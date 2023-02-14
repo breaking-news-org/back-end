@@ -32,6 +32,7 @@
 
       # First, we import stuff
       pkgs = nixpkgs.legacyPackages.${system};
+      inherit (drv-tools.functions.${system}) mkShellApps mkBin withDescription framed;
       inherit (my-codium.functions.${system}) writeSettingsJSON mkCodium;
       inherit (my-codium.configs.${system}) extensions settingsNix;
       inherit (flakes-tools.functions.${system}) mkFlakesTools;
@@ -41,10 +42,10 @@
       inherit (workflows.configs.${system}) nixCI;
 
       # Next, set the desired GHC version
-      ghcVersion_ = "92";
+      ghcVersion_ = "925";
 
       # and the name of the package
-      myPackageName = "nix-managed";
+      myPackageName = "back-end";
 
       # Then, we list separately the libraries that our package needs
       myPackageDepsLib = [ ];
@@ -117,6 +118,91 @@
         hls
       ];
 
+      # --- build an executable ---
+      # We can take one step further and make our app builds reproducible
+      # We'll take the haskellPackages.myPackage and turn it into an executable
+      # At this moment, we can set a name of our executable
+
+      exeName = "back-end";
+
+      # We'll also add a description
+      exe =
+        withDescription
+          (justStaticExecutable exeName haskellPackages.myPackage)
+          "Back end"
+      ;
+      # A disadvantage of this approach is that the package and all its local dependencies
+      # will be rebuilt even if only that package changes
+      # So, the builds aren't incremental
+
+      # --- docker image ---
+      # What if we'd like to share our Haskell app?
+      # In this case, we can easily make a Docker image with it
+      # We'll take an executable from the previous step and put it into an image
+      # At this moment, we can set a name and a tag of our image
+
+      imageName = "breaking-news-back";
+      localImageName = imageName;
+      imageTag = "latest";
+
+      image = pkgs.dockerTools.buildLayeredImage {
+        name = imageName;
+        tag = imageTag;
+        config.Entrypoint = [ "bash" "-c" exe.name ];
+        contents = [ pkgs.bash exe ];
+      };
+
+      scripts =
+        let
+          dockerHubImageName = "breaking-news-back";
+          herokuAppName = "breaking-news-back";
+          host = "127.0.0.1";
+          port = "8082";
+          result = "result";
+          tag = "latest";
+
+          scripts1 = mkShellApps {
+            dockerBuild = {
+              text = ''docker load < ${image}'';
+              runtimeInputs = [ pkgs.docker ];
+              description = "Load an image into docker";
+            };
+          };
+
+          scripts2 = mkShellApps {
+            dockerRun = {
+              text = ''
+                ${mkBin scripts1.dockerBuild}
+                docker run -p ${host}:${port}:${port} ${localImageName}:${tag}
+              '';
+              runtimeInputs = [ pkgs.docker ];
+              description = "Run `${localImageName}` in a docker container";
+            };
+            herokuRelease = {
+              text = ''
+                ${mkBin scripts1.dockerBuild}
+                docker login --username=_ --password=$(heroku auth:token) registry.heroku.com
+                docker tag ${localImageName}:${tag} registry.heroku.com/${herokuAppName}/web
+                docker push registry.heroku.com/${herokuAppName}/web
+                heroku container:release web -a ${herokuAppName}
+              '';
+              runtimeInputs = [ pkgs.docker pkgs.heroku ];
+              description = "Release `${herokuAppName}` on Heroku";
+            };
+          };
+        in
+        scripts1 // scripts2;
+
+      # The image is ready. We can run it in a devshell
+      dockerShell = mkShell {
+        packages = [ pkgs.docker ];
+        bash.extra = ''
+          docker load < ${image}
+          ${framed "docker run -it ${localImageName}:${imageTag}"}
+        '';
+        commands = mkCommands "tools" [ pkgs.docker ];
+      };
+
       # And compose VSCodium with dev tools and HLS
       codium = mkCodium {
         extensions = { inherit (extensions) nix haskell misc github markdown; };
@@ -129,25 +215,14 @@
           git nix-ide workbench markdown-all-in-one markdown-language-features;
       };
 
-      tools = codiumTools ++ [ codium ];
-
-      # --- flakes tools ---
-      # Also, we provide scripts that can be used in CI
-      flakesTools = mkFlakesTools [ "." ];
-
-      # write .github/ci.yaml to get a GitHub Actions workflow file
-      writeWorkflows = writeWorkflow "ci" nixCI;
+      tools = codiumTools;
     in
     {
       packages = {
-        inherit (flakesTools)
-          updateLocks
-          pushToCachix;
         inherit
           writeSettings
-          writeWorkflows
           codium;
-      };
+      } // scripts;
 
       devShells = {
         default = mkShell {
@@ -166,19 +241,14 @@
               help = writeSettings.meta.description;
             }
             {
-              name = "nix run .#writeWorkflows";
+              name = "nix run .#${scripts.dockerRun.pname}";
               category = "infra";
-              help = writeWorkflows.meta.description;
+              help = scripts.dockerRun.meta.description;
             }
             {
-              name = "nix run .#updateLocks";
+              name = "nix run .#${scripts.herokuRelease.pname}";
               category = "infra";
-              help = flakesTools.updateLocks.meta.description;
-            }
-            {
-              name = "nix run .#pushToCachix";
-              category = "infra";
-              help = flakesTools.pushToCachix.meta.description;
+              help = scripts.herokuRelease.meta.description;
             }
           ];
         };

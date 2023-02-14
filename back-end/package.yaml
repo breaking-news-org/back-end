@@ -1,6 +1,6 @@
-name: nix-managed
+name: back-end
 version: 0.1.0.0
-github: "value/nix-managed"
+github: "value/back-end"
 license: BSD3
 author: "value"
 maintainer: "value"
@@ -17,7 +17,7 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description: Please see the README on GitHub at <https://github.com/value/nix-managed#readme>
+description: Please see the README on GitHub at <https://github.com/value/back-end#readme>
 
 default-extensions:
   - ImportQualifiedPost
@@ -40,7 +40,7 @@ library:
   source-dirs: src
 
 executables:
-  nix-managed:
+  back-end:
     main: Main.hs
     source-dirs: app
     ghc-options:
@@ -48,10 +48,10 @@ executables:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
-      - nix-managed
+      - back-end
 
 tests:
-  nix-managed-test:
+  back-end-test:
     main: Spec.hs
     source-dirs: test
     ghc-options:
@@ -59,4 +59,4 @@ tests:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
-      - nix-managed
+      - back-end
