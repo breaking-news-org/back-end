@@ -22,7 +22,7 @@ let
   };
 
   workflow = {
-    name = "Nix CI";
+    name = "CI";
     inherit on;
     jobs = {
       "${job1}" = {

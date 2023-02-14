@@ -70,7 +70,7 @@ jobs:
         run: |
           cd back-end
           nix run .#herokuRelease
-name: Nix CI
+name: CI
 "on":
   pull_request: {}
   push: {}
