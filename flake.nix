@@ -23,7 +23,7 @@
         inherit (inputs.flakes-tools.functions.${system}) mkFlakesTools;
         inherit (inputs.workflows.functions.${system}) writeWorkflow;
         inherit (inputs.workflows.configs.${system}) nixCI;
-        inherit (inputs.drv-tools) withAttrs;
+        inherit (inputs.drv-tools.functions.${system}) withAttrs;
 
         flakesTools = mkFlakesTools [ "." "back-end" ];
 
@@ -51,7 +51,13 @@
             files markdown-language-features todo-tree;
         };
 
-        writeWorkflows = writeWorkflow "CI" (withAttrs nixCI { on.schedule = [{ cron = "0 0 1 * *"; }]; });
+        writeWorkflows = import ./nix-files/workflows.nix {
+          inherit (inputs) workflows;
+          backDir = "back-end";
+          name = "CI";
+          herokuAppName = "breaking-news-back";
+          inherit system;
+        };
       in
       {
         packages = {
