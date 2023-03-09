@@ -48,7 +48,7 @@
       myPackageName = "back-end";
 
       # Then, we list separately the libraries that our package needs
-      myPackageDepsLib = [ ];
+      myPackageDepsLib = [ pkgs.zlib pkgs.libpqxx ];
 
       # And the binaries. 
       # In our case, the Haskell app will call the `hello` command

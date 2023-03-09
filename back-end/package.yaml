@@ -21,9 +21,50 @@ description: Please see the README on GitHub at <https://github.com/value/back-e
 
 default-extensions:
   - ImportQualifiedPost
+  - LambdaCase
+  - DataKinds
+  - DeriveGeneric
+  - FlexibleContexts
+  - GADTs
+  - KindSignatures
+  - ScopedTypeVariables
+  - StrictData
+  - TemplateHaskell
+  - TypeApplications
+  - TypeFamilies
+  - TypeOperators
+  - ConstraintKinds
+  - OverloadedStrings
+  - RankNTypes
 
 dependencies:
   - base >= 4.7 && < 5
+  - time
+  - yaml
+  - aeson
+  - async
+  - bytestring
+  - exceptions
+  - filepath
+  - servant
+  - servant-client
+  - servant-docs
+  - servant-server
+  - wai
+  - warp
+  - text
+  - hashable
+  - effectful
+  - effectful-th
+  - monad-logger-aeson
+  - lens
+  - mtl
+  - monad-logger
+  - transformers
+  - resource-pool
+  - persistent
+  - persistent-postgresql
+  - esqueleto
 
 ghc-options:
   - -Wall

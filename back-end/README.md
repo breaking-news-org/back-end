@@ -1,6 +1,9 @@
-# Haskell
+# Back end
 
-`VSCodium` with extensions and executables for `Haskell`.
+## Overview
+
+- Functional requirements are described [here](https://github.com/fullstack-development/haskell-internship/blob/master/server-task.md).
+- API versioning - via query parameters ([src](https://usecsv.com/community/api-versioning))
 
 ## Prerequisites
 

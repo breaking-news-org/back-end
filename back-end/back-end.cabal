@@ -25,16 +25,69 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Demo.Backend.Config
+      Demo.Backend.Controller.User
+      Demo.Backend.External.Logger
+      Demo.Backend.External.SqlDatabase
+      Demo.Backend.Main
+      Demo.Backend.Persist.Model
+      Demo.Backend.Persist.Prelude
+      Demo.Backend.Persist.User
+      Demo.Backend.Server
+      Demo.Backend.Service.User
+      Demo.Common.API
+      Demo.Common.API.Prelude
+      Demo.Common.API.User
   other-modules:
       Paths_back_end
   hs-source-dirs:
       src
   default-extensions:
       ImportQualifiedPost
+      LambdaCase
+      DataKinds
+      DeriveGeneric
+      FlexibleContexts
+      GADTs
+      KindSignatures
+      ScopedTypeVariables
+      StrictData
+      TemplateHaskell
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ConstraintKinds
+      OverloadedStrings
+      RankNTypes
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , async
+    , base >=4.7 && <5
+    , bytestring
+    , effectful
+    , effectful-th
+    , esqueleto
+    , exceptions
+    , filepath
+    , hashable
+    , lens
+    , monad-logger
+    , monad-logger-aeson
+    , mtl
+    , persistent
+    , persistent-postgresql
+    , resource-pool
+    , servant
+    , servant-client
+    , servant-docs
+    , servant-server
+    , text
+    , time
+    , transformers
+    , wai
+    , warp
+    , yaml
   default-language: Haskell2010
 
 executable back-end
@@ -45,10 +98,51 @@ executable back-end
       app
   default-extensions:
       ImportQualifiedPost
+      LambdaCase
+      DataKinds
+      DeriveGeneric
+      FlexibleContexts
+      GADTs
+      KindSignatures
+      ScopedTypeVariables
+      StrictData
+      TemplateHaskell
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ConstraintKinds
+      OverloadedStrings
+      RankNTypes
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      back-end
+      aeson
+    , async
+    , back-end
     , base >=4.7 && <5
+    , bytestring
+    , effectful
+    , effectful-th
+    , esqueleto
+    , exceptions
+    , filepath
+    , hashable
+    , lens
+    , monad-logger
+    , monad-logger-aeson
+    , mtl
+    , persistent
+    , persistent-postgresql
+    , resource-pool
+    , servant
+    , servant-client
+    , servant-docs
+    , servant-server
+    , text
+    , time
+    , transformers
+    , wai
+    , warp
+    , yaml
   default-language: Haskell2010
 
 test-suite back-end-test
@@ -60,8 +154,49 @@ test-suite back-end-test
       test
   default-extensions:
       ImportQualifiedPost
+      LambdaCase
+      DataKinds
+      DeriveGeneric
+      FlexibleContexts
+      GADTs
+      KindSignatures
+      ScopedTypeVariables
+      StrictData
+      TemplateHaskell
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ConstraintKinds
+      OverloadedStrings
+      RankNTypes
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      back-end
+      aeson
+    , async
+    , back-end
     , base >=4.7 && <5
+    , bytestring
+    , effectful
+    , effectful-th
+    , esqueleto
+    , exceptions
+    , filepath
+    , hashable
+    , lens
+    , monad-logger
+    , monad-logger-aeson
+    , mtl
+    , persistent
+    , persistent-postgresql
+    , resource-pool
+    , servant
+    , servant-client
+    , servant-docs
+    , servant-server
+    , text
+    , time
+    , transformers
+    , wai
+    , warp
+    , yaml
   default-language: Haskell2010
