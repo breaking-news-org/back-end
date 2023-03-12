@@ -1,10 +1,10 @@
-module Demo.Common.API.Prelude
-  ( Text,
-    Generic,
-    module Servant.API,
-    module Data.Aeson,
-    aesonOptions
-  )
+module Demo.Common.API.Prelude (
+  Text,
+  Generic,
+  module Servant.API,
+  module Data.Aeson,
+  aesonOptions,
+)
 where
 
 import Data.Aeson

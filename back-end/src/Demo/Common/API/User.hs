@@ -7,8 +7,8 @@ import Demo.Common.API.Prelude
 type API = ReqBody '[JSON] UserRegistrationForm :> Post '[JSON] NoContent
 
 data UserRegistrationForm = UserRegistrationForm
-  { _userRegistrationForm_email :: !Text,
-    _userRegistrationForm_password :: !Text
+  { _userRegistrationForm_email :: !Text
+  , _userRegistrationForm_password :: !Text
   }
   deriving (Show, Eq, Generic)
 

@@ -1,0 +1,11 @@
+env: dev
+db:
+  db: postgresql
+  user: admin
+  password: psltest
+  host: postgres
+  port: 5432
+  dbName: postgresdb
+  numConns: 10
+web:
+  port: 8080

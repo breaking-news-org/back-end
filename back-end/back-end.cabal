@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -43,22 +43,27 @@ library
   hs-source-dirs:
       src
   default-extensions:
-      ImportQualifiedPost
-      LambdaCase
+      BlockArguments
+      ConstraintKinds
       DataKinds
       DeriveGeneric
       FlexibleContexts
       GADTs
+      ImportQualifiedPost
       KindSignatures
+      LambdaCase
+      OverloadedStrings
+      QuasiQuotes
+      RankNTypes
+      RecordWildCards
       ScopedTypeVariables
       StrictData
       TemplateHaskell
+      TupleSections
       TypeApplications
       TypeFamilies
       TypeOperators
-      ConstraintKinds
-      OverloadedStrings
-      RankNTypes
+      ViewPatterns
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       aeson
@@ -82,6 +87,7 @@ library
     , servant-client
     , servant-docs
     , servant-server
+    , string-interpolate
     , text
     , time
     , transformers
@@ -97,106 +103,79 @@ executable back-end
   hs-source-dirs:
       app
   default-extensions:
-      ImportQualifiedPost
-      LambdaCase
+      BlockArguments
+      ConstraintKinds
       DataKinds
       DeriveGeneric
       FlexibleContexts
       GADTs
+      ImportQualifiedPost
       KindSignatures
+      LambdaCase
+      OverloadedStrings
+      QuasiQuotes
+      RankNTypes
+      RecordWildCards
       ScopedTypeVariables
       StrictData
       TemplateHaskell
+      TupleSections
       TypeApplications
       TypeFamilies
       TypeOperators
-      ConstraintKinds
-      OverloadedStrings
-      RankNTypes
+      ViewPatterns
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
-    , async
-    , back-end
+      back-end
     , base >=4.7 && <5
-    , bytestring
-    , effectful
-    , effectful-th
-    , esqueleto
-    , exceptions
-    , filepath
-    , hashable
-    , lens
-    , monad-logger
-    , monad-logger-aeson
-    , mtl
-    , persistent
-    , persistent-postgresql
-    , resource-pool
-    , servant
-    , servant-client
-    , servant-docs
-    , servant-server
-    , text
-    , time
-    , transformers
+    , string-interpolate
     , wai
-    , warp
-    , yaml
   default-language: Haskell2010
 
 test-suite back-end-test
   type: exitcode-stdio-1.0
-  main-is: Spec.hs
+  main-is: Main.hs
   other-modules:
+      Integration.MainTest
+      Integration.User
+      Spec
       Paths_back_end
   hs-source-dirs:
       test
   default-extensions:
-      ImportQualifiedPost
-      LambdaCase
+      BlockArguments
+      ConstraintKinds
       DataKinds
       DeriveGeneric
       FlexibleContexts
       GADTs
+      ImportQualifiedPost
       KindSignatures
+      LambdaCase
+      OverloadedStrings
+      QuasiQuotes
+      RankNTypes
+      RecordWildCards
       ScopedTypeVariables
       StrictData
       TemplateHaskell
+      TupleSections
       TypeApplications
       TypeFamilies
       TypeOperators
-      ConstraintKinds
-      OverloadedStrings
-      RankNTypes
+      ViewPatterns
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-tool-depends:
+      tasty-discover:tasty-discover
   build-depends:
-      aeson
-    , async
-    , back-end
+      back-end
     , base >=4.7 && <5
-    , bytestring
-    , effectful
-    , effectful-th
-    , esqueleto
-    , exceptions
-    , filepath
-    , hashable
-    , lens
-    , monad-logger
-    , monad-logger-aeson
-    , mtl
-    , persistent
-    , persistent-postgresql
-    , resource-pool
-    , servant
-    , servant-client
-    , servant-docs
-    , servant-server
-    , text
-    , time
-    , transformers
+    , hspec
+    , http-types
+    , string-interpolate
+    , tasty
+    , tasty-hspec
+    , tasty-hunit
     , wai
-    , warp
-    , yaml
+    , wai-extra
   default-language: Haskell2010

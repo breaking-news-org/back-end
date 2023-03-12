@@ -1,6 +1,0 @@
-env: dev
-db:
-  connStr: "local/db.data"
-  numConns: 10
-web:
-  port: 8080

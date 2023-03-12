@@ -7,9 +7,9 @@ import Control.Monad.Reader (ReaderT (runReaderT))
 import Control.Monad.Trans.Class (lift)
 import Data.Pool (Pool, withResource)
 import Data.Text.Encoding (encodeUtf8)
-import Database.Esqueleto.Experimental ()
+import Database.Esqueleto.Experimental (SqlBackend, runMigration)
 import Database.Persist.Postgresql (withPostgresqlPool)
-import Database.Persist.Sql (SqlBackend, runMigration)
+import Demo.Backend.Config (mkConnStr)
 import Demo.Backend.Config qualified as Config
 import Demo.Backend.External.Logger (Logger, withLogger)
 import Demo.Backend.Persist.Model (migrateAll)
@@ -41,7 +41,7 @@ initSqlBackendPool action = do
   conf <- Config.getConfig Config._app_db
   withLogger
     $ withPostgresqlPool
-      (conf ^. Config.db_connStr . to encodeUtf8)
+      (conf ^. to mkConnStr . to encodeUtf8)
       (conf ^. Config.db_numConns)
     $ \pool -> do
       lift $ withUnliftStrategy (ConcUnlift Ephemeral Unlimited) $ withEffToIO $ \unlift -> do

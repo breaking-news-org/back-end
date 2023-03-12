@@ -1,12 +1,12 @@
-module Demo.Backend.Main
-  ( main,
-    AppM,
-    runAppM,
-  )
+module Demo.Backend.Main (
+  main,
+  AppM,
+  runAppM,
+)
 where
 
 import Data.Function ((&))
-import qualified Demo.Backend.Config as Config
+import Demo.Backend.Config qualified as Config
 import Demo.Backend.Controller.User (UserController, runUserController)
 import Demo.Backend.External.Logger (Logger, runLogger)
 import Demo.Backend.Persist.Prelude (SqlBackendPool, runSqlBackendPool)
@@ -20,14 +20,14 @@ main = runAppM startServer
 
 type AppM =
   Eff
-    '[ Server,
-       UserController,
-       UserService,
-       UserRepo,
-       SqlBackendPool,
-       Logger,
-       Config.Loader,
-       IOE
+    '[ Server
+     , UserController
+     , UserService
+     , UserRepo
+     , SqlBackendPool
+     , Logger
+     , Config.Loader
+     , IOE
      ]
 
 runAppM :: AppM () -> IO ()

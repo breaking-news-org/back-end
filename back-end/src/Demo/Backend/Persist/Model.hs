@@ -21,7 +21,7 @@ import Database.Persist.TH
 share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]
   [persistLowerCase|
-User
+Users
     email Text
     hashedPassword ByteString
     nickname Text

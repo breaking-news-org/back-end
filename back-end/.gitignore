@@ -3,3 +3,6 @@
 .direnv
 .vscode
 dist-newstyle
+dist
+postgres-queries
+secrets.env

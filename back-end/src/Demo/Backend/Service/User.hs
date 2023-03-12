@@ -5,16 +5,16 @@ module Demo.Backend.Service.User where
 
 import Data.ByteString (ByteString)
 import Data.Text (Text)
-import qualified Data.Text.Encoding as T
+import Data.Text.Encoding qualified as T
 import Demo.Backend.External.Logger
 import Effectful
 import Effectful.Dispatch.Dynamic (interpret)
 import Effectful.TH
 
 data User = User
-  { _user_email :: !Text,
-    _user_hashedPassword :: !ByteString,
-    _user_nickname :: !Text
+  { _user_email :: !Text
+  , _user_hashedPassword :: !ByteString
+  , _user_nickname :: !Text
   }
   deriving (Show, Eq)
 
@@ -42,9 +42,9 @@ runUserService = interpret $ \_ -> \case
   Register email password -> do
     createUser $
       User
-        { _user_email = email,
-          _user_hashedPassword = hashPassword password,
-          _user_nickname = "" -- default nick name
+        { _user_email = email
+        , _user_hashedPassword = hashPassword password
+        , _user_nickname = "" -- default nick name
         }
     withLogger $ logInfo "created a new user successfully"
 

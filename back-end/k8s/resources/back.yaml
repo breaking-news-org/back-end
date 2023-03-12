@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: back # Sets Deployment name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: back
+  template:
+    metadata:
+      labels:
+        app: back
+    spec:
+      containers:
+        - name: breaking-news-back
+          image: deemp/breaking-news-back:latest # Sets Image
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080 # Exposes container port
+              name: back-port
+          volumeMounts:
+            - mountPath: /etc/config
+              name: config-volume
+          # command: [ "/bin/sh", "-c", "ls /etc/config" ]
+          env:
+            - name: CONFIG_FILE
+              value: /etc/config/back.yaml
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: back-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: back # Sets service name
+  labels:
+    app: back # Labels and Selectors
+spec:
+  type: NodePort # Sets service type
+  ports:
+    - port: 8080 # Sets port to run the service
+      name: back-service-port
+      targetPort: back-port
+      nodePort: 30003
+  selector:
+    app: back

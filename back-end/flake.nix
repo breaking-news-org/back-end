@@ -31,12 +31,12 @@
       # See NixOS wiki for more info - https://nixos.wiki/wiki/Haskell
 
       # First, we import stuff
-      pkgs = nixpkgs.legacyPackages.${system};
-      inherit (drv-tools.functions.${system}) mkShellApps mkBin withDescription framed;
+      pkgs = import nixpkgs { config.allowUnfree = true; inherit system; };
+      inherit (drv-tools.functions.${system}) mkShellApps mkBin withDescription framed mapGenAttrs;
       inherit (my-codium.functions.${system}) writeSettingsJSON mkCodium;
       inherit (my-codium.configs.${system}) extensions settingsNix;
       inherit (flakes-tools.functions.${system}) mkFlakesTools;
-      inherit (devshell.functions.${system}) mkCommands mkShell;
+      inherit (devshell.functions.${system}) mkCommands mkShell mkRunCommands;
       inherit (haskell-tools.functions.${system}) toolsGHC;
       inherit (workflows.functions.${system}) writeWorkflow;
       inherit (workflows.configs.${system}) nixCI;
@@ -91,7 +91,8 @@
               # here's how we can add a package built from sources
               # then, we may use this package in .cabal in a test-suite
               testHaskellDepends = [
-                (super.callCabal2nix "lima" "${lima.outPath}/lima" { })
+                lima.packages.${system}.package
+                super.tasty-discover
               ] ++ x.testHaskellDepends;
             });
         };
@@ -106,16 +107,28 @@
       # More specifically, if we're developing Haskell packages A and B and A depends on B, we need to supply both A and B
       # This will prevent nix from building B as a dev dependency of A
 
-      inherit (toolsGHC ghcVersion_ override (ps: [ ps.myPackage ]) myPackageDepsBin)
+      inherit (toolsGHC {
+        version = ghcVersion_;
+        inherit override;
+        packages = (ps: [ ps.myPackage ]);
+        runtimeDependencies = myPackageDepsBin;
+      })
         hls cabal implicit-hie justStaticExecutable
         ghcid callCabal2nix haskellPackages hpack;
 
-      codiumTools = [
+      tools = [
         ghcid
         hpack
         implicit-hie
         cabal
         hls
+
+        # db stuff
+        pkgs.minikube
+        pkgs.kubectl
+        pkgs.postgresql_15
+        pkgs.helm
+        pkgs.postman
       ];
 
       # --- build an executable ---
@@ -128,7 +141,10 @@
       # We'll also add a description
       exe =
         withDescription
-          (justStaticExecutable exeName haskellPackages.myPackage)
+          (justStaticExecutable {
+            package = dontCheck haskellPackages.myPackage;
+            executableName = exeName;
+          })
           "Back end"
       ;
       # A disadvantage of this approach is that the package and all its local dependencies
@@ -148,7 +164,7 @@
       image = pkgs.dockerTools.buildLayeredImage {
         name = imageName;
         tag = imageTag;
-        config.Entrypoint = [ "bash" "-c" exe.name ];
+        config.Entrypoint = [ "bash" "-c" exeName ];
         contents = [ pkgs.bash exe ];
       };
 
@@ -160,6 +176,10 @@
           port = "8082";
           result = "result";
           tag = "latest";
+          env =
+            mapGenAttrs
+              (name: { "${name}" = "\$${name}"; })
+              [ "DOCKER_HUB_USERNAME" "DOCKER_HUB_PASSWORD" ];
 
           scripts1 = mkShellApps {
             dockerBuild = {
@@ -168,6 +188,8 @@
               description = "Load an image into docker";
             };
           };
+
+          kubernetesDir = "k8s";
 
           scripts2 = mkShellApps {
             dockerRun = {
@@ -189,70 +211,61 @@
               runtimeInputs = [ pkgs.docker pkgs.heroku ];
               description = "Release `${herokuAppName}` on Heroku";
             };
+            pushToDockerHub = rec {
+              text = ''
+                ${mkBin scripts1.dockerBuild}
+                docker login -u ${env.DOCKER_HUB_USERNAME} -p ${env.DOCKER_HUB_PASSWORD}
+                docker tag ${localImageName}:${tag} ${env.DOCKER_HUB_USERNAME}/${dockerHubImageName}:${tag}
+                docker push ${env.DOCKER_HUB_USERNAME}/${dockerHubImageName}:${tag}
+              '';
+              description = ''Push image to Docker Hub'';
+              longDescription = ''
+                ${description}
+
+                Expected env variables:
+                - ${env.DOCKER_HUB_USERNAME}
+                - ${env.DOCKER_HUB_PASSWORD}
+              '';
+            };
+            runDB = {
+              text = ''
+                ${pkgs.minikube}/bin/minikube start
+                ${pkgs.kubectl}/bin/kubectl apply -f ${kubernetesDir}
+              '';
+              description = "Start database";
+            };
           };
         in
         scripts1 // scripts2;
 
-      # The image is ready. We can run it in a devshell
-      dockerShell = mkShell {
-        packages = [ pkgs.docker ];
-        bash.extra = ''
-          docker load < ${image}
-          ${framed "docker run -it ${localImageName}:${imageTag}"}
-        '';
-        commands = mkCommands "tools" [ pkgs.docker ];
-      };
-
-      # And compose VSCodium with dev tools and HLS
-      codium = mkCodium {
-        extensions = { inherit (extensions) nix haskell misc github markdown; };
-        runtimeDependencies = codiumTools;
-      };
-
-      # a script to write .vscode/settings.json
-      writeSettings = writeSettingsJSON {
-        inherit (settingsNix) haskell todo-tree files editor gitlens
-          git nix-ide workbench markdown-all-in-one markdown-language-features;
-      };
-
-      tools = codiumTools;
-    in
-    {
       packages = {
-        inherit
-          writeSettings
-          codium;
+        writeSettings = writeSettingsJSON {
+          inherit (settingsNix) haskell todo-tree files editor gitlens
+            git nix-ide workbench markdown-all-in-one markdown-language-features;
+        };
+        # And compose VSCodium with dev tools and HLS
+        codium = mkCodium {
+          extensions = { inherit (extensions) nix haskell misc github markdown; };
+          runtimeDependencies = tools;
+        };
       } // scripts;
+
 
       devShells = {
         default = mkShell {
           packages = tools;
           # sometimes necessary for programs that work with files
           bash.extra = "export LANG=C.utf8";
-          commands = mkCommands "tools" tools ++ [
-            {
-              name = "nix run .#codium .";
-              category = "ide";
-              help = "Run " + codium.meta.description + " in the current directory";
-            }
-            {
-              name = "nix run .#writeSettings";
-              category = "ide";
-              help = writeSettings.meta.description;
-            }
-            {
-              name = "nix run .#${scripts.dockerRun.pname}";
-              category = "infra";
-              help = scripts.dockerRun.meta.description;
-            }
-            {
-              name = "nix run .#${scripts.herokuRelease.pname}";
-              category = "infra";
-              help = scripts.herokuRelease.meta.description;
-            }
-          ];
+          commands = mkCommands "tools" tools
+            ++ (mkRunCommands "scripts" { inherit (packages) runDB; })
+            ++ (mkRunCommands "ide" { inherit (packages) codium writeSettings; })
+            ++ (mkRunCommands "infra" { inherit (packages) dockerRun herokuRelease pushToDockerHub; })
+          ;
         };
       };
+    in
+    {
+      inherit packages devShells;
     });
 
   nixConfig = {

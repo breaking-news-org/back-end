@@ -1,10 +1,10 @@
-module Demo.Backend.Persist.Prelude
-  ( module Effectful,
-    module Database.Persist,
-    module Effectful.Dispatch.Dynamic,
-    module Demo.Backend.External.SqlDatabase,
-    SqlBackend,
-  )
+module Demo.Backend.Persist.Prelude (
+  module Effectful,
+  module Database.Persist,
+  module Effectful.Dispatch.Dynamic,
+  module Demo.Backend.External.SqlDatabase,
+  SqlBackend,
+)
 where
 
 import Database.Persist

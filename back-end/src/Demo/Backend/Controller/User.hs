@@ -1,10 +1,11 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# OPTIONS_GHC -Wno-unticked-promoted-constructors #-}
 
 module Demo.Backend.Controller.User where
 
 import Control.Monad.Except
 import Demo.Backend.Service.User (UserService)
-import qualified Demo.Backend.Service.User as UserService
+import Demo.Backend.Service.User qualified as UserService
 import Demo.Common.API.User (UserRegistrationForm (..))
 import Effectful
 import Effectful.Dispatch.Dynamic
@@ -14,7 +15,7 @@ import Servant.Server (ServerError)
 data UserController :: Effect where
   Register :: UserRegistrationForm -> UserController m (Either ServerError NoContent)
 
-type instance DispatchOf UserController = 'Dynamic
+type instance DispatchOf UserController = Dynamic
 
 register ::
   UserController :> es =>
@@ -27,6 +28,6 @@ runUserController ::
   Eff (UserController : es) a ->
   Eff es a
 runUserController = interpret $ \_ -> \case
-  Register UserRegistrationForm {..} -> do
+  Register UserRegistrationForm{..} -> do
     UserService.register _userRegistrationForm_email _userRegistrationForm_password
     pure $ Right NoContent
