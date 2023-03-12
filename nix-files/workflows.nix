@@ -4,11 +4,18 @@ let
   inherit (workflows.configs.${system}) steps os oss;
   job1 = "_1_update_flake_locks";
   job2 = "_2_push_to_cachix";
-  job3 = "_3_back";
+  job3 = "_3_push_to_heroku";
+  job4 = "_4_push_to_docker_hub";
   herokuAppName = "breaking-news-back";
   names = mkAccessors {
     matrix.os = "";
-    secrets = genAttrsId [ "GITHUB_TOKEN" "HEROKU_API_KEY" "HEROKU_EMAIL" ];
+    secrets = genAttrsId [
+      "GITHUB_TOKEN"
+      "HEROKU_API_KEY"
+      "HEROKU_EMAIL"
+      "DOCKER_HUB_USERNAME"
+      "DOCKER_HUB_PASSWORD"
+    ];
   };
 
   on = {
@@ -48,7 +55,7 @@ let
         ];
       };
       "${job3}" = {
-        name = "Release to Heroku";
+        name = "Push to Heroku";
         needs = job1;
         runs-on = os.ubuntu-20;
         steps = [
@@ -69,6 +76,30 @@ let
             run = ''
               cd ${backDir}
               nix run .#herokuRelease
+            '';
+          }
+        ];
+      };
+      "${job4}" = {
+        name = "Push to Docker Hub";
+        needs = job1;
+        runs-on = os.ubuntu-20;
+        steps = [
+          steps.checkout
+          steps.installNix
+          {
+            name = "Log in to Docker";
+            uses = "docker/login-action@v2.1.0";
+            "with" = {
+              username = expr names.secrets.DOCKER_HUB_USERNAME;
+              password = expr names.secrets.DOCKER_HUB_PASSWORD;
+            };
+          }
+          {
+            name = "Push to Docker Hub";
+            run = ''
+              cd ${backDir}
+              nix run .#pushToDockerHub
             '';
           }
         ];

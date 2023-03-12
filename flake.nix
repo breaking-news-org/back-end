@@ -19,82 +19,57 @@
         inherit (inputs.codium.functions.${system}) mkCodium writeSettingsJSON;
         inherit (inputs.codium.configs.${system}) extensions settingsNix;
         inherit (inputs.vscode-extensions.extensions.${system}) vscode-marketplace open-vsx;
-        inherit (inputs.devshell.functions.${system}) mkCommands mkShell;
+        inherit (inputs.devshell.functions.${system}) mkCommands mkRunCommands mkShell;
         inherit (inputs.flakes-tools.functions.${system}) mkFlakesTools;
         inherit (inputs.workflows.functions.${system}) writeWorkflow;
-        inherit (inputs.workflows.configs.${system}) nixCI;
         inherit (inputs.drv-tools.functions.${system}) withAttrs;
 
-        flakesTools = mkFlakesTools [ "." "back-end" ];
+        tools = [ ];
 
-        codiumTools = [ ];
-
-        # We construct `VSCodium` with ready attrsets of extensions like `nix`
-        codium = mkCodium {
-          extensions = {
-            inherit (extensions) nix misc;
-            # Also, we take some extensions from `extensions` and put them into the `haskell` attrset
-            haskell = {
-              inherit (open-vsx.haskell) haskell;
-              inherit (vscode-marketplace.visortelle) haskell-spotlight;
-            };
-          };
-          runtimeDependencies = codiumTools;
-        };
-
-        tools = codiumTools;
-        # This is a script to write a `settings.json`
-        # It uses attrsets of settings like `nix-ide`
-        writeSettings = writeSettingsJSON {
-          inherit (settingsNix)
-            nix-ide git gitlens editor workbench
-            files markdown-language-features todo-tree;
-        };
-
-        writeWorkflows = import ./nix-files/workflows.nix {
-          inherit (inputs) workflows;
-          backDir = "back-end";
-          name = "CI";
-          herokuAppName = "breaking-news-back";
-          inherit system;
-        };
-      in
-      {
         packages = {
-          inherit (flakesTools) updateLocks pushToCachix;
-          inherit writeSettings codium writeWorkflows;
+          inherit (mkFlakesTools [ "." "back-end" ]) updateLocks pushToCachix;
+
+          # We construct `VSCodium` with ready attrsets of extensions like `nix`
+          codium = mkCodium {
+            extensions = {
+              inherit (extensions) nix misc;
+              # Also, we take some extensions from `extensions` and put them into the `haskell` attrset
+              haskell = {
+                inherit (open-vsx.haskell) haskell;
+                inherit (vscode-marketplace.visortelle) haskell-spotlight;
+              };
+            };
+            runtimeDependencies = tools;
+          };
+
+          writeWorkflows = import ./nix-files/workflows.nix {
+            inherit (inputs) workflows;
+            backDir = "back-end";
+            name = "CI";
+            herokuAppName = "breaking-news-back";
+            inherit system;
+          };
+
+          # This is a script to write a `settings.json`
+          # It uses attrsets of settings like `nix-ide`
+          writeSettings = writeSettingsJSON {
+            inherit (settingsNix)
+              nix-ide git gitlens editor workbench
+              files markdown-language-features todo-tree;
+          };
         };
+
         devShells.default = mkShell {
           packages = tools;
           bash.extra = '''';
-          commands = mkCommands "tools" tools ++ [
-            {
-              name = "nix run .#codium .";
-              category = "ide";
-              help = "Run " + codium.meta.description + " in the current directory";
-            }
-            {
-              name = "nix run .#writeSettings";
-              category = "ide";
-              help = writeSettings.meta.description;
-            }
-            {
-              name = "nix run .#writeWorkflows";
-              category = "infra";
-              help = writeWorkflows.meta.description;
-            }
-            {
-              name = "nix run .#updateLocks";
-              category = "infra";
-              help = flakesTools.updateLocks.meta.description;
-            }
-            {
-              name = "nix run .#pushToCachix";
-              category = "infra";
-              help = flakesTools.pushToCachix.meta.description;
-            }
-          ];
+          commands =
+            (mkCommands "tools" tools) ++
+            (mkRunCommands "ide" { inherit (packages) codium writeSettings; }) ++
+            (mkRunCommands "infra" { inherit (packages) writeWorkflows updateLocks pushToCachix; });
         };
+      in
+      {
+        inherit packages devShells;
       });
 
   nixConfig = {
