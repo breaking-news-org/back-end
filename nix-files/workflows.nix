@@ -97,6 +97,10 @@ let
           }
           {
             name = "Push to Docker Hub";
+            env = {
+              DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
+              DOCKER_HUB_PASSWORD = expr names.secrets.DOCKER_HUB_PASSWORD;
+            };
             run = ''
               cd ${backDir}
               nix run .#pushToDockerHub

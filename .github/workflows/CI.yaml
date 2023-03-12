@@ -88,6 +88,9 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
       - name: Push to Docker Hub
+        env:
+          DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
         run: |
           cd back-end
           nix run .#pushToDockerHub

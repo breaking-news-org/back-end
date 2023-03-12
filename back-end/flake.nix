@@ -211,6 +211,7 @@
               runtimeInputs = [ pkgs.docker pkgs.heroku ];
               description = "Release `${herokuAppName}` on Heroku";
             };
+            # TODO don't login here
             pushToDockerHub = rec {
               text = ''
                 ${mkBin scripts1.dockerBuild}
