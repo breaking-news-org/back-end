@@ -1,7 +1,0 @@
-configMapGenerator:
-  - name: back-config
-    files:
-      - config/back.yaml
-resources:
-  - resources/back.yaml
-  - resources/postgres.yaml

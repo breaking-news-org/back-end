@@ -1,0 +1,4 @@
+packages: ../back ./
+
+package *
+    ghc-options: -haddock

@@ -1,1 +1,12 @@
+.stack-work/
+*~
+.direnv
 .vscode
+dist-newstyle
+dist
+postgres-queries
+secrets.env
+.result
+.kube
+.helm
+result

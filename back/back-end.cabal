@@ -1,0 +1,154 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.35.2.
+--
+-- see: https://github.com/sol/hpack
+
+name:           back-end
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/value/back-end#readme>
+homepage:       https://github.com/value/back-end#readme
+bug-reports:    https://github.com/value/back-end/issues
+author:         value
+maintainer:     value
+copyright:      value
+license:        BSD3
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/value/back-end
+
+library
+  exposed-modules:
+      API.API
+      API.API1
+      API.OpenAPI3
+      API.Prelude
+      API.TH
+      API.Types.News
+      API.Types.User
+      API.User
+      Common.Prelude
+      Config
+      Controller.News
+      Controller.Prelude
+      Controller.User
+      External.Logger
+      External.SqlDatabase
+      Main
+      Model.News
+      Model.User
+      Persist.Model
+      Persist.News
+      Persist.Prelude
+      Persist.User
+      Server
+      Service.News
+      Service.Prelude
+      Service.Types.News
+      Service.Types.User
+      Service.User
+  other-modules:
+      Paths_back_end
+  hs-source-dirs:
+      src
+  default-extensions:
+      BlockArguments
+      ConstraintKinds
+      DataKinds
+      DeriveGeneric
+      DuplicateRecordFields
+      FlexibleContexts
+      GADTs
+      ImportQualifiedPost
+      KindSignatures
+      LambdaCase
+      NamedFieldPuns
+      OverloadedRecordDot
+      OverloadedStrings
+      QuasiQuotes
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StrictData
+      TemplateHaskell
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      aeson
+    , async
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , effectful
+    , effectful-th
+    , esqueleto
+    , exceptions
+    , filepath
+    , hashable
+    , lens
+    , monad-logger
+    , monad-logger-aeson
+    , mtl
+    , openapi3
+    , persistent
+    , persistent-postgresql
+    , resource-pool
+    , servant
+    , servant-client
+    , servant-docs
+    , servant-openapi3
+    , servant-server
+    , string-interpolate
+    , template-haskell
+    , text
+    , time
+    , transformers
+    , wai
+    , warp
+    , yaml
+  default-language: Haskell2010
+
+executable back-end
+  main-is: Main.hs
+  other-modules:
+      Paths_back_end
+  hs-source-dirs:
+      app
+  default-extensions:
+      BlockArguments
+      ConstraintKinds
+      DataKinds
+      DeriveGeneric
+      DuplicateRecordFields
+      FlexibleContexts
+      GADTs
+      ImportQualifiedPost
+      KindSignatures
+      LambdaCase
+      NamedFieldPuns
+      OverloadedRecordDot
+      OverloadedStrings
+      QuasiQuotes
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StrictData
+      TemplateHaskell
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      back-end
+    , base >=4.7 && <5
+    , string-interpolate
+    , wai
+  default-language: Haskell2010

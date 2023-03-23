@@ -1,0 +1,4 @@
+packages: back test
+
+package *
+    ghc-options: -haddock

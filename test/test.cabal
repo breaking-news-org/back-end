@@ -1,0 +1,108 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.35.2.
+--
+-- see: https://github.com/sol/hpack
+
+name:           test
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/value/test#readme>
+homepage:       https://github.com/value/test#readme
+bug-reports:    https://github.com/value/test/issues
+author:         value
+maintainer:     value
+copyright:      value
+license:        BSD3
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/value/test
+
+library
+  exposed-modules:
+      Integration.Config
+      Integration.MainTest
+      Spec
+      Unit.MainSpec
+  other-modules:
+      Paths_test
+  hs-source-dirs:
+      src
+  default-extensions:
+      BlockArguments
+      ConstraintKinds
+      DataKinds
+      DeriveGeneric
+      FlexibleContexts
+      GADTs
+      ImportQualifiedPost
+      KindSignatures
+      LambdaCase
+      OverloadedStrings
+      QuasiQuotes
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StrictData
+      TemplateHaskell
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+      OverloadedRecordDot
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      back-end
+    , base >=4.7 && <5
+    , effectful
+    , hspec
+    , http-client
+    , http-types
+    , servant-client
+    , string-interpolate
+    , tasty
+    , tasty-hspec
+    , tasty-hunit
+    , wai
+    , wai-extra
+  default-language: Haskell2010
+
+executable test
+  main-is: Main.hs
+  other-modules:
+      Paths_test
+  hs-source-dirs:
+      app
+  default-extensions:
+      BlockArguments
+      ConstraintKinds
+      DataKinds
+      DeriveGeneric
+      FlexibleContexts
+      GADTs
+      ImportQualifiedPost
+      KindSignatures
+      LambdaCase
+      OverloadedStrings
+      QuasiQuotes
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StrictData
+      TemplateHaskell
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+      OverloadedRecordDot
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-tool-depends:
+      tasty-discover:tasty-discover
+  build-depends:
+      back-end
+    , base >=4.7 && <5
+    , test
+  default-language: Haskell2010

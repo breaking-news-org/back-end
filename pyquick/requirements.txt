@@ -1,0 +1,16 @@
+Arpeggio==2.0.0
+attrs==22.2.0
+certifi==2022.12.7
+charset-normalizer==3.1.0
+dill==0.3.6
+grpcio==1.51.3
+idna==3.4
+parver==0.4
+protobuf==4.22.1
+pulumi==3.58.0
+pulumi-kubernetes==3.24.2
+PyYAML==6.0
+requests==2.28.2
+semver==2.13.0
+six==1.16.0
+urllib3==1.26.15

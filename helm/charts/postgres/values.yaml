@@ -1,0 +1,42 @@
+# Default values for postgres.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+app: postgres
+environment: staging
+container:
+  replicaCount: 1
+  image: postgres:15.1-alpine
+  tag: latest
+  dockerHubUser: deemp
+  volumeMounts:
+    name: postgredb
+    mountPath: /var/lib/postgresql/data
+  config:
+    varName: CONFIG_FILE
+    mountPath: /etc/config
+    file: config.yaml
+volume:
+  name: 
+db:
+  port: 5432
+  POSTGRES_DB: postgresdb
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: psltest
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30003
+
+# app config
+config:
+  db:
+    db: postgresql
+    user: admin
+    password: psltest
+    host: postgres
+    port: 5432
+    dbName: postgresdb
+    numConns: 10
+  web:
+    port: 8080

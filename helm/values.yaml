@@ -1,0 +1,20 @@
+env: test
+# can also be
+# staging,
+app: back-test
+docker_hub_user: deemp
+name: breaking-news-back
+containers:
+  name: breaking-news-back-app
+  image: breaking-news-back-app
+  tag: latest
+  port: 8080
+  config:
+    env:
+      var: CONFIG_FILE
+      file: config
+    mountPath: /etc/config
+    file: config.yaml
+service:
+  port: 8080
+  nodePort: 30003

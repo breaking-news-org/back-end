@@ -1,0 +1,77 @@
+{{ $environment := .Values.environment }}
+{{ $appName := .Values.app }}
+{{ $app := print $appName "-" .Values.environment }}
+{{ $containerPortName := print $app "-port" }}
+{{ $configMapName := print $app "-configmap" }}
+{{ $container := .Values.container }}
+{{ $service := .Values.service }}
+{{ $containerConfig := $container.config }}
+{{ $config := .Values.config }}
+{{ $webPort := $config.web.port }}
+{{ $labels := (dict "environment" $environment "app" $appName) | toYaml }}
+{{ $labelsBlock := (dict "labels" ($labels | fromYaml)) | toYaml }}
+---
+apiVersion: apps/v1
+kind: ConfigMap
+metadata: 
+  name: {{ $configMapName }}
+{{ $labelsBlock | indent 2 }}
+data:
+  {{ $containerConfig.file }}: |
+{{ set .Values.config "web" (fromYaml (print "port: " $webPort)) | toYaml | indent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $app }}-deployment
+{{ $labelsBlock | indent 2}}
+spec:
+  replicas: {{ $container.replicaCount }}
+  selector:
+    matchLabels:
+{{ $labels | indent 6 }}
+  template:
+    metadata:
+{{ $labels | indent 6}}
+    spec:
+      {{- $configVolumeName := print $app "-config-volume" }}
+      containers:
+        - name: {{ $app }}-container
+          image: "{{ $container.dockerHubUser }}/{{ $container.image }}:{{ $container.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ $webPort }}
+              name: {{ $containerPortName }}
+          volumeMounts:
+            - mountPath: "{{ $containerConfig.mountPath }}"
+              name: {{ $configVolumeName }}
+          env:
+            - name: {{ $containerConfig.varName }}
+              value: "{{ $containerConfig.mountPath }}/{{ $containerConfig.file }}"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+      volumes:
+        - name: {{ $configVolumeName }}
+          configMap:
+            name: {{ $configMapName }}
+---
+{{ $servicePortName := print $app "-service-port" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $app }}-service
+{{ $labelsBlock | indent 2 }}
+spec:
+  type: {{ $service.type }}
+  ports:
+    - port: {{ $service.port }}
+      name: {{ $servicePortName }}
+      targetPort: {{ $containerPortName }}
+      nodePort: {{ $service.nodePort }}
+  selector:
+    app: {{ $app }}

@@ -1,1 +1,0 @@
-{-# OPTIONS_GHC -F -pgmF tasty-discover -optF --debug -optF --generated-module=Spec -optF --tree-display  #-}

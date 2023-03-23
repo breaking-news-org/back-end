@@ -1,0 +1,32 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
+
+module Service.User where
+
+import Effectful
+import Effectful.TH
+import Model.User (UserRepo, createUser)
+import Service.Prelude
+import Service.Types.User
+
+data UserService :: Effect where
+  Register :: UserRegistrationData -> UserService m ()
+
+makeEffect ''UserService
+
+runUserService ::
+  (UserRepo :> es, Logger :> es) =>
+  Eff (UserService : es) a ->
+  Eff es a
+runUserService = interpret $ \_ -> \case
+  Register UserRegistrationData{..} -> do
+    createUser $
+      User
+        { _user_email = email
+        , _user_hashedPassword = Password $ hashPassword password
+        , _user_nickname = "" -- default nick name
+        }
+    withLogger $ logInfo "created a new user successfully"
+
+hashPassword :: Text -> ByteString
+hashPassword = encodeUtf8 -- dummy implementation. we should generate a salt, and calculate sha512(salt <> password)
