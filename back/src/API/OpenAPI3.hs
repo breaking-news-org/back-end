@@ -1,9 +1,10 @@
 module API.OpenAPI3 where
 
-import API.API (API)
 import API.Prelude
-import Common.Prelude (ByteString)
-import Servant.OpenApi (HasOpenApi (toOpenApi))
+import API.Root (API)
 
-s :: ByteString
-s = encode $ toOpenApi (Proxy :: Proxy API)
+spec :: OpenApi
+spec = toOpenApi (Proxy :: Proxy API)
+
+writeSpec :: FilePath -> IO ()
+writeSpec f = encodeFile f spec

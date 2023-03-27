@@ -1,3 +1,3 @@
 module Main (main) where
 
-import Main (main)
+import App (main)

@@ -6,7 +6,7 @@ module Persist.Prelude (
 )
 where
 
-import Database.Esqueleto.Experimental (entityVal, from, insert, select, table, val, where_, (<=.), (^.))
+import Database.Esqueleto.Experimental (entityVal, from, insert, select, table, val, where_, (<=.), (^.), (&&.), (>=.), Value(..))
 import Effectful
 import Effectful.Dispatch.Dynamic
 import External.SqlDatabase

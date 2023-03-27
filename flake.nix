@@ -275,7 +275,6 @@
             commands =
               (mkCommands "tools" tools)
               ++ [
-                { name = "helm"; command = ''microk8s helm "$@"''; help = "microk8s helm"; category = "tools"; }
                 {
                   name = "pulumi";
                   command = ''LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.gcc-unwrapped ]} ${pkgs.pulumi}/bin/pulumi "$@"'';
@@ -298,12 +297,6 @@
         inherit packages devShells;
       }
     )
-    #   // (inputs.dream2nix.lib.makeFlakeOutputs {
-    #   systems = inputs.flake-utils.lib.defaultSystems;
-    #   source = ./pyquick;
-    #   projects = ./pyquick/projects.toml;
-    #   config.projectRoot = ./pyquick;
-    # })
   ;
 
   nixConfig = {

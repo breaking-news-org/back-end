@@ -7,4 +7,5 @@ db:
   dbName: postgresdb
   numConns: 10
 web:
-  port: 8080
+  port: 8080  
+  pageSize: 10

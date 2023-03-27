@@ -3,38 +3,46 @@
 
 module Controller.News where
 
-import API.Types.News as API (CreateNews (..), GetNews (..))
-import Service.News (NewsService (..))
-import Service.Prelude (UTCTime)
-import Control.Monad.Except
-import Effectful
-import Effectful.Dispatch.Dynamic
-import Servant.API (NoContent (..))
-import Servant.Server (ServerError)
+import API.Types.News (filters_createdUntil)
+import API.Types.News qualified as API (CreateNews (..), Filters (..), GetNews (..), News)
+import Common.Prelude
+import Controller.Prelude (ExceptT (..), NoContent (..), ServerError)
+import Service.News qualified as Service (NewsService (..), serviceCreateNews, serviceGetNews)
+import Service.Prelude (interpret, send)
+import Service.Types.News qualified as Service
 
 data NewsController :: Effect where
-  Create :: CreateNews -> NewsController m (Either ServerError NoContent)
-  Get :: UTCTime -> NewsController m (Either ServerError [GetNews])
+  ControllerCreateNews :: API.CreateNews -> NewsController m (Either ServerError NoContent)
+  -- TODO allow filters
+  -- as maybe fields of a record
+  ControllerGetNews :: API.Filters Maybe -> NewsController m (Either ServerError [API.News])
 
 type instance DispatchOf NewsController = Dynamic
 
--- TODO template this
+create :: NewsController :> es => API.CreateNews -> ExceptT ServerError (Eff es) NoContent
+create = ExceptT . send . ControllerCreateNews
 
-create :: NewsController :> es => CreateNews -> ExceptT ServerError (Eff es) NoContent
-create = ExceptT . send . Create
+get :: NewsController :> es => API.Filters Maybe -> ExceptT ServerError (Eff es) [API.News]
+get = ExceptT . send . ControllerGetNews
 
-get :: NewsController :> es => UTCTime -> ExceptT ServerError (Eff es) [GetNews]
-get = ExceptT . send . Get
-
-runNewsController ::
-  NewsService :> es =>
-  Eff (NewsController : es) a ->
-  Eff es a
+runNewsController :: (Service.NewsService :> es) => Eff (NewsController : es) a -> Eff es a
 runNewsController = interpret $ \_ -> \case
-  Create API.CreateNews{..} -> do
+  ControllerCreateNews API.CreateNews{..} -> do
+    -- take from somewhere
+    creator <- undefined
+    Service.serviceCreateNews
+      ( Service.CreateNews
+          { Service._createNews_title
+          , Service._createNews_text
+          , Service._createNews_category
+          , Service._createNews_images
+          , Service._createNews_creator = creator
+          }
+      )
     pure $ Right NoContent
-  Get t -> do
-    pure $ pure []
+  ControllerGetNews fs -> do
+    news <- Service.serviceGetNews fs
+    pure $ pure news
 
 -- TODO fix
 

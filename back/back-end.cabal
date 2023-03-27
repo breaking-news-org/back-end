@@ -21,29 +21,30 @@ source-repository head
 
 library
   exposed-modules:
-      API.API
-      API.API1
+      API.Endpoints.API1.News
+      API.Endpoints.API1.Root
+      API.Endpoints.API1.User
       API.OpenAPI3
       API.Prelude
+      API.Root
       API.TH
       API.Types.News
       API.Types.User
-      API.User
+      App
       Common.Prelude
-      Config
       Controller.News
       Controller.Prelude
       Controller.User
       External.Logger
       External.SqlDatabase
-      Main
-      Model.News
-      Model.User
+      Persist.Effects.News
+      Persist.Effects.User
       Persist.Model
       Persist.News
       Persist.Prelude
       Persist.User
-      Server
+      Server.Config
+      Server.Server
       Service.News
       Service.Prelude
       Service.Types.News
@@ -85,6 +86,7 @@ library
     , base >=4.7 && <5
     , bytestring
     , containers
+    , data-default
     , effectful
     , effectful-th
     , esqueleto
@@ -117,6 +119,47 @@ library
 executable back-end
   main-is: Main.hs
   other-modules:
+      GenerateOpenAPI3
+      Paths_back_end
+  hs-source-dirs:
+      app
+  default-extensions:
+      BlockArguments
+      ConstraintKinds
+      DataKinds
+      DeriveGeneric
+      DuplicateRecordFields
+      FlexibleContexts
+      GADTs
+      ImportQualifiedPost
+      KindSignatures
+      LambdaCase
+      NamedFieldPuns
+      OverloadedRecordDot
+      OverloadedStrings
+      QuasiQuotes
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StrictData
+      TemplateHaskell
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      back-end
+    , base >=4.7 && <5
+    , string-interpolate
+    , wai
+  default-language: Haskell2010
+
+executable gen-oas3
+  main-is: GenerateOpenAPI3.hs
+  other-modules:
+      Main
       Paths_back_end
   hs-source-dirs:
       app

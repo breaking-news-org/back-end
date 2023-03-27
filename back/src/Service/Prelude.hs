@@ -7,6 +7,7 @@ module Service.Prelude (
   module Effectful.Dispatch.Dynamic,
   module External.Logger,
   module Data.Text.Encoding,
+  module Effectful,
 )
 where
 
@@ -15,6 +16,7 @@ import Data.ByteString (ByteString)
 import Data.Text (Text)
 import Data.Text.Encoding
 import Data.Time
+import Effectful
 import Effectful.Dispatch.Dynamic
 import External.Logger
 import GHC.Generics (Generic)

@@ -32,7 +32,8 @@ News
     title Text
     creationDate UTCTime
     creator Text
-    category Text
+    category Int
+    text Text
     images IndexedImages
     isPublished Bool
     deriving Ord Eq Show

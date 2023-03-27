@@ -1,12 +1,14 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
 module API.Types.News where
 
 import API.Prelude
-import API.TH (processApiRecord)
-import Common.Prelude (Generic, Text)
+import API.TH (processApiRecord, processApiRecord')
+import Common.Prelude (HKD, Text)
 import Database.Esqueleto.Experimental (PersistFieldSql (sqlType), SqlType (SqlString))
+import Data.Int (Int64)
 
 data IndexedImage = IndexedImages
   { _indexedImage_id :: Int
@@ -49,11 +51,37 @@ processApiRecord ''EditNews
 
 -- | Transport
 data GetNews = GetNews
-  { _getNews_id :: Int
-  , _getNews_text :: !Text
-  , _getNews_category :: !Text
-  , _getNews_images :: IndexedImages
+  { _getNews_id :: Maybe Int
+  , _getNews_category :: Maybe Text
   }
   deriving (Generic)
 
 processApiRecord ''GetNews
+
+-- | Transport
+data News = News
+  { _news_title :: !Text
+  , _news_creationDate :: !UTCTime
+  , _news_creator :: !Text
+  , _news_category :: !Text
+  , _news_text :: !Text
+  , _news_id :: Int
+  , _news_images :: IndexedImages
+  , _news_isPublished :: Bool
+  }
+  deriving (Generic)
+
+processApiRecord ''News
+
+data Filters f = Filters
+  { _filters_createdUntil :: HKD f UTCTime
+  , _filters_createdSince :: HKD f UTCTime
+  , _filters_createdAt :: HKD f UTCTime
+  , _filters_creator :: HKD f Text
+  , _filters_categoryId :: HKD f Int
+  , _filters_content :: HKD f Text
+  , _filters_block :: HKD f Int64
+  }
+  deriving (Generic)
+
+processApiRecord' [''Filters, ''Maybe]

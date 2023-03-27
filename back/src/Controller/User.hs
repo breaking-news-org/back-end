@@ -4,13 +4,11 @@ module Controller.User where
 
 import API.Types.User (UserRegistrationForm (..))
 import Controller.Prelude
+import Effectful
+import Effectful.Dispatch.Dynamic
 import Service.Types.User
 import Service.User (UserService)
 import Service.User qualified as UserService
-import Effectful
-import Effectful.Dispatch.Dynamic
-import Servant.API (NoContent (..))
-import Servant.Server (ServerError)
 
 data UserController :: Effect where
   Register :: UserRegistrationForm -> UserController m (Either ServerError NoContent)
@@ -26,7 +24,7 @@ runUserController ::
   Eff es a
 runUserController = interpret $ \_ -> \case
   Register form -> do
-    UserService.register
+    UserService.serviceRegister
       UserRegistrationData
         { email = form._userRegistrationForm_email
         , password = form._userRegistrationForm_password

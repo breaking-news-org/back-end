@@ -1,10 +1,8 @@
 module Integration.MainTest (unit_main) where
 
-import API.API (API)
 import API.Prelude (NoContent, type (:<|>) (..))
+import API.Root (API)
 import API.Types.User (UserRegistrationForm (..))
-import Config (getConfig)
-import Config qualified
 import Control.Exception (catch, throwIO)
 import Data.Data (Proxy (..))
 import Data.String.Interpolate (i)
@@ -13,6 +11,7 @@ import GHC.IO.Exception (ExitCode (..))
 import Integration.Config
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Servant.Client
+import Server.Config
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -30,7 +29,8 @@ unit_main =
                   then putStrLn "Nice"
                   else putStrLn "Bad" >> throwIO e
             )
-user :<|> (createNews :<|> getNews) = client api
+
+user :<|> createNews :<|> getNews = client api
 
 mkUser :: ClientM NoContent
 mkUser =
@@ -48,7 +48,7 @@ _CONFIG_FILE = "TEST_CONFIG_FILE"
 
 userTests :: TestTree
 userTests = testCase "Registration" do
-  testConf <- runEff $ Config.runLoader @TestConf _CONFIG_FILE do
+  testConf <- runEff $ runLoader @TestConf _CONFIG_FILE do
     getConfig @TestConf id
   let appConf = testConf._testConf_app
   manager' <- newManager defaultManagerSettings

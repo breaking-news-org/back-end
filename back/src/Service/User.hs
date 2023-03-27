@@ -5,21 +5,18 @@ module Service.User where
 
 import Effectful
 import Effectful.TH
-import Model.User (UserRepo, createUser)
+import Persist.Effects.User (UserRepo, createUser)
 import Service.Prelude
 import Service.Types.User
 
 data UserService :: Effect where
-  Register :: UserRegistrationData -> UserService m ()
+  ServiceRegister :: UserRegistrationData -> UserService m ()
 
 makeEffect ''UserService
 
-runUserService ::
-  (UserRepo :> es, Logger :> es) =>
-  Eff (UserService : es) a ->
-  Eff es a
+runUserService :: (UserRepo :> es, Logger :> es) => Eff (UserService : es) a -> Eff es a
 runUserService = interpret $ \_ -> \case
-  Register UserRegistrationData{..} -> do
+  ServiceRegister UserRegistrationData{..} -> do
     createUser $
       User
         { _user_email = email

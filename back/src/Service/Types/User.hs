@@ -1,8 +1,8 @@
 module Service.Types.User where
 
 import API.TH (processRecord)
-import Service.Prelude (ByteString, Generic, Text, decodeUtf8, encodeUtf8)
 import Common.Prelude (FromJSON (parseJSON), ToJSON (..), withText)
+import Service.Prelude (ByteString, Generic, Text, decodeUtf8, encodeUtf8)
 
 data Password = Password
   { unPassword :: !ByteString

@@ -3,7 +3,7 @@ module Persist.User (
 )
 where
 
-import Model.User
+import Persist.Effects.User
 import Persist.Model qualified as Model
 import Persist.Prelude
 import Service.Types.User
