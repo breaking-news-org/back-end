@@ -3,8 +3,8 @@ db:
   db: postgresql
   user: admin
   password: psltest
-  host: postgres
-  port: 5432
+  host: localhost
+  port: 30002 
   dbName: postgresdb
   numConns: 10
 web:

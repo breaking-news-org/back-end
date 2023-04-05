@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module External.SqlDatabase (runSqlBackendPool, SqlBackendPool, withConn) where
 
 import Control.Lens (to, (^.))
@@ -15,7 +13,7 @@ import Effectful.Reader.Static (Reader, ask, runReader)
 import Effectful.TH (makeEffect)
 import External.Logger (Logger, withLogger)
 import Persist.Model (migrateAll)
-import Server.Config
+import Server.Config (App (_app_db), Loader, db_numConns, getConfig, mkConnStr)
 
 data SqlBackendPool :: Effect where
   WithConn :: ReaderT SqlBackend m a -> SqlBackendPool m a

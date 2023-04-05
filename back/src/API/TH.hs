@@ -2,66 +2,38 @@ module API.TH (
   aesonOptions,
   makeLenses,
   processRecord,
-  processRecord',
+  makeFromToJSON,
   processApiRecord,
   processApiRecord',
   mkType,
+  makeToSchema,
 ) where
 
 import API.Prelude
 import Common.Prelude
+import Common.TH (aesonOptions, makeFromToJSON, makeFromToJSON', mkType, processRecord)
 import Language.Haskell.TH
 
-aesonOptions :: Options
-aesonOptions =
-  defaultOptions
-    { fieldLabelModifier = dropWhile (== '_') . dropWhile (/= '_') . dropWhile (== '_')
-    }
-
-processRecord' :: Type -> Q [Dec]
-processRecord' t =
+makeToSchema' :: Type -> Q [Dec]
+makeToSchema' t = do
   [d|
-    instance FromJSON $a where
-      parseJSON = genericParseJSON aesonOptions
-
-    instance ToJSON $a where
-      toJSON = genericToJSON aesonOptions
-      toEncoding = genericToEncoding aesonOptions
+    instance ToSchema $(pure t) where
+      declareNamedSchema = genericDeclareNamedSchema $ fromAesonOptions aesonOptions
     |]
- where
-  a = pure t
 
-processRecord :: Name -> Q [Dec]
-processRecord n = (<>) <$> makeLenses n <*> processRecord' (ConT n)
+makeToSchema :: Name -> Q [Dec]
+makeToSchema name = makeToSchema' $ ConT name
 
 processApiRecord :: Name -> Q [Dec]
 processApiRecord name = do
-  r1 <- processRecord name
-  r2 <-
-    [d|
-      instance ToSchema $a where
-        declareNamedSchema = genericDeclareNamedSchema $ fromAesonOptions aesonOptions
-      |]
-  pure $ r1 <> r2
- where
-  a = conT name
+  (<>) <$> processRecord name <*> makeToSchema name
 
 processApiRecord' :: [Name] -> Q [Dec]
 processApiRecord' (x : xs) = do
-  r1 <- processRecord' t
+  r1 <- makeFromToJSON' t
   r2 <- makeLenses x
-  r3 <-
-    [d|
-      instance ToSchema $a where
-        declareNamedSchema = genericDeclareNamedSchema $ fromAesonOptions aesonOptions
-      |]
+  r3 <- makeToSchema' t
   pure $ r1 <> r2 <> r3
  where
   t = mkType (x : xs)
-  a = pure t
 processApiRecord' [] = error "Not enough names: 0"
-
-mkType :: [Name] -> Type
-mkType [x] = ConT x
-mkType (x : xs) = AppT (ConT x) (mkType xs)
-mkType _ = error "Could not construct a type"

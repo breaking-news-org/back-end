@@ -42,11 +42,21 @@ default-extensions:
   - TypeFamilies
   - TypeOperators
   - ViewPatterns
+  - ImplicitParams
+  - StandaloneDeriving
+  - FlexibleInstances
+  - DeriveAnyClass
+  - DerivingStrategies
+  - GeneralizedNewtypeDeriving
+  - MultiParamTypeClasses
+  - UndecidableInstances
 
 dependencies:
   - base >= 4.7 && < 5
   - wai
   - string-interpolate
+  - effectful-core
+  - effectful-plugin
 
 ghc-options:
   - -Wall
@@ -58,6 +68,7 @@ ghc-options:
   - -Wmissing-home-modules
   - -Wpartial-fields
   - -Wredundant-constraints
+  - -fplugin=Effectful.Plugin
 
 library:
   source-dirs: src
@@ -66,6 +77,7 @@ library:
     - async
     - bytestring
     - containers
+    - data-default
     - effectful
     - effectful-th
     - esqueleto
@@ -91,7 +103,9 @@ library:
     - transformers
     - warp
     - yaml
-    - data-default
+    - servant-auth-server
+    - servant-auth
+    - jose
 
 executables:
   back-end:
@@ -103,7 +117,7 @@ executables:
       - -with-rtsopts=-N
     dependencies:
       - back-end
-  gen-oas3:
+  gen-openapi3:
     main: GenerateOpenAPI3.hs
     source-dirs: app
     ghc-options:

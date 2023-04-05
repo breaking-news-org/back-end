@@ -3,7 +3,9 @@ components:
     CreateNews:
       properties:
         category:
-          type: string
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
         images:
           items:
             $ref: '#/components/schemas/IndexedImage'
@@ -18,15 +20,6 @@ components:
       - category
       - images
       type: object
-    GetNews:
-      properties:
-        category:
-          type: string
-        id:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
-      type: object
     IndexedImage:
       properties:
         id:
@@ -38,6 +31,40 @@ components:
       required:
       - id
       - value
+      type: object
+    News:
+      properties:
+        category:
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/UTCTime'
+        creator:
+          type: string
+        id:
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
+        images:
+          items:
+            $ref: '#/components/schemas/IndexedImage'
+          type: array
+        isPublished:
+          type: boolean
+        text:
+          type: string
+        title:
+          type: string
+      required:
+      - title
+      - creationDate
+      - creator
+      - category
+      - text
+      - id
+      - images
+      - isPublished
       type: object
     UTCTime:
       example: 2016-07-22T00:00:00Z
@@ -74,22 +101,61 @@ paths:
           description: Invalid `body`
   /api1/news/get:
     put:
-      requestBody:
-        content:
-          application/json;charset=utf-8:
-            schema:
-              $ref: '#/components/schemas/UTCTime'
+      parameters:
+      - in: query
+        name: createdUntil
+        required: false
+        schema:
+          format: yyyy-mm-ddThh:MM:ssZ
+          type: string
+      - in: query
+        name: createdSince
+        required: false
+        schema:
+          format: yyyy-mm-ddThh:MM:ssZ
+          type: string
+      - in: query
+        name: createdAt
+        required: false
+        schema:
+          format: yyyy-mm-ddThh:MM:ssZ
+          type: string
+      - in: query
+        name: creator
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: category
+        required: false
+        schema:
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
+      - in: query
+        name: content
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: block
+        required: false
+        schema:
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
       responses:
         '200':
           content:
             application/json;charset=utf-8:
               schema:
                 items:
-                  $ref: '#/components/schemas/GetNews'
+                  $ref: '#/components/schemas/News'
                 type: array
           description: ''
         '400':
-          description: Invalid `body`
+          description: Invalid `block` or `content` or `category` or `creator` or
+            `createdAt` or `createdSince` or `createdUntil`
   /api1/user/register:
     put:
       requestBody:

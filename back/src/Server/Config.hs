@@ -2,6 +2,7 @@ module Server.Config where
 
 import API.TH (processRecord)
 import Data.Aeson
+import Data.Int (Int64)
 import Data.String.Interpolate (i)
 import Data.Text (Text)
 import Data.Yaml.Aeson (decodeFileThrow)
@@ -27,15 +28,14 @@ processRecord ''DB
 
 data Web = Web
   { _web_port :: Int
-  , _web_pageSize :: Int
+  , _web_pageSize :: Int64
   }
   deriving (Show, Generic)
 
 processRecord ''Web
 
 data App = App
-  { _app_env :: Text
-  , _app_db :: DB
+  { _app_db :: DB
   , _app_web :: Web
   }
   deriving (Show, Generic)

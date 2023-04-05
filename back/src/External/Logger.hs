@@ -12,7 +12,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 
 module External.Logger (
   Logger,
@@ -31,6 +30,7 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Static
 import Effectful.TH
 import System.IO (stdout)
+import Effectful.Internal.Effect
 
 data Logger :: Effect where
   WithLogger :: PureLoggingT m a -> Logger m a

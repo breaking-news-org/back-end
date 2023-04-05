@@ -5,8 +5,9 @@ module App (
 )
 where
 
-import Controller.News (NewsController, runNewsController)
-import Controller.User (UserController, runUserController)
+import Controller.News (ControllerNews, runNewsController)
+import Controller.User (ControllerUser, runUserController)
+import Crypto.JOSE (JWK)
 import Data.Function ((&))
 import Effectful
 import External.Logger (Logger, runLogger)
@@ -26,20 +27,24 @@ main = runAppM startServer
 type AppM =
   Eff
     '[ Server
-     , UserController
+     , ControllerUser
      , UserService
      , UserRepo
-     , NewsController
-     , NewsService
+     , ControllerNews
+     , ServiceNews
      , NewsRepo
      , SqlBackendPool
      , Logger
      , Loader App
+     , Loader JWK
      , IOE
      ]
 
 _CONFIG_FILE :: String
 _CONFIG_FILE = "CONFIG_FILE"
+
+_JWK_FILE :: String
+_JWK_FILE = "JWK_FILE"
 
 runAppM :: AppM () -> IO ()
 runAppM appM =
@@ -53,4 +58,5 @@ runAppM appM =
     & runSqlBackendPool
     & runLogger
     & runLoader _CONFIG_FILE
+    & runLoader _JWK_FILE
     & runEff

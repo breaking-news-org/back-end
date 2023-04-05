@@ -52,7 +52,7 @@ curl --location --request POST 'http://192.168.58.2:30003/api/user' \
         }'
 
 # connect to the database
-psql postgresql://admin:psltest@192.168.58.2:30002/postgresdb
+psql postgresql://admin:psltest@localhost:30002/postgresdb
 
 # check records
 select * from users;

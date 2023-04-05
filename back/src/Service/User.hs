@@ -19,8 +19,8 @@ runUserService = interpret $ \_ -> \case
   ServiceRegister UserRegistrationData{..} -> do
     createUser $
       User
-        { _user_email = email
-        , _user_hashedPassword = Password $ hashPassword password
+        { _user_email = _userRegistrationData_email
+        , _user_hashedPassword = Password $ hashPassword _userRegistrationData_password
         , _user_nickname = "" -- default nick name
         }
     withLogger $ logInfo "created a new user successfully"

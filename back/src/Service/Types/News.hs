@@ -1,50 +1,46 @@
 module Service.Types.News (
-  News (..),
+  GetNews (..),
+  getNews_title,
+  getNews_creationDate,
+  getNews_creator,
+  getNews_category,
+  getNews_text,
+  getNews_id,
+  getNews_images,
+  getNews_isPublished,
   CreateNews (..),
-  Filters,
-  IndexedImages,
-  news_title,
-  news_creationDate,
-  news_creator,
-  news_category,
-  news_text,
-  news_id,
-  news_images,
-  news_isPublished,
   createNews_title,
   createNews_text,
   createNews_category,
   createNews_images,
   createNews_creator,
+  module Persist.Types.News,
 ) where
 
-import API.Types.News qualified as API (Filters, IndexedImages)
-import Service.Prelude (Generic, Text, UTCTime, makeLenses)
+import Common.Prelude (Generic, Text, UTCTime, makeLenses)
+import Common.TH (makeFromToJSON)
+import Persist.Types.News (Filters (..), IndexedImage (..), IndexedImages, filters_block, filters_category, filters_content, filters_createdAt, filters_createdSince, filters_createdUntil, filters_creator, filters_newsId)
 
--- TODO make new types?
-type Filters = API.Filters
-type IndexedImages = API.IndexedImages
-
--- | Internal
-data News = News
-  { _news_title :: !Text
-  , _news_creationDate :: !UTCTime
-  , _news_creator :: !Text
-  , _news_category :: Int
-  , _news_text :: !Text
-  , _news_id :: Int
-  , _news_images :: IndexedImages
-  , _news_isPublished :: Bool
+data GetNews = GetNews
+  { _getNews_title :: !Text
+  , _getNews_creationDate :: !UTCTime
+  , _getNews_creator :: !Text
+  , _getNews_category :: Int
+  , _getNews_text :: !Text
+  , _getNews_id :: Int
+  , _getNews_images :: IndexedImages
+  , _getNews_isPublished :: Bool
   }
   deriving (Generic)
 
-makeLenses ''News
+makeLenses ''GetNews
 
--- | Internal
+makeFromToJSON ''GetNews
+
 data CreateNews = CreateNews
   { _createNews_title :: !Text
   , _createNews_text :: !Text
-  , _createNews_category :: !Text
+  , _createNews_category :: Int
   , _createNews_images :: IndexedImages
   , _createNews_creator :: !Text
   }

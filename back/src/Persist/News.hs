@@ -3,69 +3,69 @@ module Persist.News (
 )
 where
 
-import API.Types.News (Filters, filters_block, filters_categoryId, filters_content, filters_createdAt, filters_createdSince, filters_createdUntil, filters_creator)
-import Common.Prelude (Getting, getCurrentTime, non, (&))
+import Common.Prelude (Getting, getCurrentTime, non)
 import Common.Prelude qualified as Common ((^.))
 import Control.Monad (void)
-import Database.Esqueleto.Experimental (SqlExpr, like, limit, (==.))
+import Database.Esqueleto.Experimental (Entity (..), SqlExpr, fromSqlKey, like, limit, offset, (==.))
+import Effectful.Reader.Dynamic (Reader, ask)
 import Persist.Effects.News (NewsRepo (..))
 import Persist.Model (EntityField (..), News (..))
 import Persist.Prelude
-import Server.Config (App (..))
-import Service.Types.News qualified as Service
+import Persist.Types.News as PersistNews (Filters (..), InsertNews (..), SelectNews (..), filters_block, filters_category, filters_content, filters_createdAt, filters_createdSince, filters_createdUntil, filters_creator)
+import Server.Config (App (..), Web (..))
 
--- TODO pass a config here
-runNewsRepo :: (IOE :> es, SqlBackendPool :> es) => App -> Eff (NewsRepo : es) a -> Eff es a
-runNewsRepo app = interpret $ \_ -> \case
-  InsertNews news -> void $ withConn $ insert $ newsToModel news
-  -- TODO use filters
-  SelectNews fs -> do
+runNewsRepo :: (IOE :> es, Reader App :> es, SqlBackendPool :> es) => Eff (NewsRepo : es) a -> Eff es a
+runNewsRepo = interpret $ \_ -> \case
+  RepoInsertNews news -> void $ withConn $ insert $ newsToModel news
+  RepoSelectNews filters -> do
     now <- liftIO getCurrentTime
-    let -- TODO initial date
-        -- TODO fix
-        -- News id?
-        -- this might be more complex in production code
-        -- TODO fix
-
-        -- mkSql lens_ f = (fs Common.^. lens_) & maybe (val True) f
-
-        -- mkSql' :: Getting (Maybe a) (Filters Maybe) (Maybe a) -> (a -> SqlExpr (Value Bool)) -> SqlExpr (Value Bool)
-
-        -- mkSql' :: Getting a (Filters Maybe) a -> (a -> SqlExpr (Value Bool)) -> SqlExpr (Value Bool)
-
+    app <- ask
+    let
     s <- withConn $ select do
       news <- from $ table @News
       let
-        mkSql' l f = f (fs Common.^. l . non now)
-        createdUntil = mkSql' filters_createdUntil (\x -> news ^. NewsCreationDate <=. val x)
-        createdSince = mkSql' filters_createdSince (\x -> news ^. NewsCreationDate >=. val x)
+        mkCreatedSql lens' f = f (filters Common.^. lens' . non now)
+        createdUntil = mkCreatedSql PersistNews.filters_createdUntil (\x -> news ^. NewsCreationDate <=. val x)
+        createdSince = mkCreatedSql PersistNews.filters_createdSince (\x -> news ^. NewsCreationDate >=. val x)
         mkSql :: Getting (Maybe a) (Filters Maybe) (Maybe a) -> (a -> SqlExpr (Value Bool)) -> SqlExpr (Value Bool)
-        mkSql l f = (fs Common.^. l) & maybe (val True) f
-        createdAt = mkSql filters_createdAt (\x -> news ^. NewsCreationDate ==. val x)
-        creator = mkSql filters_creator (\x -> news ^. NewsCreator ==. val x)
-        categoryId = mkSql filters_categoryId (\x -> news ^. NewsCategory ==. val x)
-        newsText = mkSql filters_content (\x -> val x `like` news ^. NewsText)
-        newsBlock = fs Common.^. filters_block . non 0
+        mkSql l f = maybe (val True) f (filters Common.^. l)
+        createdAt = mkSql PersistNews.filters_createdAt (\x -> news ^. NewsCreationDate ==. val x)
+        creator = mkSql PersistNews.filters_creator (\x -> news ^. NewsCreator ==. val x)
+        category = mkSql PersistNews.filters_category (\x -> news ^. NewsCategory ==. val x)
+        newsText = mkSql PersistNews.filters_content (\x -> val x `like` news ^. NewsText)
+        newsBlock = fromIntegral $ filters Common.^. PersistNews.filters_block . non 0
       where_
-        ( createdUntil &&. createdSince &&. createdAt &&. creator &&. categoryId &&. newsText
+        ( createdUntil &&. createdSince &&. createdAt &&. creator &&. category &&. newsText
         )
-      limit $ newsBlock * app._app_web._web_pageSize
+      let pageSize = app._app_web._web_pageSize
+      offset $ newsBlock * pageSize
+      limit pageSize
       pure news
 
-    let t = modelToNews . entityVal <$> s
+    let t = modelToNews <$> s
     pure t
 
-newsToModel :: Service.News -> News
-newsToModel news =
+newsToModel :: InsertNews -> News
+newsToModel InsertNews{..} =
   News
-    { newsTitle = news._news_title
-    , newsCreationDate = news._news_creationDate
-    , newsCreator = news._news_creator
-    , newsCategory = news._news_category
-    , newsImages = news._news_images
-    , newsIsPublished = news._news_isPublished
-    , newsText = news._news_text
+    { newsTitle = _insertNews_title
+    , newsCreationDate = _insertNews_creationDate
+    , newsCreator = _insertNews_creator
+    , newsCategory = _insertNews_category
+    , newsImages = _insertNews_images
+    , newsIsPublished = _insertNews_isPublished
+    , newsText = _insertNews_text
     }
 
-modelToNews :: News -> Service.News
-modelToNews = undefined
+modelToNews :: Entity News -> PersistNews.SelectNews
+modelToNews Entity{entityKey, entityVal = News{..}} =
+  SelectNews
+    { _selectNews_title = newsTitle
+    , _selectNews_creationDate = newsCreationDate
+    , _selectNews_creator = newsCreator
+    , _selectNews_category = newsCategory
+    , _selectNews_images = newsImages
+    , _selectNews_isPublished = newsIsPublished
+    , _selectNews_text = newsText
+    , _selectNews_id = fromIntegral $ fromSqlKey entityKey
+    }

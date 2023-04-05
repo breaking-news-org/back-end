@@ -1,9 +1,7 @@
-{-# LANGUAGE FlexibleInstances #-}
-
 module API.Types.User where
 
-import API.TH
-import Common.Prelude
+import API.TH (processApiRecord)
+import Common.Prelude (Generic, Text)
 
 -- | Transport
 data UserRegistrationForm = UserRegistrationForm

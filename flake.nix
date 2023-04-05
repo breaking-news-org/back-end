@@ -10,8 +10,15 @@
     devshell.url = "github:deemp/flakes?dir=devshell";
     flakes-tools.url = "github:deemp/flakes?dir=flakes-tools";
     workflows.url = "github:deemp/flakes?dir=workflows";
-    lima.url = "github:deemp/flakes?dir=lima";
     dream2nix.url = "github:nix-community/dream2nix";
+    servant = {
+      url = "github:haskell-servant/servant";
+      flake = false;
+    };
+    jose = {
+      url = "github:frasertweedale/hs-jose";
+      flake = false;
+    };
   };
   outputs = inputs: inputs.flake-utils.lib.eachDefaultSystem
     (system:
@@ -31,7 +38,7 @@
         inherit (inputs.workflows.configs.${system}) nixCI;
 
         # Next, set the desired GHC version
-        ghcVersion_ = "925";
+        ghcVersion_ = "927";
 
         # and the name of the package
         appPackageName = "back-end";
@@ -75,10 +82,13 @@
         # We should use `cabal v1-*` commands with it - https://github.com/NixOS/nixpkgs/issues/130556#issuecomment-1114239002
         override = {
           overrides = self: super:
-            let modify = drv: pkgs.lib.pipe drv [ dontBenchmark dontHaddock dontCheck ]; in
+            let modify = drv: pkgs.lib.pipe drv [ dontBenchmark dontCheck ]; in
             {
               lzma = modify super.lzma;
               openapi3 = modify (unmarkBroken super.openapi3);
+              # jose = super.callCabal2nix "jose" inputs.jose.outPath { };
+              # servant-auth-server = super.callCabal2nix "servant-auth-server" "${inputs.servant.outPath}/servant-auth/servant-auth-server" { };
+              # servant-auth = super.callCabal2nix "servant-auth" "${inputs.servant.outPath}/servant-auth/servant-auth" { };
             } //
             (
               let mkPackage = name: path: depsLib: depsBin: overrideCabal
@@ -89,6 +99,9 @@
                   # these deps will be in haskellPackages.myPackage.getCabalDeps.librarySystemDepends
                   librarySystemDepends = depsLib ++ (x.librarySystemDepends or [ ]);
                   executableSystemDepends = depsBin ++ (x.executableSystemDepends or [ ]);
+
+                  libraryHaskellDepends = [ ] ++ (x.libraryHaskellDepends or [ ]);
+
                   testHaskellDepends = [
                     super.tasty-discover
                   ] ++ (x.testHaskellDepends or [ ]);
@@ -220,7 +233,7 @@
           # kubernetes
           pkgs.kubectl
           # pkgs.kubernetes-helm
-          pkgs.minikube
+          # pkgs.minikube
 
           # tests
           pkgs.postman
@@ -264,12 +277,11 @@
           default = mkShell {
             packages = tools ++ extraTools;
             bash.extra = ''
-              export LANG=C.utf8
+              export CONFIG_FILE="$PWD/local/config.yaml"
+              export KUBECONFIG_DIR="$PWD/.kube"
+              export KUBECONFIG="$KUBECONFIG_DIR/config"
 
-              export CONFIG_FILE="$PWD/k8s/config/back.yaml"
-              export KUBECONFIG="$PWD/.kube/config"
-
-              mkdir -p $KUBECONFIG
+              mkdir -p $KUBECONFIG_DIR
               microk8s config > $KUBECONFIG/config
             '';
             commands =

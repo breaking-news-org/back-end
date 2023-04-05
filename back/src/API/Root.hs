@@ -20,11 +20,21 @@ type API = ToServantApi Routes
 --   :> (("user"
 --        :> ("register"
 --            :> (ReqBody' '[Required, Strict] '[JSON] UserRegistrationForm
---                :> Verb 'PUT 200 '[JSON] NoContent)))
+--                :> Verb 'PUT 200 '[JSON] Text)))
 --       :<|> ("news"
---             :> (("create"
---                  :> (ReqBody' '[Required, Strict] '[JSON] CreateNews
---                      :> Verb 'PUT 200 '[JSON] NoContent))
---                 :<|> ("get"
---                       :> (ReqBody' '[Required, Strict] '[JSON] (Filters Maybe)
---                           :> Verb 'PUT 200 '[JSON] [GetNews])))))
+--             :> (Auth '[JWT] ClientToken
+--                 :> (("create"
+--                      :> (ReqBody' '[Required, Strict] '[JSON] CreateNews
+--                          :> Verb 'PUT 200 '[JSON] NoContent))
+--                     :<|> ("get"
+--                           :> (QueryParam' '[Optional, Strict] "createdUntil" UTCTime
+--                               :> (QueryParam' '[Optional, Strict] "createdSince" UTCTime
+--                                   :> (QueryParam' '[Optional, Strict] "createdAt" UTCTime
+--                                       :> (QueryParam' '[Optional, Strict] "creator" Text
+--                                           :> (QueryParam' '[Optional, Strict] "category" Int
+--                                               :> (QueryParam' '[Optional, Strict] "content" Text
+--                                                   :> (QueryParam' '[Optional, Strict] "block" Int
+--                                                       :> (QueryParam'
+--                                                             '[Optional, Strict] "newsId" Int
+--                                                           :> Verb
+--                                                                'PUT 200 '[JSON] [News])))))))))))))

@@ -28,12 +28,17 @@ library
       API.Prelude
       API.Root
       API.TH
+      API.Types.Client
       API.Types.News
       API.Types.User
       App
       Common.Prelude
+      Common.TH
+      Controller.Effects.News
       Controller.News
       Controller.Prelude
+      Controller.Types.News
+      Controller.Types.User
       Controller.User
       External.Logger
       External.SqlDatabase
@@ -42,9 +47,12 @@ library
       Persist.Model
       Persist.News
       Persist.Prelude
+      Persist.Types.News
+      Persist.Types.User
       Persist.User
       Server.Config
       Server.Server
+      Service.Effects.News
       Service.News
       Service.Prelude
       Service.Types.News
@@ -79,7 +87,15 @@ library
       TypeFamilies
       TypeOperators
       ViewPatterns
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+      ImplicitParams
+      StandaloneDeriving
+      FlexibleInstances
+      DeriveAnyClass
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      MultiParamTypeClasses
+      UndecidableInstances
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin
   build-depends:
       aeson
     , async
@@ -88,11 +104,14 @@ library
     , containers
     , data-default
     , effectful
+    , effectful-core
+    , effectful-plugin
     , effectful-th
     , esqueleto
     , exceptions
     , filepath
     , hashable
+    , jose
     , lens
     , monad-logger
     , monad-logger-aeson
@@ -102,6 +121,8 @@ library
     , persistent-postgresql
     , resource-pool
     , servant
+    , servant-auth
+    , servant-auth-server
     , servant-client
     , servant-docs
     , servant-openapi3
@@ -148,15 +169,25 @@ executable back-end
       TypeFamilies
       TypeOperators
       ViewPatterns
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+      ImplicitParams
+      StandaloneDeriving
+      FlexibleInstances
+      DeriveAnyClass
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      MultiParamTypeClasses
+      UndecidableInstances
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       back-end
     , base >=4.7 && <5
+    , effectful-core
+    , effectful-plugin
     , string-interpolate
     , wai
   default-language: Haskell2010
 
-executable gen-oas3
+executable gen-openapi3
   main-is: GenerateOpenAPI3.hs
   other-modules:
       Main
@@ -188,10 +219,20 @@ executable gen-oas3
       TypeFamilies
       TypeOperators
       ViewPatterns
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+      ImplicitParams
+      StandaloneDeriving
+      FlexibleInstances
+      DeriveAnyClass
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      MultiParamTypeClasses
+      UndecidableInstances
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       back-end
     , base >=4.7 && <5
+    , effectful-core
+    , effectful-plugin
     , string-interpolate
     , wai
   default-language: Haskell2010

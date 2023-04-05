@@ -1,5 +1,6 @@
 module Main where
 
-import API.OpenAPI3
+import API.OpenAPI3 ( writeSpec )
 
-main = writeSpec "../API/v1.yaml"
+main :: IO ()
+main = writeSpec "API/v1.yaml"

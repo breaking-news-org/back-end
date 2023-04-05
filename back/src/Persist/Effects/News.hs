@@ -1,14 +1,11 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 module Persist.Effects.News where
 
-import Effectful
-import Effectful.TH
-import Service.Types.News
+import Effectful (Effect)
+import Effectful.TH (makeEffect)
+import Persist.Types.News (Filters, InsertNews, SelectNews)
 
 data NewsRepo :: Effect where
-  InsertNews :: News -> NewsRepo m ()
-  SelectNews :: Filters Maybe -> NewsRepo m [News]
+  RepoInsertNews :: InsertNews -> NewsRepo m ()
+  RepoSelectNews :: Filters Maybe -> NewsRepo m [SelectNews]
 
 makeEffect ''NewsRepo
