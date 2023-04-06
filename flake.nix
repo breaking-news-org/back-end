@@ -277,12 +277,16 @@
           default = mkShell {
             packages = tools ++ extraTools;
             bash.extra = ''
+              export LANG="C.utf8"
+
               export CONFIG_FILE="$PWD/local/config.yaml"
               export KUBECONFIG_DIR="$PWD/.kube"
               export KUBECONFIG="$KUBECONFIG_DIR/config"
 
               mkdir -p $KUBECONFIG_DIR
               microk8s config > $KUBECONFIG/config
+
+              export JWK_FILE="$PWD/local/jwk.json"
             '';
             commands =
               (mkCommands "tools" tools)

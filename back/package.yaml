@@ -106,11 +106,12 @@ library:
     - servant-auth-server
     - servant-auth
     - jose
+    - insert-ordered-containers
 
 executables:
   back-end:
     main: Main.hs
-    source-dirs: app
+    source-dirs: app/BackEnd
     ghc-options:
       - -threaded
       - -rtsopts
@@ -118,8 +119,8 @@ executables:
     dependencies:
       - back-end
   gen-openapi3:
-    main: GenerateOpenAPI3.hs
-    source-dirs: app
+    main: Main.hs
+    source-dirs: app/GenerateOpenAPI3
     ghc-options:
       - -threaded
       - -rtsopts

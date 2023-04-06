@@ -6,8 +6,8 @@ import Common.Prelude (Dispatch (Dynamic), DispatchOf, Effect)
 import Controller.Prelude (NoContent (..), ServerError)
 import Persist.Types.News (Filters)
 
-data ControllerNews :: Effect where
-  ControllerCreateNews :: ClientToken -> CreateNews -> ControllerNews m (Either ServerError NoContent)
-  ControllerGetNews :: ClientToken -> Filters Maybe -> ControllerNews m (Either ServerError [GetNews])
+data NewsController :: Effect where
+  ControllerCreateNews :: ClientToken -> CreateNews -> NewsController m (Either ServerError NoContent)
+  ControllerGetNews :: ClientToken -> Filters Maybe -> NewsController m (Either ServerError [GetNews])
 
-type instance DispatchOf ControllerNews = 'Dynamic
+type instance DispatchOf NewsController = 'Dynamic

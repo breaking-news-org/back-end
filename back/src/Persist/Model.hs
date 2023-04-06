@@ -2,6 +2,7 @@ module Persist.Model where
 
 import Data.ByteString (ByteString)
 import Data.Text (Text)
+import Database.Esqueleto.PostgreSQL.JSON (JSONB)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 import Persist.Types.News (IndexedImages)
 import Service.Prelude (UTCTime)
@@ -20,7 +21,7 @@ News
     creator Text
     category Int
     text Text
-    images IndexedImages
+    images (JSONB IndexedImages)
     isPublished Bool
     deriving Ord Eq Show
 |]

@@ -2,9 +2,8 @@ module Persist.Types.News where
 
 import Common.Prelude (Generic, HKD, Text, UTCTime)
 import Common.TH (makeLenses, processRecord)
-import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql (sqlType), SqlType (SqlString), fromPersistValue, fromPersistValueJSON, toPersistValueJSON)
 
-data IndexedImage = IndexedImages
+data IndexedImage = IndexedImage
   { _indexedImage_id :: Int
   , _indexedImage_value :: !Text
   }
@@ -12,14 +11,12 @@ data IndexedImage = IndexedImages
 
 processRecord ''IndexedImage
 
-instance PersistField IndexedImage where
-  fromPersistValue = fromPersistValueJSON
-  toPersistValue = toPersistValueJSON
+newtype IndexedImages = IndexedImages
+  { _indexedImages :: [IndexedImage]
+  }
+  deriving (Show, Generic, Eq, Ord)
 
-instance PersistFieldSql IndexedImage where
-  sqlType _ = SqlString
-
-type IndexedImages = [IndexedImage]
+processRecord ''IndexedImages
 
 data InsertNews = InsertNews
   { _insertNews_title :: !Text

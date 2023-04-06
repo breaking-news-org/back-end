@@ -5,8 +5,9 @@ module App (
 )
 where
 
-import Controller.News (ControllerNews, runNewsController)
-import Controller.User (ControllerUser, runUserController)
+import Controller.Effects.News (NewsController)
+import Controller.News (runNewsController)
+import Controller.User (UserController, runUserController)
 import Crypto.JOSE (JWK)
 import Data.Function ((&))
 import Effectful
@@ -18,8 +19,10 @@ import Persist.Prelude (SqlBackendPool, runSqlBackendPool)
 import Persist.User (runUserRepo)
 import Server.Config
 import Server.Server
+import Service.Effects.News (ServiceNews)
 import Service.News
 import Service.User (UserService, runUserService)
+import Effectful.Reader.Dynamic (runReader)
 
 main :: IO ()
 main = runAppM startServer
@@ -27,10 +30,10 @@ main = runAppM startServer
 type AppM =
   Eff
     '[ Server
-     , ControllerUser
+     , UserController
      , UserService
      , UserRepo
-     , ControllerNews
+     , NewsController
      , ServiceNews
      , NewsRepo
      , SqlBackendPool

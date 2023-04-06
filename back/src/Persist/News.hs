@@ -7,19 +7,19 @@ import Common.Prelude (Getting, getCurrentTime, non)
 import Common.Prelude qualified as Common ((^.))
 import Control.Monad (void)
 import Database.Esqueleto.Experimental (Entity (..), SqlExpr, fromSqlKey, like, limit, offset, (==.))
-import Effectful.Reader.Dynamic (Reader, ask)
+import Database.Esqueleto.PostgreSQL.JSON (JSONB (JSONB, unJSONB))
 import Persist.Effects.News (NewsRepo (..))
 import Persist.Model (EntityField (..), News (..))
 import Persist.Prelude
 import Persist.Types.News as PersistNews (Filters (..), InsertNews (..), SelectNews (..), filters_block, filters_category, filters_content, filters_createdAt, filters_createdSince, filters_createdUntil, filters_creator)
-import Server.Config (App (..), Web (..))
+import Server.Config (App (..), Loader, Web (..), getConfig)
 
-runNewsRepo :: (IOE :> es, Reader App :> es, SqlBackendPool :> es) => Eff (NewsRepo : es) a -> Eff es a
+runNewsRepo :: (IOE :> es, Loader App :> es, SqlBackendPool :> es) => Eff (NewsRepo : es) a -> Eff es a
 runNewsRepo = interpret $ \_ -> \case
   RepoInsertNews news -> void $ withConn $ insert $ newsToModel news
   RepoSelectNews filters -> do
     now <- liftIO getCurrentTime
-    app <- ask
+    app <- getConfig id
     let
     s <- withConn $ select do
       news <- from $ table @News
@@ -52,7 +52,7 @@ newsToModel InsertNews{..} =
     , newsCreationDate = _insertNews_creationDate
     , newsCreator = _insertNews_creator
     , newsCategory = _insertNews_category
-    , newsImages = _insertNews_images
+    , newsImages = JSONB _insertNews_images
     , newsIsPublished = _insertNews_isPublished
     , newsText = _insertNews_text
     }
@@ -64,7 +64,7 @@ modelToNews Entity{entityKey, entityVal = News{..}} =
     , _selectNews_creationDate = newsCreationDate
     , _selectNews_creator = newsCreator
     , _selectNews_category = newsCategory
-    , _selectNews_images = newsImages
+    , _selectNews_images = unJSONB newsImages
     , _selectNews_isPublished = newsIsPublished
     , _selectNews_text = newsText
     , _selectNews_id = fromIntegral $ fromSqlKey entityKey

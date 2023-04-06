@@ -7,9 +7,7 @@ components:
           minimum: -9223372036854775808
           type: integer
         images:
-          items:
-            $ref: '#/components/schemas/IndexedImage'
-          type: array
+          $ref: '#/components/schemas/IndexedImages'
         text:
           type: string
         title:
@@ -20,19 +18,7 @@ components:
       - category
       - images
       type: object
-    IndexedImage:
-      properties:
-        id:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
-        value:
-          type: string
-      required:
-      - id
-      - value
-      type: object
-    News:
+    GetNews:
       properties:
         category:
           maximum: 9223372036854775807
@@ -47,9 +33,7 @@ components:
           minimum: -9223372036854775808
           type: integer
         images:
-          items:
-            $ref: '#/components/schemas/IndexedImage'
-          type: array
+          $ref: '#/components/schemas/IndexedImages'
         isPublished:
           type: boolean
         text:
@@ -66,6 +50,22 @@ components:
       - images
       - isPublished
       type: object
+    IndexedImage:
+      properties:
+        id:
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
+        value:
+          type: string
+      required:
+      - id
+      - value
+      type: object
+    IndexedImages:
+      items:
+        $ref: '#/components/schemas/IndexedImage'
+      type: array
     UTCTime:
       example: 2016-07-22T00:00:00Z
       format: yyyy-mm-ddThh:MM:ssZ
@@ -80,6 +80,12 @@ components:
       - email
       - password
       type: object
+  securitySchemes:
+    JWT:
+      bearerFormat: JWT
+      description: Bearer Authentication
+      scheme: bearer
+      type: http
 info:
   title: ''
   version: ''
@@ -99,6 +105,8 @@ paths:
           description: ''
         '400':
           description: Invalid `body`
+      security:
+      - JWT: []
   /api1/news/get:
     put:
       parameters:
@@ -144,18 +152,27 @@ paths:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
           type: integer
+      - in: query
+        name: newsId
+        required: false
+        schema:
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
       responses:
         '200':
           content:
             application/json;charset=utf-8:
               schema:
                 items:
-                  $ref: '#/components/schemas/News'
+                  $ref: '#/components/schemas/GetNews'
                 type: array
           description: ''
         '400':
-          description: Invalid `block` or `content` or `category` or `creator` or
-            `createdAt` or `createdSince` or `createdUntil`
+          description: Invalid `newsId` or `block` or `content` or `category` or `creator`
+            or `createdAt` or `createdSince` or `createdUntil`
+      security:
+      - JWT: []
   /api1/user/register:
     put:
       requestBody:
@@ -166,7 +183,9 @@ paths:
       responses:
         '200':
           content:
-            application/json;charset=utf-8: {}
+            application/json;charset=utf-8:
+              schema:
+                type: string
           description: ''
         '400':
           description: Invalid `body`

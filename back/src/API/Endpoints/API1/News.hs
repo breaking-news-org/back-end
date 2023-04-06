@@ -1,9 +1,9 @@
 module API.Endpoints.API1.News where
 
-import API.Prelude
-import API.Types.News
-import API.Types.News qualified as API
+import API.Prelude (Generic, GenericMode (type (:-)), JSON, NoContent, Put, QueryParam, ReqBody, UTCTime, type (:>))
+import API.Types.News (CreateNews)
 import Common.Prelude (Text)
+import Service.Types.News qualified as API (GetNews)
 
 data API route = API
   { create :: route :- "create" :> ReqBody '[JSON] CreateNews :> Put '[JSON] NoContent

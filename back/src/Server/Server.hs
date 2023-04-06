@@ -5,10 +5,10 @@ import API.Root (Routes (..))
 import API.Types.Client (ClientToken)
 import API.Types.News ()
 import Control.Monad.Except (ExceptT (..), runExceptT)
-import Controller.Effects.News (ControllerNews)
-import Controller.News qualified as ControllerNews
-import Controller.User (ControllerUser)
-import Controller.User qualified as ControllerUser
+import Controller.Effects.News (NewsController)
+import Controller.News qualified as NewsController
+import Controller.User (UserController)
+import Controller.User qualified as UserController
 import Crypto.JOSE (JWK, KeyMaterialGenParam (..), genJWK)
 import Data.Aeson qualified
 import Data.ByteString.Lazy qualified as BSL
@@ -56,8 +56,8 @@ type Constraints es =
   , Loader App :> es
   , Loader JWK :> es
   , Logger :> es
-  , ControllerNews :> es
-  , ControllerUser :> es
+  , NewsController :> es
+  , UserController :> es
   )
 
 runServerEffect :: forall es a. Constraints es => Eff (Server : es) a -> Eff es a
@@ -81,8 +81,8 @@ getWaiApplication' jwk = do
           serverToHandler
           Routes
             { api1 =
-                ControllerUser.register
-                  :<|> (\token -> withClient token ControllerNews.create :<|> withClient token ControllerNews.get)
+                UserController.register
+                  :<|> (\token -> withClient token NewsController.create :<|> withClient token NewsController.get)
             }
           (defaultJWTSettings jwk Servant.:. defaultCookieSettings Servant.:. EmptyContext)
     pure waiApp

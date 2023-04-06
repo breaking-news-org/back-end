@@ -3,9 +3,9 @@
 
 module Service.Types.User where
 
-import API.Prelude (Parser, ToSchema, Value)
-import Common.Prelude (FromJSON (parseJSON), ToJSON (..), withText)
-import Common.TH (processRecord)
+import Common.Prelude (FromJSON (parseJSON), ToJSON (..), Value, withText)
+import Common.TH (makeFromToJSON, processRecord)
+import Data.Aeson.Types (Parser)
 import Service.Prelude (ByteString, Generic, Text, decodeUtf8, encodeUtf8)
 
 data Password = Password
@@ -35,5 +35,10 @@ data UserRegistrationData = UserRegistrationData
   { _userRegistrationData_email :: !Text
   , _userRegistrationData_password :: !Text
   }
+  deriving (Generic)
 
-data Role = RoleUser | RoleAdmin deriving (Generic, FromJSON, ToJSON, ToSchema)
+processRecord ''UserRegistrationData
+
+data Role = RoleUser | RoleAdmin deriving (Generic)
+
+makeFromToJSON ''Role

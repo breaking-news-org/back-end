@@ -4,17 +4,17 @@ import API.Types.Client (ClientToken (..))
 import API.Types.News (CreateNews (..))
 import API.Types.News qualified as API
 import Common.Prelude (Eff, Text, UTCTime, type (:>))
-import Controller.Effects.News (ControllerNews (..))
+import Controller.Effects.News (NewsController (..))
 import Controller.Prelude (ExceptT (..), NoContent (..), ServerError)
 import Service.Effects.News qualified as Service (ServiceNews (..), serviceCreateNews, serviceGetNews)
 import Service.Prelude (interpret, send)
 import Service.Types.News qualified as Service
 
-create :: (ControllerNews :> es) => ClientToken -> API.CreateNews -> ExceptT ServerError (Eff es) NoContent
+create :: (NewsController :> es) => ClientToken -> API.CreateNews -> ExceptT ServerError (Eff es) NoContent
 create clientToken = ExceptT . send . ControllerCreateNews clientToken
 
 get ::
-  (ControllerNews :> es) =>
+  (NewsController :> es) =>
   ClientToken ->
   Maybe UTCTime ->
   Maybe UTCTime ->
@@ -37,8 +37,8 @@ get
   _filters_newsId =
     ExceptT $ send $ ControllerGetNews clientToken API.Filters{..}
 
-ewsControllerNews :: (Service.ServiceNews :> es) => Eff (ControllerNews : es) a -> Eff es a
-ewsControllerNews = interpret $ \_ -> \case
+runNewsController :: (Service.ServiceNews :> es) => Eff (NewsController : es) a -> Eff es a
+runNewsController = interpret $ \_ -> \case
   ControllerCreateNews ClientToken{..} CreateNews{..} -> do
     Service.serviceCreateNews
       ( Service.CreateNews

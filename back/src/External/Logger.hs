@@ -1,17 +1,5 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE NoDeriveAnyClass #-}
 
 module External.Logger (
   Logger,
@@ -30,7 +18,6 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Static
 import Effectful.TH
 import System.IO (stdout)
-import Effectful.Internal.Effect
 
 data Logger :: Effect where
   WithLogger :: PureLoggingT m a -> Logger m a

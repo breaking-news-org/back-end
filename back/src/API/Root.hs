@@ -37,4 +37,7 @@ type API = ToServantApi Routes
 --                                                       :> (QueryParam'
 --                                                             '[Optional, Strict] "newsId" Int
 --                                                           :> Verb
---                                                                'PUT 200 '[JSON] [News])))))))))))))
+--                                                                'PUT
+--                                                                200
+--                                                                '[JSON]
+--                                                                [GetNews])))))))))))))

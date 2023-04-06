@@ -1,6 +1,8 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module API.Types.Client where
 
-import API.TH (processApiRecord)
+import API.TH (makeToSchema, processApiRecord)
 import Common.Prelude (Generic, Text, UTCTime)
 import Servant.Auth.JWT (FromJWT, ToJWT)
 import Service.Types.User (Role)
@@ -13,7 +15,11 @@ data ClientToken = ClientToken
   }
   deriving (Generic)
 
+makeToSchema ''Role
 processApiRecord ''ClientToken
 
-deriving instance FromJWT ClientToken
-deriving instance ToJWT ClientToken
+instance FromJWT ClientToken
+
+instance ToJWT ClientToken
+
+-- instance ToParamSchema ClientToken

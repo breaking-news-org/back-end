@@ -11,17 +11,17 @@ import Service.Types.User
 import Service.User (UserService)
 import Service.User qualified as UserService
 
-data ControllerUser :: Effect where
-  Register :: UserRegistrationForm -> ControllerUser m (Either ServerError Text)
+data UserController :: Effect where
+  Register :: UserRegistrationForm -> UserController m (Either ServerError Text)
 
-type instance DispatchOf ControllerUser = Dynamic
+type instance DispatchOf UserController = Dynamic
 
-register :: ControllerUser :> es => UserRegistrationForm -> ExceptT ServerError (Eff es) Text
+register :: UserController :> es => UserRegistrationForm -> ExceptT ServerError (Eff es) Text
 register = ExceptT . send . Register
 
 runUserController ::
   UserService :> es =>
-  Eff (ControllerUser : es) a ->
+  Eff (UserController : es) a ->
   Eff es a
 runUserController = interpret $ \_ -> \case
   Register form -> do
