@@ -5,13 +5,9 @@
 - Functional requirements are described [here](https://github.com/fullstack-development/haskell-internship/blob/master/server-task.md).
 - API versioning - via url part (easy to version the whole API) ([src](https://usecsv.com/community/api-versioning))
 
-## Structure
+## OpenAPI3
 
-- Service
-  - works with API types
-  - internal effects like `repo` work with internal types
-- Repo
-  - works with internal types
+- [V1](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/breaking-news-org/back-end/main/API/v1.yaml)
 
 ## Tests
 
