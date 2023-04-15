@@ -30,11 +30,13 @@ library
       API.TH
       API.Types.Client
       API.Types.News
+      API.Types.TypeLevel
       API.Types.User
       App
       Common.Prelude
       Common.TH
       Controller.Effects.News
+      Controller.Effects.Users
       Controller.News
       Controller.Prelude
       Controller.Types.News
@@ -110,13 +112,17 @@ library
     , esqueleto
     , exceptions
     , filepath
+    , first-class-families
     , hashable
+    , http-api-data
     , insert-ordered-containers
     , jose
     , lens
     , monad-logger
     , monad-logger-aeson
     , mtl
+    , named-servant
+    , named-servant-server
     , openapi3
     , persistent
     , persistent-postgresql

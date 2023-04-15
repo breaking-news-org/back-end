@@ -86,9 +86,13 @@
             {
               lzma = modify super.lzma;
               openapi3 = modify (unmarkBroken super.openapi3);
-              # jose = super.callCabal2nix "jose" inputs.jose.outPath { };
-              # servant-auth-server = super.callCabal2nix "servant-auth-server" "${inputs.servant.outPath}/servant-auth/servant-auth-server" { };
-              # servant-auth = super.callCabal2nix "servant-auth" "${inputs.servant.outPath}/servant-auth/servant-auth" { };
+              named-servant = (super.callCabal2nix "named-servant" ./named-servant/named-servant { });
+              named-servant-server = (super.callCabal2nix "named-servant-server" ./named-servant/named-servant-server {
+                inherit (self) named-servant;
+              });
+              named-servant-client = (super.callCabal2nix "named-servant-client" ./named-servant/named-servant-client {
+                inherit (self) named-servant;
+              });
             } //
             (
               let mkPackage = name: path: depsLib: depsBin: overrideCabal
@@ -125,7 +129,7 @@
         inherit (toolsGHC {
           version = ghcVersion_;
           inherit override;
-          packages = (ps: [ ps.${appPackageName} ps.${testPackageName} ]);
+          packages = (ps: [ ps.${appPackageName} ps.${testPackageName} ps.named-servant ps.named-servant-server ps.named-servant-client ]);
           runtimeDependencies = appPackageDepsBin ++ testPackageDepsBin;
         })
           hls cabal implicit-hie justStaticExecutable

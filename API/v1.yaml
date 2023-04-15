@@ -92,7 +92,7 @@ info:
 openapi: 3.0.0
 paths:
   /api1/news/create:
-    put:
+    post:
       requestBody:
         content:
           application/json;charset=utf-8:
@@ -173,8 +173,8 @@ paths:
             or `createdAt` or `createdSince` or `createdUntil`
       security:
       - JWT: []
-  /api1/user/register:
-    put:
+  /api1/user/authorize:
+    post:
       requestBody:
         content:
           application/json;charset=utf-8:

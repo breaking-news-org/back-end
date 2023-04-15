@@ -6,8 +6,9 @@ module App (
 where
 
 import Controller.Effects.News (NewsController)
+import Controller.Effects.Users (UserController)
 import Controller.News (runNewsController)
-import Controller.User (UserController, runUserController)
+import Controller.User (runUserController)
 import Crypto.JOSE (JWK)
 import Data.Function ((&))
 import Effectful
@@ -22,7 +23,6 @@ import Server.Server
 import Service.Effects.News (ServiceNews)
 import Service.News
 import Service.User (UserService, runUserService)
-import Effectful.Reader.Dynamic (runReader)
 
 main :: IO ()
 main = runAppM startServer

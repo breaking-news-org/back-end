@@ -1,13 +1,16 @@
-module Server.Server (Server, runServerEffect, startServer, getWaiApplication) where
+module Server.Server (Server, runServerEffect, startServer, getWaiApplication, writeJWK) where
 
-import API.Prelude (GServantProduct, NamedRoutes, ToServant, ToServantApi, toServant, type (:<|>) ((:<|>)))
+import API.Endpoints.API1.News as ApiNews (API (API, create, get))
+import API.Endpoints.API1.Root as API1 (API (API, news, user))
+import API.Endpoints.API1.User as ApiUser (API (API, register))
+import API.Prelude (NamedRoutes, ToServantApi, toServant)
 import API.Root (Routes (..))
 import API.Types.Client (ClientToken)
 import API.Types.News ()
 import Control.Monad.Except (ExceptT (..), runExceptT)
 import Controller.Effects.News (NewsController)
+import Controller.Effects.Users (UserController)
 import Controller.News qualified as NewsController
-import Controller.User (UserController)
 import Controller.User qualified as UserController
 import Crypto.JOSE (JWK, KeyMaterialGenParam (..), genJWK)
 import Data.Aeson qualified
@@ -20,11 +23,13 @@ import External.Logger (Logger, logInfo, withLogger)
 import GHC.Generics (Generic (Rep))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
-import Servant (Context (EmptyContext), HasServer (ServerT))
+import Servant (Context (EmptyContext), GServantProduct, HasServer (ServerT), ToServant)
 import Servant.Auth.Server (AuthResult (..), defaultCookieSettings, defaultJWTSettings)
-import Servant.Auth.Server.Internal.AddSetCookie (AddSetCookieApi, AddSetCookies (..), Nat (S))
+import Servant.Auth.Server.Internal.AddSetCookie (AddSetCookieApi, AddSetCookies (addSetCookies), Nat (S))
 import Servant.Server qualified as Servant
 import Servant.Server.Generic (AsServerT, genericServeTWithContext)
+-- import Servant.Server.Named ()
+import Servant.Server.Record ()
 import Server.Config (App (_app_web), Loader, Web (_web_port), getConfig)
 
 -- wire up all controllers here
@@ -40,8 +45,8 @@ instance
   where
   addSetCookies cookies = addSetCookies cookies . toServant
 
-withClient :: AuthResult ClientToken -> (ClientToken -> a) -> a
-withClient r f = case r of
+withClientToken :: AuthResult ClientToken -> (ClientToken -> a) -> a
+withClientToken r f = case r of
   Authenticated c -> f c
   _ -> error "sdsdfsd"
 
@@ -81,13 +86,19 @@ getWaiApplication' jwk = do
           serverToHandler
           Routes
             { api1 =
-                UserController.register
-                  :<|> (\token -> withClient token NewsController.create :<|> withClient token NewsController.get)
+                API1.API
+                  { user = ApiUser.API{register = UserController.register jwk}
+                  , news = \token ->
+                      ApiNews.API
+                        { create = withClientToken token NewsController.create
+                        , get = withClientToken token NewsController.get
+                        }
+                  }
             }
           (defaultJWTSettings jwk Servant.:. defaultCookieSettings Servant.:. EmptyContext)
     pure waiApp
 
 writeJWK :: IO ()
 writeJWK = do
-  jwk <- genJWK (RSAGenParam 100)
+  jwk <- genJWK (RSAGenParam 1000)
   BSL.writeFile "jwk.json" (Data.Aeson.encode jwk)

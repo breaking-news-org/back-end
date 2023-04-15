@@ -56,10 +56,16 @@ library
   build-depends:
       back-end
     , base >=4.7 && <5
+    , bytestring
+    , containers
     , effectful
     , hspec
+    , http-api-data
     , http-client
     , http-types
+    , jose
+    , servant
+    , servant-auth
     , servant-client
     , string-interpolate
     , tasty

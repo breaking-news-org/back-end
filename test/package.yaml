@@ -47,18 +47,25 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
-    - wai
-    - string-interpolate
-    - wai-extra
-    - http-types
+    - back-end
+    - effectful
     - hspec
+    - http-client
+    - http-types
+    - jose
+    - servant
+    - servant-auth
+    - servant-client
+    - string-interpolate
     - tasty
     - tasty-hspec
     - tasty-hunit
-    - back-end
-    - servant-client
-    - http-client
-    - effectful
+    - wai
+    - wai-extra
+    - bytestring
+    # - servant-client-core
+    - containers
+    - http-api-data
 
 ghc-options:
   - -Wall

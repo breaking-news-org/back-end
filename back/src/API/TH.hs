@@ -9,10 +9,10 @@ module API.TH (
   makeToSchema,
 ) where
 
-import API.Prelude
-import Common.Prelude
+import API.Prelude (ToSchema (..), fromAesonOptions, genericDeclareNamedSchema)
+import Common.Prelude (makeLenses)
 import Common.TH (aesonOptions, makeFromToJSON, makeFromToJSON', mkType, processRecord)
-import Language.Haskell.TH
+import Language.Haskell.TH (Dec, Name, Q, Type (ConT))
 
 makeToSchema' :: Type -> Q [Dec]
 makeToSchema' t = do

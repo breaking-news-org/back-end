@@ -107,6 +107,10 @@ library:
     - servant-auth
     - jose
     - insert-ordered-containers
+    - http-api-data
+    - named-servant-server
+    - named-servant
+    - first-class-families
 
 executables:
   back-end:

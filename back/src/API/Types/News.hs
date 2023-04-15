@@ -11,9 +11,18 @@ module API.Types.News (
   editNews_images,
   GetNews (..),
   module Service.Types.News,
+  QueryParams (..),
+  queryParams_createdUntil,
+  queryParams_createdSince,
+  queryParams_createdAt,
+  queryParams_creator,
+  queryParams_category,
+  queryParams_content,
+  queryParams_block,
+  queryParams_newsId,
 ) where
 
-import API.Prelude (Generic)
+import API.Prelude (Generic, UTCTime)
 import API.TH (makeToSchema, processApiRecord)
 import Common.Prelude (Text)
 
@@ -44,3 +53,17 @@ data EditNews = EditNews
 processApiRecord ''EditNews
 
 makeToSchema ''GetNews
+
+data QueryParams = QueryParams
+  { _queryParams_createdUntil :: Maybe UTCTime
+  , _queryParams_createdSince :: Maybe UTCTime
+  , _queryParams_createdAt :: Maybe UTCTime
+  , _queryParams_creator :: Maybe Text
+  , _queryParams_category :: Maybe Int
+  , _queryParams_content :: Maybe Text
+  , _queryParams_block :: Maybe Int
+  , _queryParams_newsId :: Maybe Int
+  }
+  deriving (Generic)
+
+processApiRecord ''QueryParams

@@ -1,9 +1,9 @@
 module Controller.News where
 
 import API.Types.Client (ClientToken (..))
-import API.Types.News (CreateNews (..))
+import API.Types.News (CreateNews (..), QueryParams (..))
 import API.Types.News qualified as API
-import Common.Prelude (Eff, Text, UTCTime, type (:>))
+import Common.Prelude (Eff, type (:>))
 import Controller.Effects.News (NewsController (..))
 import Controller.Prelude (ExceptT (..), NoContent (..), ServerError)
 import Service.Effects.News qualified as Service (ServiceNews (..), serviceCreateNews, serviceGetNews)
@@ -13,28 +13,19 @@ import Service.Types.News qualified as Service
 create :: (NewsController :> es) => ClientToken -> API.CreateNews -> ExceptT ServerError (Eff es) NoContent
 create clientToken = ExceptT . send . ControllerCreateNews clientToken
 
-get ::
-  (NewsController :> es) =>
-  ClientToken ->
-  Maybe UTCTime ->
-  Maybe UTCTime ->
-  Maybe UTCTime ->
-  Maybe Text ->
-  Maybe Int ->
-  Maybe Text ->
-  Maybe Int ->
-  Maybe Int ->
-  ExceptT ServerError (Eff es) [API.GetNews]
+get :: (NewsController :> es) => ClientToken -> QueryParams -> ExceptT ServerError (Eff es) [API.GetNews]
 get
   clientToken
-  _filters_createdUntil
-  _filters_createdSince
-  _filters_createdAt
-  _filters_creator
-  _filters_category
-  _filters_content
-  _filters_block
-  _filters_newsId =
+  QueryParams
+    { _queryParams_createdUntil = _filters_createdUntil
+    , _queryParams_createdSince = _filters_createdSince
+    , _queryParams_createdAt = _filters_createdAt
+    , _queryParams_creator = _filters_creator
+    , _queryParams_category = _filters_category
+    , _queryParams_content = _filters_content
+    , _queryParams_block = _filters_block
+    , _queryParams_newsId = _filters_newsId
+    } =
     ExceptT $ send $ ControllerGetNews clientToken API.Filters{..}
 
 runNewsController :: (Service.ServiceNews :> es) => Eff (NewsController : es) a -> Eff es a

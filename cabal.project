@@ -1,4 +1,4 @@
-packages: back test
+packages: back test named-servant/named-servant named-servant/named-servant-client named-servant/named-servant-server
 
 package *
     ghc-options: -haddock

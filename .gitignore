@@ -10,3 +10,5 @@ secrets.env
 .kube
 .helm
 result
+.git-bk
+ghc*

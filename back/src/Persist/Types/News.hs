@@ -1,6 +1,7 @@
 module Persist.Types.News where
 
-import Common.Prelude (Generic, HKD, Text, UTCTime)
+import API.Prelude (Generic, UTCTime)
+import Common.Prelude (HKD, Text)
 import Common.TH (makeLenses, processRecord)
 
 data IndexedImage = IndexedImage
@@ -11,9 +12,7 @@ data IndexedImage = IndexedImage
 
 processRecord ''IndexedImage
 
-newtype IndexedImages = IndexedImages
-  { _indexedImages :: [IndexedImage]
-  }
+newtype IndexedImages = IndexedImages [IndexedImage]
   deriving (Show, Generic, Eq, Ord)
 
 processRecord ''IndexedImages
