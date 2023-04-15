@@ -2,7 +2,9 @@
   inputs = {
     nixpkgs_.url = "github:deemp/flakes?dir=source-flake/nixpkgs";
     nixpkgs.follows = "nixpkgs_/nixpkgs";
-    my-codium.url = "github:deemp/flakes?dir=codium";
+    nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions/424a7d09e2ebe4bcce9a0304b3f467e6aa78f209";
+    codium.url = "github:deemp/flakes?dir=codium";
+    codium.inputs.vscode-extensions.follows = "nix-vscode-extensions";
     drv-tools.url = "github:deemp/flakes?dir=drv-tools";
     flake-utils_.url = "github:deemp/flakes?dir=source-flake/flake-utils";
     flake-utils.follows = "flake-utils_/flake-utils";
@@ -19,6 +21,10 @@
       url = "github:frasertweedale/hs-jose";
       flake = false;
     };
+    symbols = {
+      url = "github:deemp/symbols/add-fromlist";
+      flake = false;
+    };
   };
   outputs = inputs: inputs.flake-utils.lib.eachDefaultSystem
     (system:
@@ -29,8 +35,8 @@
         # First, we import stuff
         pkgs = import inputs.nixpkgs { config.allowUnfree = true; inherit system; };
         inherit (inputs.drv-tools.functions.${system}) mkShellApps mkShellApp mkBin withDescription framed mapGenAttrs;
-        inherit (inputs.my-codium.functions.${system}) writeSettingsJSON mkCodium;
-        inherit (inputs.my-codium.configs.${system}) extensions settingsNix;
+        inherit (inputs.codium.functions.${system}) writeSettingsJSON mkCodium;
+        inherit (inputs.codium.configs.${system}) extensions settingsNix;
         inherit (inputs.flakes-tools.functions.${system}) mkFlakesTools;
         inherit (inputs.devshell.functions.${system}) mkCommands mkShell mkRunCommands;
         inherit (inputs.haskell-tools.functions.${system}) toolsGHC;
@@ -86,6 +92,7 @@
             {
               lzma = modify super.lzma;
               openapi3 = modify (unmarkBroken super.openapi3);
+              symbols = (super.callCabal2nix "symbols" inputs.symbols.outPath { });
               named-servant = (super.callCabal2nix "named-servant" ./named-servant/named-servant { });
               named-servant-server = (super.callCabal2nix "named-servant-server" ./named-servant/named-servant-server {
                 inherit (self) named-servant;

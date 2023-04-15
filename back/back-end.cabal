@@ -30,7 +30,6 @@ library
       API.TH
       API.Types.Client
       API.Types.News
-      API.Types.TypeLevel
       API.Types.User
       App
       Common.Prelude
@@ -135,6 +134,7 @@ library
     , servant-openapi3
     , servant-server
     , string-interpolate
+    , symbols
     , template-haskell
     , text
     , time

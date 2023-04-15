@@ -111,6 +111,7 @@ library:
     - named-servant-server
     - named-servant
     - first-class-families
+    - symbols
 
 executables:
   back-end:

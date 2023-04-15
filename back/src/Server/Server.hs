@@ -3,10 +3,12 @@ module Server.Server (Server, runServerEffect, startServer, getWaiApplication, w
 import API.Endpoints.API1.News as ApiNews (API (API, create, get))
 import API.Endpoints.API1.Root as API1 (API (API, news, user))
 import API.Endpoints.API1.User as ApiUser (API (API, register))
+import API.OpenAPI3 ()
 import API.Prelude (NamedRoutes, ToServantApi, toServant)
 import API.Root (Routes (..))
 import API.Types.Client (ClientToken)
 import API.Types.News ()
+import API.Types.TypeLevel ()
 import Control.Monad.Except (ExceptT (..), runExceptT)
 import Controller.Effects.News (NewsController)
 import Controller.Effects.Users (UserController)
@@ -28,7 +30,7 @@ import Servant.Auth.Server (AuthResult (..), defaultCookieSettings, defaultJWTSe
 import Servant.Auth.Server.Internal.AddSetCookie (AddSetCookieApi, AddSetCookies (addSetCookies), Nat (S))
 import Servant.Server qualified as Servant
 import Servant.Server.Generic (AsServerT, genericServeTWithContext)
--- import Servant.Server.Named ()
+import Servant.Server.Named ()
 import Servant.Server.Record ()
 import Server.Config (App (_app_web), Loader, Web (_web_port), getConfig)
 

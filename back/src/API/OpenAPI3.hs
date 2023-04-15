@@ -11,7 +11,8 @@ import Data.OpenApi (Components (_componentsSecuritySchemes), HasSecurity (secur
 import Data.Text qualified as T
 import Servant.Auth (Auth, JWT)
 import Servant.Record (RecordParam, UnRecordParam)
-import API.Types.TypeLevel (Modify)
+import Servant.TypeLevel (Modify)
+import API.Types.TypeLevel ()
 
 spec :: OpenApi
 spec = toOpenApi (Proxy :: Proxy API)

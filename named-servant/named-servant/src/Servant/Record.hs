@@ -18,50 +18,48 @@ import Fcf (Exp)
 import GHC.Generics
 import GHC.TypeLits
 import Servant.API
-import Servant.TypeLevel (Eval)
+import Servant.TypeLevel (Eval, Modify)
 
-{- | RecordParam uses the fields in the record to represent the
- parameters.  The name of the field is used as parameter name, and
- the type is the return type.  For example, this api:
-
- @
- type API = "users" :> (QueryParam "category" Category :>
-                        QueryParam' '[Required, Strict] "sort_by" SortBy :>
-                        QueryFlag "with_schema" :>
-                        QueryParams "filters" Filter :>
-                        Get '[JSON] User
- @
-
- can be written with records:
-
- @
- data UserParams = UserParams
-   { category :: Maybe Category
-   , sort_by :: Sortby
-   , with_schema :: Bool
-   , filters :: [Filter]
-   }
-
- type API = "users" :> RecordParam UserParams :> Get '[JSON] User
- @
--}
+-- | 'RecordParam' uses the fields in the record to represent the
+-- parameters.  The name of the field is used as parameter name, and
+-- the type is the return type.  For example, this api:
+--
+-- @
+-- type API = "users" :> (QueryParam "category" Category :>
+--                        QueryParam' '[Required, Strict] "sort_by" SortBy :>
+--                        QueryFlag "with_schema" :>
+--                        QueryParams "filters" Filter :>
+--                        Get '[JSON] User
+-- @
+--
+-- can be written with records:
+--
+-- @
+-- data UserParams = UserParams
+--   { category :: Maybe Category
+--   , sort_by :: Sortby
+--   , with_schema :: Bool
+--   , filters :: [Filter]
+--   }
+--
+-- type API = "users" :> RecordParam UserParams :> Get '[JSON] User
+-- @
 data RecordParam (a :: Type)
 
 type family ServantAppend x y where
   ServantAppend (a :> b) c = a :> ServantAppend b c
   ServantAppend a c = a :> c
 
-{- | Type family to rewrite a RecordParam Api to a regular servant API.
- Useful to define instances for classes that extract information from
- the API type, such as Servant.Swagger, or servant-foreign.
-
- Typical use:
-
- > instance SomeClass (UnRecordParam (RecordParam a :> api))) =>
- >          SomeClass (RecordParam a :> api) where
- >    someMethod _ =
- >      someMethod (Proxy :: Proxy (UnRecordParam (RecordParam a :> api))
--}
+-- | Type family to rewrite a RecordParam Api to a regular servant API.
+-- Useful to define instances for classes that extract information from
+-- the API type, such as Servant.Swagger, or servant-foreign.
+--
+-- Typical use:
+--
+-- > instance SomeClass (UnRecordParam (RecordParam a :> api))) =>
+-- >          SomeClass (RecordParam a :> api) where
+-- >    someMethod _ =
+-- >      someMethod (Proxy :: Proxy (UnRecordParam (RecordParam a :> api))
 type family UnRecordParam (x :: Type) (f :: Symbol -> Exp Symbol) :: Type where
   UnRecordParam (a :> b) f = ServantAppend (UnRecordParam a f) b
   UnRecordParam (RecordParam a) f = UnRecordParam (Rep a ()) f
@@ -72,13 +70,13 @@ type family UnRecordParam (x :: Type) (f :: Symbol -> Exp Symbol) :: Type where
       (UnRecordParam (b d) f)
   UnRecordParam (C1 m a d) f = UnRecordParam (a d) f
   UnRecordParam (S1 ('MetaSel ('Just sym) d1 d2 d3) (Rec0 Bool) d) f =
-    QueryFlag (Eval (f sym))
+    QueryFlag (Eval (Modify sym))
   UnRecordParam (S1 ('MetaSel ('Just sym) d1 d2 d3) (Rec0 [a]) d) f =
-    QueryParams (Eval (f sym)) a
+    QueryParams (Eval (Modify sym)) a
   UnRecordParam (S1 ('MetaSel ('Just sym) d1 d2 d3) (Rec0 (Maybe a)) d) f =
-    QueryParam' [Optional, Strict] (Eval (f sym)) a
+    QueryParam' [Optional, Strict] (Eval (Modify sym)) a
   UnRecordParam (S1 ('MetaSel ('Just sym) d1 d2 d3) (Rec0 a) d) f =
-    QueryParam' [Required, Strict] (Eval (f sym)) a
+    QueryParam' [Required, Strict] (Eval (Modify sym)) a
 
 instance (Generic a, GHasLink (Rep a) sub) => HasLink (RecordParam a :> sub) where
   type MkLink (RecordParam a :> sub) b = a -> MkLink sub b
@@ -119,19 +117,19 @@ instance
 instance
   {-# OVERLAPPING #-}
   ( KnownSymbol sym
-  , KnownSymbol (Eval (f sym))
+  , KnownSymbol (Eval (Modify sym))
   , HasLink sub
   ) =>
   GHasLink (S1 ('MetaSel ('Just sym) d1 d2 d3) (Rec0 Bool)) sub
   where
   gToLink toA _ l (M1 (K1 x)) =
-    toLink toA (Proxy :: Proxy (QueryFlag (Eval (f sym)) :> sub)) l x
+    toLink toA (Proxy :: Proxy (QueryFlag (Eval (Modify sym)) :> sub)) l x
   {-# INLINE gToLink #-}
 
 instance
   {-# OVERLAPPING #-}
   ( KnownSymbol sym
-  , KnownSymbol (Eval (f sym))
+  , KnownSymbol (Eval (Modify sym))
   , ToHttpApiData a
   , HasLink (a :> sub)
   , HasLink sub
@@ -139,42 +137,33 @@ instance
   GHasLink (S1 ('MetaSel ('Just sym) d1 d2 d3) (Rec0 [a])) sub
   where
   gToLink toA _ l (M1 (K1 x)) =
-    toLink toA (Proxy :: Proxy (QueryParams (Eval (f sym)) a :> sub)) l x
+    toLink toA (Proxy :: Proxy (QueryParams (Eval (Modify sym)) a :> sub)) l x
   {-# INLINE gToLink #-}
 
 instance
   {-# OVERLAPPING #-}
   ( KnownSymbol sym
-  , KnownSymbol (Eval (f sym)),
-    ToHttpApiData a
+  , KnownSymbol (Eval (Modify sym))
+  , ToHttpApiData a
   , HasLink (a :> sub)
   , HasLink sub
   ) =>
   GHasLink (S1 ('MetaSel ('Just sym) d1 d2 d3) (Rec0 (Maybe a))) sub
   where
   gToLink toA _ l (M1 (K1 x)) =
-    toLink
-      toA
-      (Proxy :: Proxy (QueryParam' '[Optional, Strict] (Eval (f sym)) a :> sub))
-      l
-      x
+    toLink toA (Proxy :: Proxy (QueryParam' '[Optional, Strict] (Eval (Modify sym)) a :> sub)) l x
   {-# INLINE gToLink #-}
 
 instance
   {-# OVERLAPPABLE #-}
   ( KnownSymbol sym
-  , KnownSymbol (Eval (f sym))
+  , KnownSymbol (Eval (Modify sym))
   , ToHttpApiData a
   , HasLink (a :> sub)
   , HasLink sub
   ) =>
   GHasLink (S1 ('MetaSel ('Just sym) d1 d2 d3) (Rec0 a)) sub
   where
-  
   gToLink toA _ l (M1 (K1 x)) =
-    toLink
-      toA
-      (Proxy :: Proxy (QueryParam' '[Required, Strict] (Eval (f sym)) a :> sub))
-      l
-      x
+    toLink toA (Proxy :: Proxy (QueryParam' '[Required, Strict] (Eval (Modify sym)) a :> sub)) l x
   {-# INLINE gToLink #-}
