@@ -5,6 +5,6 @@ import API.Types.User
 import Common.Prelude (Text)
 
 newtype API route = API
-  { register :: route :- "authorize" :> ReqBody '[JSON] UserRegistrationForm :> Post '[JSON] Text
+  { authorize :: route :- "authorize" :> ReqBody '[JSON] UserRegistrationForm :> Post '[JSON] Text
   }
   deriving (Generic)

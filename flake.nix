@@ -13,16 +13,16 @@
     flakes-tools.url = "github:deemp/flakes?dir=flakes-tools";
     workflows.url = "github:deemp/flakes?dir=workflows";
     dream2nix.url = "github:nix-community/dream2nix";
-    servant = {
-      url = "github:haskell-servant/servant";
-      flake = false;
-    };
     jose = {
       url = "github:frasertweedale/hs-jose";
       flake = false;
     };
     symbols = {
       url = "github:deemp/symbols/add-fromlist";
+      flake = false;
+    };
+    servant = {
+      url = "github:deemp/servant";
       flake = false;
     };
   };
@@ -93,13 +93,21 @@
               lzma = modify super.lzma;
               openapi3 = modify (unmarkBroken super.openapi3);
               symbols = (super.callCabal2nix "symbols" inputs.symbols.outPath { });
-              named-servant = (super.callCabal2nix "named-servant" ./named-servant/named-servant { });
-              named-servant-server = (super.callCabal2nix "named-servant-server" ./named-servant/named-servant-server {
-                inherit (self) named-servant;
+
+              servant-named-core = (super.callCabal2nix "servant-named-core" ./servant-named/servant-named-core { });
+              servant-named-server = (super.callCabal2nix "servant-named-server" ./servant-named/servant-named-server {
+                inherit (self) servant-named-core;
               });
-              named-servant-client = (super.callCabal2nix "named-servant-client" ./named-servant/named-servant-client {
-                inherit (self) named-servant;
+              servant-named-client = (super.callCabal2nix "servant-named-client" ./servant-named/servant-named-client {
+                inherit (self) servant-named-core;
               });
+              # servant-named-core = (super.callCabal2nix "servant-named-core" "${inputs.servant.outPath}/servant-named/servant-named-core" { });
+              # servant-named-server = (super.callCabal2nix "servant-named-server" "${inputs.servant.outPath}/servant-named/servant-named-server" {
+              #   inherit (self) servant-named-core;
+              # });
+              # servant-named-client = (super.callCabal2nix "servant-named-client" "${inputs.servant.outPath}/servant-named/servant-named-client" {
+              #   inherit (self) servant-named-core;
+              # });
             } //
             (
               let mkPackage = name: path: depsLib: depsBin: overrideCabal
@@ -111,7 +119,10 @@
                   librarySystemDepends = depsLib ++ (x.librarySystemDepends or [ ]);
                   executableSystemDepends = depsBin ++ (x.executableSystemDepends or [ ]);
 
-                  libraryHaskellDepends = [ ] ++ (x.libraryHaskellDepends or [ ]);
+                  libraryHaskellDepends = [
+                    # (if name == appPackageName then self.servant-named-server else self.servant-named-client)
+                    # self.servant-named-core
+                  ] ++ (x.libraryHaskellDepends or [ ]);
 
                   testHaskellDepends = [
                     super.tasty-discover
@@ -136,7 +147,13 @@
         inherit (toolsGHC {
           version = ghcVersion_;
           inherit override;
-          packages = (ps: [ ps.${appPackageName} ps.${testPackageName} ps.named-servant ps.named-servant-server ps.named-servant-client ]);
+          packages = (ps: [
+            ps.${appPackageName}
+            ps.${testPackageName}
+            ps.servant-named-server
+            ps.servant-named-client
+            ps.servant-named-core
+          ]);
           runtimeDependencies = appPackageDepsBin ++ testPackageDepsBin;
         })
           hls cabal implicit-hie justStaticExecutable
@@ -251,6 +268,8 @@
 
           # node
           pkgs.nodejs-16_x
+
+          pkgs.bashInteractive
         ];
 
         extraTools = [

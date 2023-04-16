@@ -63,9 +63,12 @@ library:
     - wai
     - wai-extra
     - bytestring
-    # - servant-client-core
+    - servant-client-core
+    - servant-named-core
+    - servant-named-client
     - containers
     - http-api-data
+    - data-default
 
 ghc-options:
   - -Wall

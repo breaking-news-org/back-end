@@ -29,6 +29,7 @@ library
       API.Root
       API.TH
       API.Types.Client
+      API.Types.Instances
       API.Types.News
       API.Types.User
       App
@@ -120,8 +121,6 @@ library
     , monad-logger
     , monad-logger-aeson
     , mtl
-    , named-servant
-    , named-servant-server
     , openapi3
     , persistent
     , persistent-postgresql
@@ -131,6 +130,8 @@ library
     , servant-auth-server
     , servant-client
     , servant-docs
+    , servant-named-core
+    , servant-named-server
     , servant-openapi3
     , servant-server
     , string-interpolate

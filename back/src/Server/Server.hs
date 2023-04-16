@@ -2,13 +2,12 @@ module Server.Server (Server, runServerEffect, startServer, getWaiApplication, w
 
 import API.Endpoints.API1.News as ApiNews (API (API, create, get))
 import API.Endpoints.API1.Root as API1 (API (API, news, user))
-import API.Endpoints.API1.User as ApiUser (API (API, register))
+import API.Endpoints.API1.User as ApiUser (API (API, authorize))
 import API.OpenAPI3 ()
-import API.Prelude (NamedRoutes, ToServantApi, toServant)
 import API.Root (Routes (..))
 import API.Types.Client (ClientToken)
+import API.Types.Instances ()
 import API.Types.News ()
-import API.Types.TypeLevel ()
 import Control.Monad.Except (ExceptT (..), runExceptT)
 import Controller.Effects.News (NewsController)
 import Controller.Effects.Users (UserController)
@@ -22,30 +21,17 @@ import Effectful (Eff, Effect, IOE, Limit (..), MonadIO (liftIO), Persistence (E
 import Effectful.Dispatch.Dynamic (interpret)
 import Effectful.TH (makeEffect)
 import External.Logger (Logger, logInfo, withLogger)
-import GHC.Generics (Generic (Rep))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
-import Servant (Context (EmptyContext), GServantProduct, HasServer (ServerT), ToServant)
+import Servant (Context (EmptyContext))
 import Servant.Auth.Server (AuthResult (..), defaultCookieSettings, defaultJWTSettings)
-import Servant.Auth.Server.Internal.AddSetCookie (AddSetCookieApi, AddSetCookies (addSetCookies), Nat (S))
 import Servant.Server qualified as Servant
-import Servant.Server.Generic (AsServerT, genericServeTWithContext)
+import Servant.Server.Generic (genericServeTWithContext)
 import Servant.Server.Named ()
 import Servant.Server.Record ()
 import Server.Config (App (_app_web), Loader, Web (_web_port), getConfig)
 
 -- wire up all controllers here
-type instance AddSetCookieApi (NamedRoutes api) = AddSetCookieApi (ToServantApi api)
-instance
-  {-# OVERLAPS #-}
-  ( AddSetCookies ('S n) (ServerT (ToServantApi api) m) cookiedApi
-  , Generic (api (AsServerT m))
-  , GServantProduct (Rep (api (AsServerT m)))
-  , ToServant api (AsServerT m) ~ ServerT (ToServantApi api) m
-  ) =>
-  AddSetCookies ('S n) (api (AsServerT m)) cookiedApi
-  where
-  addSetCookies cookies = addSetCookies cookies . toServant
 
 withClientToken :: AuthResult ClientToken -> (ClientToken -> a) -> a
 withClientToken r f = case r of
@@ -89,7 +75,7 @@ getWaiApplication' jwk = do
           Routes
             { api1 =
                 API1.API
-                  { user = ApiUser.API{register = UserController.register jwk}
+                  { user = ApiUser.API{authorize = UserController.authorize jwk}
                   , news = \token ->
                       ApiNews.API
                         { create = withClientToken token NewsController.create

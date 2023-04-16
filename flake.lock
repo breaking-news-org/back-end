@@ -1599,15 +1599,15 @@
     "servant": {
       "flake": false,
       "locked": {
-        "lastModified": 1681296444,
-        "narHash": "sha256-w076Ny63qQvG4ghWVlu/7h5z0YrEO+ctxtp8WFnSUfw=",
-        "owner": "haskell-servant",
+        "lastModified": 1681605336,
+        "narHash": "sha256-IHYK1zray8RLD4AAZUDsqEQqfauyBsTJlzgrfoAGlBw=",
+        "owner": "deemp",
         "repo": "servant",
-        "rev": "8e3524520795042317dd8aaeb129f3ca3bed1bf7",
+        "rev": "486e59da2079c8227319aa4da21a70384fb5983b",
         "type": "github"
       },
       "original": {
-        "owner": "haskell-servant",
+        "owner": "deemp",
         "repo": "servant",
         "type": "github"
       }

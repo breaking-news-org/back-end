@@ -58,6 +58,7 @@ library
     , base >=4.7 && <5
     , bytestring
     , containers
+    , data-default
     , effectful
     , hspec
     , http-api-data
@@ -67,6 +68,9 @@ library
     , servant
     , servant-auth
     , servant-client
+    , servant-client-core
+    , servant-named-client
+    , servant-named-core
     , string-interpolate
     , tasty
     , tasty-hspec

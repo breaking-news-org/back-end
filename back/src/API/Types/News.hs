@@ -27,6 +27,7 @@ import API.TH (makeToSchema, processApiRecord)
 import Common.Prelude (Text)
 
 import Service.Types.News (Filters (..), GetNews (..), IndexedImage (..), IndexedImages)
+import Data.Default (Default)
 
 makeToSchema ''IndexedImage
 
@@ -67,3 +68,5 @@ data QueryParams = QueryParams
   deriving (Generic)
 
 processApiRecord ''QueryParams
+
+instance Default QueryParams

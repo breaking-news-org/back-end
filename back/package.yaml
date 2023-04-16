@@ -108,8 +108,8 @@ library:
     - jose
     - insert-ordered-containers
     - http-api-data
-    - named-servant-server
-    - named-servant
+    - servant-named-server
+    - servant-named-core
     - first-class-families
     - symbols
 

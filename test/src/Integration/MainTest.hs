@@ -2,19 +2,23 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Integration.MainTest (unit_main) where
 
-import API.Prelude (NoContent, type (:<|>) ((:<|>)))
-import API.Root (API)
+import API.Endpoints.API1.News qualified
+import API.Endpoints.API1.Root qualified
+import API.Endpoints.API1.User qualified
+import API.Root (API, Routes (..))
 import API.Types.News
+import API.Types.Instances ()
 import API.Types.User (UserRegistrationForm (..))
-import Common.Prelude qualified as T
 import Control.Exception (catch, throwIO)
 import Control.Monad (void)
 import Data.ByteString qualified as BS
 import Data.Data (Proxy (..))
+import Data.Default (def)
 import Data.Kind (Constraint)
 import Data.Sequence (Seq ((:<|)))
 import Data.String (IsString)
@@ -29,9 +33,10 @@ import Servant.API ((:>))
 import Servant.Auth (Auth, JWT)
 import Servant.Client
 import Servant.Client.Core (Request, RequestF (..))
+import Servant.Client.Named ()
+import Servant.Client.Record ()
 import Server.Config
 import Service.Prelude (encodeUtf8)
-import Service.Types.News (CreateNews (_createNews_category, _createNews_creator))
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -73,7 +78,13 @@ instance (HasJWT auths, HasClient ClientM api) => HasClient ClientM (Auth auths 
    where
     headerVal = "Bearer " <> token
 
-authorize :<|> withToken = client api
+Routes
+  { api1 =
+    API.Endpoints.API1.Root.API
+      { user = API.Endpoints.API1.User.API{authorize}
+      , news
+      }
+  } = client api
 
 authorizeUser :: ClientM Token
 authorizeUser =
@@ -102,14 +113,15 @@ userTests = testCase "Registration" do
   case res of
     Left err -> putStrLn [i|Error: #{err}|]
     Right token -> do
-      let createNews :<|> getNews = withToken token
+      let API.Endpoints.API1.News.API{get, create} = news token
       void $
         withClientEnv $
-          createNews
+          create
             CreateNews
               { _createNews_title = "title"
               , _createNews_text = "text"
               , _createNews_images = IndexedImages []
               , _createNews_category = 0
               }
-              
+      ns <- withClientEnv $ get def
+      pure ()

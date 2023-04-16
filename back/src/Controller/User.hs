@@ -17,8 +17,8 @@ import Service.Types.User (Role (RoleUser), UserRegistrationData (..))
 import Service.User (UserService)
 import Service.User qualified as UserService
 
-register :: UserController :> es => JWK -> UserRegistrationForm -> ExceptT ServerError (Eff es) T.Text
-register jwk = ExceptT . send . RegisterController jwk
+authorize :: UserController :> es => JWK -> UserRegistrationForm -> ExceptT ServerError (Eff es) T.Text
+authorize jwk = ExceptT . send . RegisterController jwk
 
 runUserController ::
   (UserService :> es, IOE :> es) =>

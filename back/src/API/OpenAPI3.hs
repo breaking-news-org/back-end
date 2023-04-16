@@ -5,14 +5,13 @@ module API.OpenAPI3 where
 
 import API.Prelude (HasOpenApi (..), OpenApi, Proxy (..), encodeFile, type (:>))
 import API.Root (API)
+import API.Types.Instances (DropPrefix)
 import Common.Prelude ((%~))
 import Data.HashMap.Strict.InsOrd qualified as HM
 import Data.OpenApi (Components (_componentsSecuritySchemes), HasSecurity (security), HttpSchemeType (HttpSchemeBearer), OpenApi (_openApiComponents), SecurityDefinitions (SecurityDefinitions), SecurityRequirement (SecurityRequirement), SecurityScheme (..), SecuritySchemeType (SecuritySchemeHttp), allOperations)
 import Data.Text qualified as T
 import Servant.Auth (Auth, JWT)
 import Servant.Record (RecordParam, UnRecordParam)
-import Servant.TypeLevel (Modify)
-import API.Types.TypeLevel ()
 
 spec :: OpenApi
 spec = toOpenApi (Proxy :: Proxy API)
@@ -50,9 +49,9 @@ instance (HasOpenApi api) => HasOpenApi (Auth '[] a :> api) where
   toOpenApi :: Proxy (Auth '[] a :> api) -> OpenApi
   toOpenApi Proxy = toOpenApi $ Proxy @api
 
-instance HasOpenApi (UnRecordParam (RecordParam a :> api) Modify) => HasOpenApi (RecordParam a :> api) where
+instance HasOpenApi (UnRecordParam DropPrefix (RecordParam a :> api)) => HasOpenApi (RecordParam a :> api) where
   toOpenApi :: Proxy (RecordParam a :> api) -> OpenApi
-  toOpenApi _ = toOpenApi (Proxy :: Proxy (UnRecordParam (RecordParam a :> api) Modify))
+  toOpenApi _ = toOpenApi (Proxy :: Proxy (UnRecordParam DropPrefix (RecordParam a :> api)))
 
 writeSpec :: FilePath -> IO ()
 writeSpec f = encodeFile f spec
