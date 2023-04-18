@@ -1,3 +1,7 @@
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving #-}
+
 module Persist.Model where
 
 import Data.ByteString (ByteString)

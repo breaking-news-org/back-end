@@ -3,7 +3,6 @@ module Server.Server (Server, runServerEffect, startServer, getWaiApplication, w
 import API.Endpoints.API1.News as ApiNews (API (API, create, get))
 import API.Endpoints.API1.Root as API1 (API (API, news, user))
 import API.Endpoints.API1.User as ApiUser (API (API, authorize))
-import API.OpenAPI3 ()
 import API.Root (Routes (..))
 import API.Types.Client (ClientToken)
 import API.Types.Instances ()
@@ -21,28 +20,31 @@ import Effectful (Eff, Effect, IOE, Limit (..), MonadIO (liftIO), Persistence (E
 import Effectful.Dispatch.Dynamic (interpret)
 import Effectful.TH (makeEffect)
 import External.Logger (Logger, logInfo, withLogger)
+import GHC.Generics (Generic (..))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
-import Servant (Context (EmptyContext))
+import Servant (Context (EmptyContext), HasServer (ServerT))
+import Servant.API (GServantProduct, NamedRoutes, ToServant, ToServantApi, toServant)
 import Servant.Auth.Server (AuthResult (..), defaultCookieSettings, defaultJWTSettings)
+import Servant.Auth.Server.Internal.AddSetCookie (AddSetCookieApi, AddSetCookies (..), Nat (S))
 import Servant.Server qualified as Servant
-import Servant.Server.Generic (genericServeTWithContext)
+import Servant.Server.Generic (AsServerT, genericServeTWithContext)
 import Servant.Server.Named ()
 import Servant.Server.Record ()
 import Server.Config (App (_app_web), Loader, Web (_web_port), getConfig)
 
 -- wire up all controllers here
 
-withClientToken :: AuthResult ClientToken -> (ClientToken -> a) -> a
-withClientToken r f = case r of
-  Authenticated c -> f c
-  _ -> error "sdsdfsd"
-
 data Server :: Effect where
   GetWaiApplication :: Server m Application
   StartServer :: Server m ()
 
 makeEffect ''Server
+
+withClientToken :: AuthResult ClientToken -> (ClientToken -> a) -> a
+withClientToken r f = case r of
+  Authenticated c -> f c
+  _ -> error "sdsdfsd"
 
 type Constraints es =
   ( IOE :> es
@@ -62,6 +64,18 @@ runServerEffect = interpret $ \_ -> \case
     withLogger . logInfo . fromString $ "listening at port " <> show port
     liftIO $ Warp.run port waiApp
   GetWaiApplication -> getConfig id >>= getWaiApplication'
+
+type instance AddSetCookieApi (NamedRoutes api) = AddSetCookieApi (ToServantApi api)
+instance
+  {-# OVERLAPS #-}
+  ( AddSetCookies ('S n) (ServerT (ToServantApi api) m) cookiedApi
+  , Generic (api (AsServerT m))
+  , GServantProduct (Rep (api (AsServerT m)))
+  , ToServant api (AsServerT m) ~ ServerT (ToServantApi api) m
+  ) =>
+  AddSetCookies ('S n) (api (AsServerT m)) cookiedApi
+  where
+  addSetCookies cookies = addSetCookies cookies . toServant
 
 getWaiApplication' :: forall es. Constraints es => JWK -> Eff es Application
 getWaiApplication' jwk = do

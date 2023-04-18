@@ -90,11 +90,8 @@ library
       TypeOperators
       ViewPatterns
       ImplicitParams
-      StandaloneDeriving
       FlexibleInstances
       DeriveAnyClass
-      DerivingStrategies
-      GeneralizedNewtypeDeriving
       MultiParamTypeClasses
       UndecidableInstances
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin
@@ -177,11 +174,8 @@ executable back-end
       TypeOperators
       ViewPatterns
       ImplicitParams
-      StandaloneDeriving
       FlexibleInstances
       DeriveAnyClass
-      DerivingStrategies
-      GeneralizedNewtypeDeriving
       MultiParamTypeClasses
       UndecidableInstances
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N
@@ -226,11 +220,8 @@ executable gen-openapi3
       TypeOperators
       ViewPatterns
       ImplicitParams
-      StandaloneDeriving
       FlexibleInstances
       DeriveAnyClass
-      DerivingStrategies
-      GeneralizedNewtypeDeriving
       MultiParamTypeClasses
       UndecidableInstances
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N

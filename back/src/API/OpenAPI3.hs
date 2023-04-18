@@ -5,10 +5,9 @@ module API.OpenAPI3 where
 
 import API.Prelude (HasOpenApi (..), OpenApi, Proxy (..), encodeFile, type (:>))
 import API.Root (API)
-import API.Types.Instances (DropPrefix)
 import Common.Prelude ((%~))
 import Data.HashMap.Strict.InsOrd qualified as HM
-import Data.OpenApi (Components (_componentsSecuritySchemes), HasSecurity (security), HttpSchemeType (HttpSchemeBearer), OpenApi (_openApiComponents), SecurityDefinitions (SecurityDefinitions), SecurityRequirement (SecurityRequirement), SecurityScheme (..), SecuritySchemeType (SecuritySchemeHttp), allOperations)
+import Data.OpenApi (Components (..), HasSecurity (..), HttpSchemeType (..), OpenApi (..), SecurityDefinitions (..), SecurityRequirement (..), SecurityScheme (..), SecuritySchemeType (..), allOperations)
 import Data.Text qualified as T
 import Servant.Auth (Auth, JWT)
 import Servant.Record (RecordParam, UnRecordParam)
@@ -29,9 +28,7 @@ addSecurityScheme securityIdentifier securityScheme openApi =
 
 addSecurityRequirement :: T.Text -> OpenApi -> OpenApi
 addSecurityRequirement securityRequirement =
-  allOperations
-    . security
-    %~ ((SecurityRequirement $ HM.singleton securityRequirement []) :)
+  allOperations . security %~ ((SecurityRequirement $ HM.singleton securityRequirement []) :)
 
 instance (HasOpenApi (Auth auths a :> api)) => HasOpenApi (Auth (JWT : auths) a :> api) where
   toOpenApi :: HasOpenApi (Auth auths a :> api) => Proxy (Auth (JWT : auths) a :> api) -> OpenApi
@@ -49,9 +46,9 @@ instance (HasOpenApi api) => HasOpenApi (Auth '[] a :> api) where
   toOpenApi :: Proxy (Auth '[] a :> api) -> OpenApi
   toOpenApi Proxy = toOpenApi $ Proxy @api
 
-instance HasOpenApi (UnRecordParam DropPrefix (RecordParam a :> api)) => HasOpenApi (RecordParam a :> api) where
-  toOpenApi :: Proxy (RecordParam a :> api) -> OpenApi
-  toOpenApi _ = toOpenApi (Proxy :: Proxy (UnRecordParam DropPrefix (RecordParam a :> api)))
+instance HasOpenApi (UnRecordParam mkExp (RecordParam mkExp a :> api)) => HasOpenApi (RecordParam mkExp a :> api) where
+  toOpenApi :: Proxy (RecordParam mkExp a :> api) -> OpenApi
+  toOpenApi _ = toOpenApi (Proxy :: Proxy (UnRecordParam mkExp (RecordParam mkExp a :> api)))
 
 writeSpec :: FilePath -> IO ()
 writeSpec f = encodeFile f spec

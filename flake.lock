@@ -1592,40 +1592,22 @@
         ],
         "nixpkgs_": "nixpkgs__8",
         "servant": "servant",
-        "symbols": "symbols",
         "workflows": "workflows"
       }
     },
     "servant": {
       "flake": false,
       "locked": {
-        "lastModified": 1681605336,
-        "narHash": "sha256-IHYK1zray8RLD4AAZUDsqEQqfauyBsTJlzgrfoAGlBw=",
+        "lastModified": 1681744123,
+        "narHash": "sha256-dhUwSwcu3rpyHEgS3F3GMxu3dg9xLWj8di6ij65FnJs=",
         "owner": "deemp",
         "repo": "servant",
-        "rev": "486e59da2079c8227319aa4da21a70384fb5983b",
+        "rev": "a4c5e15ae2b93bccb4839827a8a3acad3269f9d1",
         "type": "github"
       },
       "original": {
         "owner": "deemp",
         "repo": "servant",
-        "type": "github"
-      }
-    },
-    "symbols": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1681567615,
-        "narHash": "sha256-DYHTDfjLD3949CJqkugBQ49P0P2cJSHjDjS8FDaLoQQ=",
-        "owner": "deemp",
-        "repo": "symbols",
-        "rev": "1f980d383ba35b410a9d65526a0746a2fc6d5826",
-        "type": "github"
-      },
-      "original": {
-        "owner": "deemp",
-        "ref": "add-fromlist",
-        "repo": "symbols",
         "type": "github"
       }
     },

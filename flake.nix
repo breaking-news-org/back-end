@@ -17,10 +17,10 @@
       url = "github:frasertweedale/hs-jose";
       flake = false;
     };
-    symbols = {
-      url = "github:deemp/symbols/add-fromlist";
-      flake = false;
-    };
+    # symbols = {
+    #   url = "github:deemp/symbols/add-fromlist";
+    #   flake = false;
+    # };
     servant = {
       url = "github:deemp/servant";
       flake = false;
@@ -92,22 +92,22 @@
             {
               lzma = modify super.lzma;
               openapi3 = modify (unmarkBroken super.openapi3);
-              symbols = (super.callCabal2nix "symbols" inputs.symbols.outPath { });
+              # symbols = (super.callCabal2nix "symbols" inputs.symbols.outPath { });
 
-              servant-named-core = (super.callCabal2nix "servant-named-core" ./servant-named/servant-named-core { });
-              servant-named-server = (super.callCabal2nix "servant-named-server" ./servant-named/servant-named-server {
-                inherit (self) servant-named-core;
-              });
-              servant-named-client = (super.callCabal2nix "servant-named-client" ./servant-named/servant-named-client {
-                inherit (self) servant-named-core;
-              });
-              # servant-named-core = (super.callCabal2nix "servant-named-core" "${inputs.servant.outPath}/servant-named/servant-named-core" { });
-              # servant-named-server = (super.callCabal2nix "servant-named-server" "${inputs.servant.outPath}/servant-named/servant-named-server" {
+              # servant-named-core = (super.callCabal2nix "servant-named-core" ./servant-named/servant-named-core { });
+              # servant-named-server = (super.callCabal2nix "servant-named-server" ./servant-named/servant-named-server {
               #   inherit (self) servant-named-core;
               # });
-              # servant-named-client = (super.callCabal2nix "servant-named-client" "${inputs.servant.outPath}/servant-named/servant-named-client" {
+              # servant-named-client = (super.callCabal2nix "servant-named-client" ./servant-named/servant-named-client {
               #   inherit (self) servant-named-core;
               # });
+              servant-named-core = (super.callCabal2nix "servant-named-core" "${inputs.servant.outPath}/servant-named/servant-named-core" { });
+              servant-named-server = (super.callCabal2nix "servant-named-server" "${inputs.servant.outPath}/servant-named/servant-named-server" {
+                inherit (self) servant-named-core;
+              });
+              servant-named-client = (super.callCabal2nix "servant-named-client" "${inputs.servant.outPath}/servant-named/servant-named-client" {
+                inherit (self) servant-named-core;
+              });
             } //
             (
               let mkPackage = name: path: depsLib: depsBin: overrideCabal
@@ -150,9 +150,9 @@
           packages = (ps: [
             ps.${appPackageName}
             ps.${testPackageName}
-            ps.servant-named-server
-            ps.servant-named-client
-            ps.servant-named-core
+            # ps.servant-named-server
+            # ps.servant-named-client
+            # ps.servant-named-core
           ]);
           runtimeDependencies = appPackageDepsBin ++ testPackageDepsBin;
         })
@@ -310,6 +310,7 @@
               export LANG="C.utf8"
 
               export CONFIG_FILE="$PWD/local/config.yaml"
+              export TEST_CONFIG_FILE="$PWD/local/test.yaml"
               export KUBECONFIG_DIR="$PWD/.kube"
               export KUBECONFIG="$KUBECONFIG_DIR/config"
 

@@ -69,6 +69,7 @@ library:
     - containers
     - http-api-data
     - data-default
+    - free
 
 ghc-options:
   - -Wall

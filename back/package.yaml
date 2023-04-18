@@ -43,11 +43,8 @@ default-extensions:
   - TypeOperators
   - ViewPatterns
   - ImplicitParams
-  - StandaloneDeriving
   - FlexibleInstances
   - DeriveAnyClass
-  - DerivingStrategies
-  - GeneralizedNewtypeDeriving
   - MultiParamTypeClasses
   - UndecidableInstances
 

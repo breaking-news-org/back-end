@@ -1,5 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE NoDeriveAnyClass #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module External.Logger (
   Logger,

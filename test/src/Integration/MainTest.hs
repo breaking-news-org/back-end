@@ -31,7 +31,7 @@ import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Persist.Types.News (IndexedImages (IndexedImages))
 import Servant.API ((:>))
 import Servant.Auth (Auth, JWT)
-import Servant.Client
+import Servant.Client ( client, mkClientEnv, runClientM, ClientM, BaseUrl(BaseUrl), Scheme(Http), ClientError, HasClient(Client, clientWithRoute) )
 import Servant.Client.Core (Request, RequestF (..))
 import Servant.Client.Named ()
 import Servant.Client.Record ()
@@ -39,6 +39,8 @@ import Server.Config
 import Service.Prelude (encodeUtf8)
 import Test.Tasty
 import Test.Tasty.HUnit
+import API.Prelude (encode)
+import qualified Data.ByteString.Char8 as BSC
 
 -- https://hackage.haskell.org/package/tasty-1.4.3/docs/Test-Tasty.html#v:defaultMain
 unit_main :: IO ()
@@ -106,9 +108,9 @@ userTests = testCase "Registration" do
   testConf <- runEff $ runLoader @TestConf _CONFIG_FILE do
     getConfig @TestConf id
   manager' <- newManager defaultManagerSettings
-  let appConf = testConf._testConf_app
+  let AppConf{..} = testConf._testConf_app
       withClientEnv :: ClientM a -> IO (Either ClientError a)
-      withClientEnv f = runClientM f (mkClientEnv manager' (BaseUrl Http appConf._appConf_host appConf._appConf_port ""))
+      withClientEnv f = runClientM f (mkClientEnv manager' (BaseUrl Http _appConf_host _appConf_port ""))
   res <- withClientEnv authorizeUser
   case res of
     Left err -> putStrLn [i|Error: #{err}|]
@@ -124,4 +126,6 @@ userTests = testCase "Registration" do
               , _createNews_category = 0
               }
       ns <- withClientEnv $ get def
-      pure ()
+      case ns of
+        Left err -> error $ show err
+        Right ns_ -> BSC.putStrLn $ encode ns_
