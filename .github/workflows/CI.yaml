@@ -68,7 +68,7 @@ jobs:
           justlogin: true
       - name: Release app on Heroku
         run: |
-          cd back-end
+          cd back
           nix run .#herokuRelease
   _4_push_to_docker_hub:
     name: Push to Docker Hub
@@ -87,12 +87,12 @@ jobs:
         with:
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
-      - name: Push to Docker Hub
-        env:
+      - env:
           DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        name: Push to Docker Hub
         run: |
-          cd back-end
+          cd back
           nix run .#pushToDockerHub
 name: CI
 "on":

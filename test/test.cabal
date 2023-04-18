@@ -54,7 +54,7 @@ library
       OverloadedRecordDot
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
-      back-end
+      back
     , base >=4.7 && <5
     , bytestring
     , containers
@@ -113,7 +113,7 @@ executable test
   build-tool-depends:
       tasty-discover:tasty-discover
   build-depends:
-      back-end
+      back
     , base >=4.7 && <5
     , test
   default-language: Haskell2010

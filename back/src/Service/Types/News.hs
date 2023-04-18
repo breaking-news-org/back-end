@@ -31,7 +31,7 @@ data GetNews = GetNews
   , _getNews_images :: IndexedImages
   , _getNews_isPublished :: Bool
   }
-  deriving (Generic)
+  deriving (Generic, Show)
 
 makeLenses ''GetNews
 

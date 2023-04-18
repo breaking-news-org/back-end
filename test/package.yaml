@@ -47,7 +47,7 @@ dependencies:
 library:
   source-dirs: src
   dependencies:
-    - back-end
+    - back
     - effectful
     - hspec
     - http-client
@@ -91,7 +91,7 @@ executables:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
-      - back-end
+      - back
       - test
     build-tools:
       - tasty-discover:tasty-discover

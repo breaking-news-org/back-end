@@ -10,13 +10,16 @@ module Integration.MainTest (unit_main) where
 import API.Endpoints.API1.News qualified
 import API.Endpoints.API1.Root qualified
 import API.Endpoints.API1.User qualified
+import API.Prelude (encode)
 import API.Root (API, Routes (..))
-import API.Types.News
 import API.Types.Instances ()
+import API.Types.News
 import API.Types.User (UserRegistrationForm (..))
 import Control.Exception (catch, throwIO)
 import Control.Monad (void)
+import Control.Monad.Free (Free (..))
 import Data.ByteString qualified as BS
+import Data.ByteString.Char8 qualified as BSC
 import Data.Data (Proxy (..))
 import Data.Default (def)
 import Data.Kind (Constraint)
@@ -28,19 +31,21 @@ import GHC.Generics (Generic)
 import GHC.IO.Exception (ExitCode (..))
 import Integration.Config
 import Network.HTTP.Client (defaultManagerSettings, newManager)
+import Network.HTTP.Client qualified as HTTP
 import Persist.Types.News (IndexedImages (IndexedImages))
 import Servant.API ((:>))
 import Servant.Auth (Auth, JWT)
-import Servant.Client ( client, mkClientEnv, runClientM, ClientM, BaseUrl(BaseUrl), Scheme(Http), ClientError, HasClient(Client, clientWithRoute) )
+import Servant.Client (BaseUrl (BaseUrl), ClientEnv (..), ClientError, HasClient (..), Scheme (Http), mkClientEnv)
+import Servant.Client qualified as I
 import Servant.Client.Core (Request, RequestF (..))
+import Servant.Client.Free (ClientF (RunRequest, Throw), client)
+import Servant.Client.Internal.HttpClient qualified as I
 import Servant.Client.Named ()
 import Servant.Client.Record ()
 import Server.Config
-import Service.Prelude (encodeUtf8)
+import Service.Prelude (encodeUtf8, (&), (?~))
 import Test.Tasty
 import Test.Tasty.HUnit
-import API.Prelude (encode)
-import qualified Data.ByteString.Char8 as BSC
 
 -- https://hackage.haskell.org/package/tasty-1.4.3/docs/Test-Tasty.html#v:defaultMain
 unit_main :: IO ()
@@ -68,13 +73,15 @@ type family HasJWT xs :: Constraint where
 
 class JWTAuthNotEnabled
 
-instance (HasJWT auths, HasClient ClientM api) => HasClient ClientM (Auth auths a :> api) where
-  type Client ClientM (Auth auths a :> api) = Token -> Client ClientM api
+type ClientFree = Free ClientF
 
-  clientWithRoute :: (HasJWT auths, HasClient ClientM api) => Proxy ClientM -> Proxy (Auth auths a :> api) -> Request -> Client ClientM (Auth auths a :> api)
-  clientWithRoute (Proxy :: Proxy ClientM) _ req (Token token) =
+instance (HasJWT auths, HasClient ClientFree api) => HasClient ClientFree (Auth auths a :> api) where
+  type Client ClientFree (Auth auths a :> api) = Token -> Client ClientFree api
+
+  clientWithRoute :: (HasJWT auths, HasClient ClientFree api) => Proxy ClientFree -> Proxy (Auth auths a :> api) -> Request -> Client ClientFree (Auth auths a :> api)
+  clientWithRoute (Proxy :: Proxy ClientFree) _ req (Token token) =
     clientWithRoute
-      (Proxy :: Proxy ClientM)
+      (Proxy :: Proxy ClientFree)
       (Proxy :: Proxy api)
       req{requestHeaders = ("Authorization", headerVal) :<| requestHeaders req}
    where
@@ -88,7 +95,7 @@ Routes
       }
   } = client api
 
-authorizeUser :: ClientM Token
+authorizeUser :: ClientFree Token
 authorizeUser =
   Token . encodeUtf8
     <$> authorize
@@ -109,8 +116,20 @@ userTests = testCase "Registration" do
     getConfig @TestConf id
   manager' <- newManager defaultManagerSettings
   let AppConf{..} = testConf._testConf_app
-      withClientEnv :: ClientM a -> IO (Either ClientError a)
-      withClientEnv f = runClientM f (mkClientEnv manager' (BaseUrl Http _appConf_host _appConf_port ""))
+      withClientEnv :: Show a => ClientFree a -> IO (Either ClientError a)
+      withClientEnv f = do
+        let env = mkClientEnv manager' (BaseUrl Http _appConf_host _appConf_port "")
+        case f of
+          Pure a -> pure (pure a)
+          Free (Throw err) -> error $ "ERROR: got error right away: " ++ show err
+          Free (RunRequest req k) -> do
+            let req' = I.defaultMakeClientRequest (baseUrl env) req
+            resp <- HTTP.httpLbs req' (manager env)
+            putStrLn $ "Got response:\n" <> show resp
+            let res = I.clientResponseToResponse id resp
+            case k res of
+              Pure n -> print n >> pure (pure n)
+              _ -> error "Error: didn't get a response"
   res <- withClientEnv authorizeUser
   case res of
     Left err -> putStrLn [i|Error: #{err}|]
@@ -125,7 +144,7 @@ userTests = testCase "Registration" do
               , _createNews_images = IndexedImages []
               , _createNews_category = 0
               }
-      ns <- withClientEnv $ get def
+      ns <- withClientEnv $ get (def & queryParams_category ?~ 1)
       case ns of
         Left err -> error $ show err
         Right ns_ -> BSC.putStrLn $ encode ns_

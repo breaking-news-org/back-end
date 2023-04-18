@@ -2,9 +2,7 @@
   inputs = {
     nixpkgs_.url = "github:deemp/flakes?dir=source-flake/nixpkgs";
     nixpkgs.follows = "nixpkgs_/nixpkgs";
-    nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions/424a7d09e2ebe4bcce9a0304b3f467e6aa78f209";
     codium.url = "github:deemp/flakes?dir=codium";
-    codium.inputs.vscode-extensions.follows = "nix-vscode-extensions";
     drv-tools.url = "github:deemp/flakes?dir=drv-tools";
     flake-utils_.url = "github:deemp/flakes?dir=source-flake/flake-utils";
     flake-utils.follows = "flake-utils_/flake-utils";
@@ -17,10 +15,6 @@
       url = "github:frasertweedale/hs-jose";
       flake = false;
     };
-    # symbols = {
-    #   url = "github:deemp/symbols/add-fromlist";
-    #   flake = false;
-    # };
     servant = {
       url = "github:deemp/servant";
       flake = false;
@@ -47,10 +41,10 @@
         ghcVersion_ = "927";
 
         # and the name of the package
-        appPackageName = "back-end";
+        appPackageName = "back";
 
         # and the name of the package
-        testPackageName = "back-end-test";
+        testPackageName = "test";
 
         # Then, we list separately the libraries that our package needs
         appPackageDepsLib = [ pkgs.zlib pkgs.libpqxx ];
@@ -92,15 +86,7 @@
             {
               lzma = modify super.lzma;
               openapi3 = modify (unmarkBroken super.openapi3);
-              # symbols = (super.callCabal2nix "symbols" inputs.symbols.outPath { });
 
-              # servant-named-core = (super.callCabal2nix "servant-named-core" ./servant-named/servant-named-core { });
-              # servant-named-server = (super.callCabal2nix "servant-named-server" ./servant-named/servant-named-server {
-              #   inherit (self) servant-named-core;
-              # });
-              # servant-named-client = (super.callCabal2nix "servant-named-client" ./servant-named/servant-named-client {
-              #   inherit (self) servant-named-core;
-              # });
               servant-named-core = (super.callCabal2nix "servant-named-core" "${inputs.servant.outPath}/servant-named/servant-named-core" { });
               servant-named-server = (super.callCabal2nix "servant-named-server" "${inputs.servant.outPath}/servant-named/servant-named-server" {
                 inherit (self) servant-named-core;
@@ -150,9 +136,6 @@
           packages = (ps: [
             ps.${appPackageName}
             ps.${testPackageName}
-            # ps.servant-named-server
-            # ps.servant-named-client
-            # ps.servant-named-core
           ]);
           runtimeDependencies = appPackageDepsBin ++ testPackageDepsBin;
         })
@@ -268,13 +251,12 @@
 
           # node
           pkgs.nodejs-16_x
-
-          pkgs.bashInteractive
         ];
 
         extraTools = [
           pkgs.pulumiPackages.pulumi-language-python
           pkgs.pulumiPackages.pulumi-language-nodejs
+          pkgs.bashInteractive
         ];
 
         packages = {
@@ -292,11 +274,11 @@
             extensions = { inherit (extensions) nix haskell misc github markdown kubernetes python; };
             runtimeDependencies = tools;
           };
-          inherit (mkFlakesTools [ "." "back-end" ]) updateLocks pushToCachix;
+          inherit (mkFlakesTools [ "." ]) updateLocks pushToCachix;
 
           writeWorkflows = import ./nix-files/workflows.nix {
             inherit (inputs) workflows;
-            backDir = "back-end";
+            backDir = "back";
             name = "CI";
             herokuAppName = "breaking-news-back";
             inherit system;

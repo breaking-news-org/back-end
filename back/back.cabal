@@ -4,11 +4,11 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:           back-end
+name:           back
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/value/back-end#readme>
-homepage:       https://github.com/value/back-end#readme
-bug-reports:    https://github.com/value/back-end/issues
+description:    Please see the README on GitHub at <https://github.com/value/back#readme>
+homepage:       https://github.com/value/back#readme
+bug-reports:    https://github.com/value/back/issues
 author:         value
 maintainer:     value
 copyright:      value
@@ -17,7 +17,7 @@ build-type:     Simple
 
 source-repository head
   type: git
-  location: https://github.com/value/back-end
+  location: https://github.com/value/back
 
 library
   exposed-modules:
@@ -61,7 +61,7 @@ library
       Service.Types.User
       Service.User
   other-modules:
-      Paths_back_end
+      Paths_back
   hs-source-dirs:
       src
   default-extensions:
@@ -142,56 +142,10 @@ library
     , yaml
   default-language: Haskell2010
 
-executable back-end
-  main-is: Main.hs
-  other-modules:
-      Paths_back_end
-  hs-source-dirs:
-      app/BackEnd
-  default-extensions:
-      BlockArguments
-      ConstraintKinds
-      DataKinds
-      DeriveGeneric
-      DuplicateRecordFields
-      FlexibleContexts
-      GADTs
-      ImportQualifiedPost
-      KindSignatures
-      LambdaCase
-      NamedFieldPuns
-      OverloadedRecordDot
-      OverloadedStrings
-      QuasiQuotes
-      RankNTypes
-      RecordWildCards
-      ScopedTypeVariables
-      StrictData
-      TemplateHaskell
-      TupleSections
-      TypeApplications
-      TypeFamilies
-      TypeOperators
-      ViewPatterns
-      ImplicitParams
-      FlexibleInstances
-      DeriveAnyClass
-      MultiParamTypeClasses
-      UndecidableInstances
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      back-end
-    , base >=4.7 && <5
-    , effectful-core
-    , effectful-plugin
-    , string-interpolate
-    , wai
-  default-language: Haskell2010
-
 executable gen-openapi3
   main-is: Main.hs
   other-modules:
-      Paths_back_end
+      Paths_back
   hs-source-dirs:
       app/GenerateOpenAPI3
   default-extensions:
@@ -226,7 +180,53 @@ executable gen-openapi3
       UndecidableInstances
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      back-end
+      back
+    , base >=4.7 && <5
+    , effectful-core
+    , effectful-plugin
+    , string-interpolate
+    , wai
+  default-language: Haskell2010
+
+executable server
+  main-is: Main.hs
+  other-modules:
+      Paths_back
+  hs-source-dirs:
+      app/Server
+  default-extensions:
+      BlockArguments
+      ConstraintKinds
+      DataKinds
+      DeriveGeneric
+      DuplicateRecordFields
+      FlexibleContexts
+      GADTs
+      ImportQualifiedPost
+      KindSignatures
+      LambdaCase
+      NamedFieldPuns
+      OverloadedRecordDot
+      OverloadedStrings
+      QuasiQuotes
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StrictData
+      TemplateHaskell
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+      ImplicitParams
+      FlexibleInstances
+      DeriveAnyClass
+      MultiParamTypeClasses
+      UndecidableInstances
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      back
     , base >=4.7 && <5
     , effectful-core
     , effectful-plugin
