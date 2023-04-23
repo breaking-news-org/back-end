@@ -1,4 +1,4 @@
-{ workflows, backDir, name, system }:
+{ workflows, backDir, name, system, scripts }:
 let
   inherit (workflows.functions.${system}) writeWorkflow expr mkAccessors genAttrsId;
   inherit (workflows.configs.${system}) steps os oss;
@@ -73,7 +73,8 @@ let
             };
             run = ''
               cd ${backDir}
-              nix run .#pushToDockerHub
+              nix run .#${scripts.appPushToDockerHub.pname}
+              nix run .#${scripts.testPushToDockerHub.pname}
             '';
           }
         ];

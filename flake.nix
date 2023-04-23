@@ -151,7 +151,7 @@
             executableName = appExeName;
           };
 
-        appExeName = "back-end";
+        appExeName = "back";
         appExe = mkExe appPackageName appExeName;
 
         testExeName = "test";
@@ -277,6 +277,7 @@
             backDir = "back";
             name = "CI";
             inherit system;
+            inherit scripts;
           };
         } // scripts;
 

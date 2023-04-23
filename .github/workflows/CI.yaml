@@ -70,7 +70,8 @@ jobs:
         name: Push to Docker Hub
         run: |
           cd back
-          nix run .#pushToDockerHub
+          nix run .#appPushToDockerHub
+          nix run .#testPushToDockerHub
 name: CI
 "on":
   pull_request: {}

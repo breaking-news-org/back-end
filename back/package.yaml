@@ -111,7 +111,7 @@ library:
     - symbols
 
 executables:
-  server:
+  back:
     main: Main.hs
     source-dirs: app/Server
     ghc-options:

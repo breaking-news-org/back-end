@@ -127,9 +127,9 @@ library
     , servant-auth-server
     , servant-client
     , servant-docs
+    , servant-openapi3
     , servant-queryparam-core
     , servant-queryparam-server
-    , servant-openapi3
     , servant-server
     , string-interpolate
     , symbols
@@ -142,12 +142,12 @@ library
     , yaml
   default-language: Haskell2010
 
-executable gen-openapi3
+executable back
   main-is: Main.hs
   other-modules:
       Paths_back
   hs-source-dirs:
-      app/GenerateOpenAPI3
+      app/Server
   default-extensions:
       BlockArguments
       ConstraintKinds
@@ -188,12 +188,12 @@ executable gen-openapi3
     , wai
   default-language: Haskell2010
 
-executable server
+executable gen-openapi3
   main-is: Main.hs
   other-modules:
       Paths_back
   hs-source-dirs:
-      app/Server
+      app/GenerateOpenAPI3
   default-extensions:
       BlockArguments
       ConstraintKinds
