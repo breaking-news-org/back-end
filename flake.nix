@@ -87,12 +87,12 @@
               lzma = modify super.lzma;
               openapi3 = modify (unmarkBroken super.openapi3);
 
-              servant-named-core = (super.callCabal2nix "servant-named-core" "${inputs.servant.outPath}/servant-named/servant-named-core" { });
-              servant-named-server = (super.callCabal2nix "servant-named-server" "${inputs.servant.outPath}/servant-named/servant-named-server" {
-                inherit (self) servant-named-core;
+              servant-queryparam-core = (super.callCabal2nix "servant-queryparam-core" "${inputs.servant.outPath}/servant-queryparam/servant-queryparam-core" { });
+              servant-queryparam-server = (super.callCabal2nix "servant-queryparam-server" "${inputs.servant.outPath}/servant-queryparam/servant-queryparam-server" {
+                inherit (self) servant-queryparam-core;
               });
-              servant-named-client = (super.callCabal2nix "servant-named-client" "${inputs.servant.outPath}/servant-named/servant-named-client" {
-                inherit (self) servant-named-core;
+              servant-queryparam-client = (super.callCabal2nix "servant-queryparam-client" "${inputs.servant.outPath}/servant-queryparam/servant-queryparam-client" {
+                inherit (self) servant-queryparam-core;
               });
             } //
             (
@@ -106,8 +106,6 @@
                   executableSystemDepends = depsBin ++ (x.executableSystemDepends or [ ]);
 
                   libraryHaskellDepends = [
-                    # (if name == appPackageName then self.servant-named-server else self.servant-named-client)
-                    # self.servant-named-core
                   ] ++ (x.libraryHaskellDepends or [ ]);
 
                   testHaskellDepends = [
@@ -243,8 +241,8 @@
 
           # kubernetes
           pkgs.kubectl
-          # pkgs.kubernetes-helm
-          # pkgs.minikube
+
+          pkgs.minikube
 
           # tests
           pkgs.postman
@@ -254,8 +252,6 @@
         ];
 
         extraTools = [
-          pkgs.pulumiPackages.pulumi-language-python
-          pkgs.pulumiPackages.pulumi-language-nodejs
           pkgs.bashInteractive
         ];
 
@@ -266,7 +262,7 @@
               git nix-ide workbench markdown-all-in-one markdown-language-features
               ;
             extra = settingsNix.python // {
-              "python.defaultInterpreterPath" = ''''${workspaceFolder}/pyquick/venv/bin/python'';
+              "python.defaultInterpreterPath" = ''''${workspaceFolder}/pulumi/venv/bin/python'';
             };
           };
           # And compose VSCodium with dev tools and HLS
@@ -280,7 +276,6 @@
             inherit (inputs) workflows;
             backDir = "back";
             name = "CI";
-            herokuAppName = "breaking-news-back";
             inherit system;
           };
         } // scripts;
@@ -293,24 +288,24 @@
 
               export CONFIG_FILE="$PWD/local/config.yaml"
               export TEST_CONFIG_FILE="$PWD/local/test.yaml"
-              export KUBECONFIG_DIR="$PWD/.kube"
-              export KUBECONFIG="$KUBECONFIG_DIR/config"
+              # export KUBECONFIG_DIR="$PWD/.kube"
+              # export KUBECONFIG="$KUBECONFIG_DIR/config"
 
-              mkdir -p $KUBECONFIG_DIR
-              microk8s config > $KUBECONFIG/config
+              # mkdir -p $KUBECONFIG_DIR
+              # microk8s config > $KUBECONFIG/config
 
               export JWK_FILE="$PWD/local/jwk.json"
             '';
             commands =
               (mkCommands "tools" tools)
-              ++ [
-                {
-                  name = "pulumi";
-                  command = ''LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.gcc-unwrapped ]} ${pkgs.pulumi}/bin/pulumi "$@"'';
-                  help = "pulumi";
-                  category = "tools";
-                }
-              ]
+              # ++ [
+              #   {
+              #     name = "pulumi";
+              #     command = ''LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs-22-11.glibc.out ]} ${pkgs-22-11.pulumi}/bin/pulumi "$@"'';
+              #     help = "pulumi";
+              #     category = "tools";
+              #   }
+              # ]
               ++ (mkRunCommands "scripts" scripts)
               ++ (mkRunCommands "ide" { inherit (packages) writeSettings; "codium ." = packages.codium; })
               ++ (mkRunCommands "infra" {

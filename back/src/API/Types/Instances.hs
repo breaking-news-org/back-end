@@ -3,11 +3,11 @@
 module API.Types.Instances where
 
 import GHC.Base (Symbol)
-import Servant.Symbols (DropWhile, DropWhileNot, Exp, Modify)
+import Servant.Symbols (Exp, DropPrefix, Eval)
 
 type family Modifier (sym :: Symbol) :: Symbol where
-  Modifier sym = DropWhile "_" (DropWhileNot "_" (DropWhile "_" sym))
+  Modifier sym = DropPrefix sym
 
-data DropPrefix :: Symbol -> Exp Symbol
+data Drop :: a -> Exp a
 
-type instance Modify (DropPrefix sym) = Modifier sym
+type instance Eval (Drop sym) = Modifier sym

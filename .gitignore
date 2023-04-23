@@ -12,4 +12,3 @@ secrets.env
 result
 .git-bk
 ghc*
-servant-named

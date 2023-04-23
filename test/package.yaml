@@ -64,8 +64,8 @@ library:
     - wai-extra
     - bytestring
     - servant-client-core
-    - servant-named-core
-    - servant-named-client
+    - servant-queryparam-core
+    - servant-queryparam-client
     - containers
     - http-api-data
     - data-default

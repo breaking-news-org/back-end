@@ -127,8 +127,8 @@ library
     , servant-auth-server
     , servant-client
     , servant-docs
-    , servant-named-core
-    , servant-named-server
+    , servant-queryparam-core
+    , servant-queryparam-server
     , servant-openapi3
     , servant-server
     , string-interpolate

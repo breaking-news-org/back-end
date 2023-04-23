@@ -105,8 +105,8 @@ library:
     - jose
     - insert-ordered-containers
     - http-api-data
-    - servant-named-server
-    - servant-named-core
+    - servant-queryparam-server
+    - servant-queryparam-core
     - first-class-families
     - symbols
 

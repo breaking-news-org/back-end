@@ -4,10 +4,10 @@ import API.Prelude (Generic, GenericMode (type (:-)), JSON, NoContent, Post, Put
 import API.Types.News (CreateNews, QueryParams)
 import Servant.Record (RecordParam)
 import Service.Types.News qualified as API (GetNews)
-import API.Types.Instances(DropPrefix)
+import API.Types.Instances (Drop)
 
 data API route = API
   { create :: route :- "create" :> ReqBody '[JSON] CreateNews :> Post '[JSON] NoContent
-  , get :: route :- "get" :> RecordParam DropPrefix QueryParams :> Put '[JSON] [API.GetNews]
+  , get :: route :- "get" :> RecordParam Drop QueryParams :> Put '[JSON] [API.GetNews]
   }
   deriving (Generic)

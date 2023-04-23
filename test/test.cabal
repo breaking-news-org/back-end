@@ -70,8 +70,8 @@ library
     , servant-auth
     , servant-client
     , servant-client-core
-    , servant-named-client
-    , servant-named-core
+    , servant-queryparam-client
+    , servant-queryparam-core
     , string-interpolate
     , tasty
     , tasty-hspec
