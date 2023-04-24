@@ -96,8 +96,8 @@
               });
             } //
             (
-              let mkPackage = name: path: depsLib: depsBin: overrideCabal
-                (super.callCabal2nix appPackageName path { })
+              let mkPackage = name: path: deps: depsLib: depsBin: overrideCabal
+                (dontCheck (dontHaddock (dontBenchmark (super.callCabal2nix appPackageName path deps))))
                 (x: {
                   # we can combine the existing deps and new deps
                   # we should write the new deps before the existing deps to override them
@@ -113,8 +113,8 @@
                   ] ++ (x.testHaskellDepends or [ ]);
                 }); in
               {
-                "${appPackageName}" = mkPackage appPackageName ./back appPackageDepsLib appPackageDepsBin;
-                "${testPackageName}" = mkPackage testPackageName ./test testPackageDepsLib testPackageDepsBin;
+                "${appPackageName}" = mkPackage appPackageName ./back { } appPackageDepsLib appPackageDepsBin;
+                "${testPackageName}" = mkPackage testPackageName ./test { "${appPackageName}" = self."${appPackageName}"; } testPackageDepsLib testPackageDepsBin;
               }
             );
         };
@@ -147,8 +147,8 @@
 
         mkExe = packageName: exeName:
           justStaticExecutable {
-            package = dontCheck (dontHaddock (dontBenchmark haskellPackages.${appPackageName}));
-            executableName = appExeName;
+            package = dontCheck (dontHaddock (dontBenchmark haskellPackages.${packageName}));
+            executableName = exeName;
           };
 
         appExeName = "back";
@@ -168,26 +168,20 @@
         # At this moment, we can set a name and a tag of our image
 
 
-        mkImage = imageName: imageTag: exe: entrypoint:
+        mkImage = { imageName, imageTag, exeName, exe }:
           pkgs.dockerTools.buildLayeredImage {
             name = imageName;
             tag = imageTag;
-            config.Entrypoint = [ "bash" "-c" ] ++ entrypoint;
-            contents = [ pkgs.bash exe ];
+            config.Cmd = [ exeName ];
+            contents = [
+              # pkgs.bash
+              exe
+            ];
           };
 
-        appImageName = "breaking-news-back-app";
-        appLocalImageName = appImageName;
-        appImageTag = "latest";
-        appImage = mkImage appImageName appImageTag appExe [ appExeName ];
-
-        testImageName = "breaking-news-back-test";
-        testLocalImageName = testImageName;
-        testImageTag = "latest";
-        testImage = mkImage testImageName testImageTag testExe [ testExeName ];
-
-        mkScripts = name: imageName: imageTag:
+        mkScripts = { name, imageName, imageTag, exeName, exe }:
           let
+            image = mkImage { inherit imageName imageTag exeName exe; };
             env =
               mapGenAttrs
                 (name_: { "${name_}" = "\$${name_}"; })
@@ -195,7 +189,7 @@
 
             scripts1 = mkShellApps {
               "${name}DockerBuild" = {
-                text = ''docker load < ${appImage}'';
+                text = ''docker load < ${image}'';
                 runtimeInputs = [ pkgs.docker ];
                 description = "Load an image into docker";
               };
@@ -206,7 +200,7 @@
                 text = ''
                   ${mkBin scripts1."${name}DockerBuild"}
                   docker login -u ${env.DOCKER_HUB_USERNAME} -p ${env.DOCKER_HUB_PASSWORD}
-                  docker tag ${appLocalImageName}:${imageTag} ${env.DOCKER_HUB_USERNAME}/${imageName}:${imageTag}
+                  docker tag ${imageName}:${imageTag} ${env.DOCKER_HUB_USERNAME}/${imageName}:${imageTag}
                   docker push ${env.DOCKER_HUB_USERNAME}/${imageName}:${imageTag}
                 '';
                 description = ''Push image to Docker Hub'';
@@ -225,9 +219,17 @@
         appDockerHubImageName = appImageName;
         testDockerHubImageName = testImageName;
 
+        appImageName = "breaking-news-back-app";
+        appLocalImageName = appImageName;
+        appImageTag = "latest";
+
+        testImageName = "breaking-news-back-test";
+        testLocalImageName = testImageName;
+        testImageTag = "latest";
+
         scripts =
-          (mkScripts "app" appDockerHubImageName appImageTag)
-          // (mkScripts "test" testDockerHubImageName testImageTag);
+          (mkScripts { name = "app"; imageName = appDockerHubImageName; imageTag = "latest"; exeName = "back"; exe = appExe; })
+          // (mkScripts { name = "test"; imageName = testDockerHubImageName; imageTag = "latest"; exeName = "test"; exe = testExe; });
 
         tools = [
           ghcid

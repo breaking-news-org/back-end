@@ -6,26 +6,24 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: back
+      environment: dev
   template:
     metadata:
       labels:
-        app: back
+        environment: dev
     spec:
       containers:
-        - name: breaking-news-back
-          image: deemp/breaking-news-back:latest # Sets Image
+        - name: breaking-news-back-app
+          image: deemp/breaking-news-back-app:latest # Sets Image
           imagePullPolicy: Always
           ports:
             - containerPort: 8080 # Exposes container port
               name: back-port
-          volumeMounts:
-            - mountPath: /etc/config
-              name: config-volume
-          # command: [ "/bin/sh", "-c", "ls /etc/config" ]
           env:
             - name: CONFIG_FILE
               value: /etc/config/back.yaml
+            - name: JWK_FILE
+              value: /etc/jwk/jwk.yaml
           resources:
             requests:
               memory: "64Mi"
@@ -33,23 +31,32 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "500m"
+          volumeMounts:
+            - mountPath: /etc/config
+              name: config-volume
+            - mountPath: /etc/jwk
+              name: jwk-volume
+          # command: [ "/bin/sh", "-c", "ls /etc/config" ]
       volumes:
         - name: config-volume
           configMap:
             name: back-config
+        - name: jwk-volume
+          configMap:
+            name: jwk-config
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: back # Sets service name
   labels:
-    app: back # Labels and Selectors
+    environment: dev # Labels and Selectors
 spec:
   type: NodePort # Sets service type
   ports:
-    - port: 8080 # Sets port to run the service
+    - port: 8081 # Sets port to run the service
       name: back-service-port
       targetPort: back-port
-      nodePort: 30003
+      nodePort: 30007
   selector:
-    app: back
+    environment: dev

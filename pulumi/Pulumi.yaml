@@ -1,4 +1,4 @@
-name: pyquick
+name: breaking-news
 runtime:
   name: python
   options:

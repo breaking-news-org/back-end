@@ -19,40 +19,40 @@
 
 ## Kubernetes
 
-- [Install microk8s](https://microk8s.io/docs/getting-started)
+- For local development, we use `minikube`.
 
-- Write a config for a project `kubectl`
+    ```console
+    # start a minikube vm
+    minikube start
 
-    ```sh
-    mkdir $KUBECONFIG
+    # go to pulumi config
+    cd pulumi
+
+    # select dev stack
+    pulumi stack select dev
+
+    # start cluster
+    pulumi up
+
+    # check that all pods are ready
+    kubectl get po
+
+    # make a request to the server
+    curl --location --request POST "http://$(minikube ip):30003/api1/user/authorize" \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "email": "contact@zelinf.net",
+                "password": "abcdef"
+            }'
+
+    # connect to the database
+    psql postgresql://admin:psltest@localhost:30002/postgresdb
+
+    # check records
+    select * from users;
     ```
 
-```console
-# start a minikube vm
-minikube start
-
-# apply kustomization
-kubectl apply -k k8s
-
-# wait some time
-# the app may fail at first because the database isn't ready
-# after that, check that both pods are running
-kubectl get po
-
-# make a request to the server
-curl --location --request POST 'http://192.168.58.2:30003/api/user' \
-        --header 'Content-Type: application/json' \
-        --data-raw '{
-            "email": "contact@zelinf.net",
-            "password": "abcdef"
-        }'
-
-# connect to the database
-psql postgresql://admin:psltest@localhost:30002/postgresdb
-
-# check records
-select * from users;
-```
+- On a server, we user `microk8s`.
 
 ## Nix
 
@@ -71,14 +71,10 @@ See these for additional info:
 
 1. Install Nix - see [how](https://github.com/deemp/flakes/blob/main/README/InstallNix.md).
 
-1. In a new terminal, start a devshell and run the app:
+1. In a new terminal, start a devshell:
 
     ```console
-    nix flake new my-project -t github:deemp/flakes#codium-haskell-simple
-    cd my-project
-    git init && git add
     nix develop
-    cabal run
     ```
 
 1. Write `settings.json` and start `VSCodium`:
@@ -87,14 +83,6 @@ See these for additional info:
     nix run .#writeSettings
     nix run .#codium .
     ```
-
-#### Tools
-
-##### GHC
-
-This template uses `GHC 9.2`. You can switch to `GHC 9.0`:
-
-- In `flake.nix`, change `"92"` to `"90"`
 
 ### Configs
 

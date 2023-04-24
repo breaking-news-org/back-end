@@ -23,9 +23,12 @@ import Server.Server
 import Service.Effects.News (ServiceNews)
 import Service.News
 import Service.User (UserService, runUserService)
+import System.IO (stdout, BufferMode(..), hSetBuffering)
 
 main :: IO ()
-main = runAppM startServer
+main = do
+  hSetBuffering stdout NoBuffering
+  runAppM startServer
 
 type AppM =
   Eff

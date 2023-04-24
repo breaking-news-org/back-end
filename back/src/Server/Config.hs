@@ -12,6 +12,7 @@ import Effectful.Reader.Static
 import Effectful.TH (makeEffect)
 import GHC.Generics (Generic)
 import System.Environment (lookupEnv)
+import Control.Exception (catch, SomeException)
 
 data DB = DB
   { _db_db :: Text
@@ -55,10 +56,10 @@ runLoader var = reinterpret (loadConfigToReader @conf var) $ \_ -> \case
   GetConfig f -> asks f
 
 loadConfigToReader :: forall conf es a. (FromJSON conf, IOE :> es) => String -> Eff (Reader conf : es) a -> Eff es a
-loadConfigToReader varConfPath action = do
-  conf <- liftIO $ do
-    confFile <- lookupEnv varConfPath
+loadConfigToReader envVarConfigPath action = do
+  config <- liftIO $ do
+    confFile <- lookupEnv envVarConfigPath
     case confFile of
-      Nothing -> error [i|Environment doesn't provide the $#{varConfPath} env variable|]
-      Just p -> decodeFileThrow p
-  runReader conf action
+      Nothing -> error [i|Environment doesn't provide the $#{envVarConfigPath} env variable|]
+      Just p -> decodeFileThrow p `catch` (\(x :: SomeException) -> error [i|Error decoding #{p}\n\n#{x}|])
+  runReader config action

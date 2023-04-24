@@ -2,13 +2,16 @@ configMapGenerator:
   - name: back-config
     files:
       - config/back.yaml
-  - name: test-config
+  - name: jwk-config
     files:
-      - config/test.yaml
+      - config/jwk.yaml
+  # - name: test-config
+  #   files:
+  #     - config/test.yaml
 resources:
   - resources/back.yaml
   - resources/postgres.yaml
   # this is for testing
-  - resources/back-test.yaml
-  - resources/back-staging.yaml
-  - resources/postgres-staging.yaml
+  # - resources/back-test.yaml
+  # - resources/back-staging.yaml
+  # - resources/postgres-staging.yaml
