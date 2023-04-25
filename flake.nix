@@ -269,7 +269,7 @@
           };
           # And compose VSCodium with dev tools and HLS
           codium = mkCodium {
-            extensions = { inherit (extensions) nix haskell misc github markdown kubernetes python; };
+            extensions = { inherit (extensions) nix haskell misc github markdown kubernetes python typescript; };
             runtimeDependencies = tools;
           };
           inherit (mkFlakesTools [ "." ]) updateLocks pushToCachix;

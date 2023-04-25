@@ -1,5 +1,5 @@
 config:
-  dev:postgres:
+  prod:postgres:
     name: postgres
     configMap:
       data:
@@ -7,7 +7,7 @@ config:
         POSTGRES_USER: admin
         POSTGRES_PASSWORD: psltest
     persistentVolume:
-      hostPath: "/mnt/data"
+      hostPath: /mnt/data
     container:
       image: postgres:15.1-alpine
       replicaCount: 1
@@ -20,8 +20,8 @@ config:
     service:
       type: NodePort
       port: 8080
-      nodePort: 30002
-  dev:back:
+      nodePort: 30005
+  prod:back:
     name: back
     deployment:
       container:
@@ -34,14 +34,12 @@ config:
             varName: CONFIG_FILE
             filePath: config.yaml
             fileContent:
-              env: dev
+              env: prod
               db:
                 db: postgresql
                 user: admin
                 password: psltest
                 dbName: postgresdb
-                # host: # string, required
-                # port: # number, required
                 numConns: 10
               web:
                 port: 8080
@@ -64,22 +62,4 @@ config:
     service:
       port: 8080
       type: NodePort
-      nodePort: 30003
-  dev:test:
-    name: test
-    deployment:
-      container:
-        replicaCount: 1
-        name: breaking-news-back-test
-        dockerHubImage: deemp/breaking-news-back-test:latest
-        port: 8080
-        app:
-          mountPath: /etc/config
-          varName: TEST_CONFIG_FILE
-          filePath: config.yaml
-          fileContent:
-            users: []
-    service:
-      port: 8080
-      type: NodePort
-      nodePort: 30004
+      nodePort: 30006
