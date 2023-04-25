@@ -9,10 +9,6 @@
 
 - [V1](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/breaking-news-org/back-end/main/API/v1.yaml)
 
-## Tests
-
-- [Using production data in staging](https://help.cloud66.com/docs/databases/using-master-data-staging)
-
 ## Infra
 
 - [Pulumi](https://www.pulumi.com/)
@@ -107,3 +103,4 @@ See these for additional info:
   - PVC is bound to a PV at runtime automatically
   - There's no connection between PVCs and PVs in a manifest
 - [advanced helm templating](https://blog.palark.com/advanced-helm-templating/)
+- [Using production data in staging](https://help.cloud66.com/docs/databases/using-master-data-staging)
