@@ -108,7 +108,7 @@ paths:
       security:
       - JWT: []
   /api1/news/get:
-    put:
+    get:
       parameters:
       - in: query
         name: createdUntil
