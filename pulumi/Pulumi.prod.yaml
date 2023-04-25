@@ -7,12 +7,11 @@ config:
         POSTGRES_USER: admin
         POSTGRES_PASSWORD: psltest
     persistentVolume:
-      hostPath: "/mnt/data"
+      hostPath: /mnt/data
     container:
       image: postgres:15.1-alpine
       replicaCount: 1
       tag: latest
-      dockerHubUser: deemp
       volumeMounts:
         name: postgredb
         mountPath: /var/lib/postgresql/data
@@ -34,15 +33,13 @@ config:
           app:
             varName: CONFIG_FILE
             filePath: config.yaml
-            file:
+            fileContent:
               env: prod
               db:
                 db: postgresql
                 user: admin
                 password: psltest
                 dbName: postgresdb
-                # host: # string, required
-                # port: # number, required
                 numConns: 10
               web:
                 port: 8080
@@ -50,7 +47,7 @@ config:
           jwk:
             varName: JWK_FILE
             filePath: jwk.yaml
-            file:
+            fileContent:
               {
                 "d": "bIcGzl9tl5DR0EvlWQ6Dld3KfR4nLOboLqnkZuZ3KAu0R9cqDvNLtOrb3v4BvljxPUHEhNBU1PgsZIxOpVsqrQjhKPp2gpIgFDIxm0x1W3mO0qwTY5qTXg4NFcqc1Rb1hyvBRYewR_BzGdM3vG4SeZH4v1FQzY0PDWf3352Fhmwm1YDgZ_r5u6xOZvxybzZvdyQdYJgVNFhUhJ1SXVxxRUvO6uJZkNmsRWUIyz8TLig-7q7TrOYG0_3u6jOEMBNd045cTj14zWQ6PXKz7mglUS_-n7cZyzJmrO6-IwMZR0nTr8LLUq7atNv6eDkXGWOftcUKDAGzm95X4ex-UdqKz-jOo3pX5p_sx00QThBQsuZaUtuxAVrqF_FXdA8TK-pSo7PW1Oi3YJpPvu9IiACi-ctBhU2AnRexj_JM9YgXE0tzBV6_HliGzBqz0oqVV2A43bT_qO9hpb4NUGJqQrAgoWHBmqV6tjwfH6TSbt7A8LvTf2D4ZQ0fy5id5OB25sCaQqppp13D5f-eQ4sznldTx-ueXGGhE5oGH4pPMc8L8c7o9dd1EtNVRenpil5EKqdz4B9vihyhjn79gZoiFPcgxmRo8KiyNFMsdz1hZWrLePy2GagVCSB07xVQHTkRa0RKH6VqHjy8drcxiDR9is24PUklp-rWpDQ65cBVntHAdabJwQ9OymmIZUDW51dLVZhY2LxqOK-k7JJaXEk1LdCee8KTnnmMpvArAIVDoEpziAriz7V5jfftM08aRapSDclLibKPhnAuKyrij04TdpPWobUDGkO47WhP9Fgh_LH0UZTLjV7n4WgLC18fzjeqLObN6PieUR0Kepnusmf1nFhqzd3zpC8XWHQU-9HTNm66PDeoOhoD-iFHQvKp6pRhdz8vbYjkl192HqQoF9dFkb1j0Pu64_EmDhxeqlsXuZBfRTvGxnn8oSMt3rnkacc3B26TNjl0sQBOJTb_Bcqi_IqgHlewWpjt7yQUOCWnA-d9R1fBul_23l8HjQeJPJJNNrbeF-1Rc9DQ-QAWQZVKDAwuav_y61_YewrH8guXLXqvk8D7o3LjLDqZcEQMUpdSwDX6wlDsKpIaJLNCN3KyJMPo2HOYVEk2ITdGxVmuXWVtcmvmlxQ1DZrHkXDthdp7KJd22RCMqNGDLMx1uYLcZd_q7L4Tj2PlwH2ewjl-BgjDmnp-kIVfSZmELOb_9mdGIt7oOypF_Q194hgQwLTsG4Cd3iJU-q8Mvmpaik1JxJfFO6ww9uDxwl-jNyHxgKFfLR5TLz_Meh81Vi05YmWPwMdbdrxI-wsZctoxwZ042JOHS-EnLHbF8IWAMQ",
                 "dp": "R7ltdBNRGfinro4mwxpIOUmNAdCZV3bKZD4ZvJHAI9VfKnG7zfHtwhxD2KYcQt36vv4Ypcc687eRPuIRKMjWbVB0nyK74Uu1xBFaRzBaOuNWSQUzgXwcrwfwfRg_NKKOvotAY8YrTHKUx74RFf3BDdV2mjuaBPzHH_5AN0uzs8ftmPmsk3JmEjOiBJktCeHgEUc3hpHlMnSODykwa9LvdPi7zWyQ98hyY2WJCPBMuwNyV4W9KDYo_RhHT7IORHXf6Ux3KLA4GHuoz-sfx2XT2W6syDS-o6XYuRoG5m4AiQScE7kKcEbFQw0aTB6DKuVS44_oNoVnZB3MNqgr27fDVuvD5PXHYiOt8AbCXGwCPAG2nwwFFtA_MZltsnlqLIhbaHZvq7yR6YReuQv6BARNQNd221qb6nwqBb7xYgejo5DYRO6V7FFqlRsvNqE5BaG9GbdIZQEQrXKqu-KVFDT084x_bJY3lklVkN0iTx02cSZ1qHo8iUwT-hYplYIU6w9d_kFaprx5OnTlM3KxOY4YwACFAYv8ALfhFai98fs3AmPdtB0xn9ChFdMU-3vF7MAs-Q2BFCklTw7JugWYnrou9BVThvCmnteeKAkquXL1S355mM8IZTP40kVjuNiGAjKldYYKMr3QxBTwP0wV3xyjsRUIkUU",

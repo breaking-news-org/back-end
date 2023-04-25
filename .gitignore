@@ -12,5 +12,3 @@ secrets.env
 result
 .git-bk
 ghc*
-pulumi/yaml
-pulumi-ts/yaml
