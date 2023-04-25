@@ -291,11 +291,6 @@
 
               export CONFIG_FILE="$PWD/local/config.yaml"
               export TEST_CONFIG_FILE="$PWD/local/test.yaml"
-              # export KUBECONFIG_DIR="$PWD/.kube"
-              # export KUBECONFIG="$KUBECONFIG_DIR/config"
-
-              # mkdir -p $KUBECONFIG_DIR
-              # microk8s config > $KUBECONFIG/config
 
               export JWK_FILE="$PWD/local/jwk.json"
             '';
