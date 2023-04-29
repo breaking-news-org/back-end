@@ -1,6 +1,5 @@
 module Common.TH (
   aesonOptions,
-  makeLenses,
   processRecord,
   makeFromToJSON,
   makeFromToJSON',
@@ -34,7 +33,7 @@ makeFromToJSON :: Name -> Q [Dec]
 makeFromToJSON t = makeFromToJSON' $ ConT t
 
 processRecord :: Name -> Q [Dec]
-processRecord n = (<>) <$> makeLenses n <*> makeFromToJSON n
+processRecord = makeFromToJSON
 
 mkType :: [Name] -> Type
 mkType [x] = ConT x

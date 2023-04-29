@@ -45,6 +45,7 @@ library
       RecordWildCards
       ScopedTypeVariables
       StrictData
+      OverloadedLabels
       TemplateHaskell
       TupleSections
       TypeApplications
@@ -102,6 +103,7 @@ executable test
       RecordWildCards
       ScopedTypeVariables
       StrictData
+      OverloadedLabels
       TemplateHaskell
       TupleSections
       TypeApplications

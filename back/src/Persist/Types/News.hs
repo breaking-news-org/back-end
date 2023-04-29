@@ -2,58 +2,51 @@ module Persist.Types.News where
 
 import API.Prelude (Generic, UTCTime)
 import Common.Prelude (HKD, Text)
-import Common.TH (makeLenses, processRecord)
+import Common.TH (processRecord)
 
-data IndexedImage = IndexedImage
-  { _indexedImage_id :: Int
-  , _indexedImage_value :: !Text
-  }
+newtype Image = Image Text
   deriving (Show, Generic, Eq, Ord)
 
-processRecord ''IndexedImage
+processRecord ''Image
 
-newtype IndexedImages = IndexedImages [IndexedImage]
-  deriving (Show, Generic, Eq, Ord)
-
-processRecord ''IndexedImages
+type Images = [Image]
 
 data InsertNews = InsertNews
   { _insertNews_title :: !Text
   , _insertNews_creationDate :: !UTCTime
-  , _insertNews_creator :: !Text
-  , _insertNews_category :: Int
+  , _insertNews_authorName :: !Text
+  , _insertNews_category :: !Int
   , _insertNews_text :: !Text
-  , _insertNews_images :: IndexedImages
-  , _insertNews_isPublished :: Bool
+  , _insertNews_images :: !Images
+  , _insertNews_isPublished :: !Bool
   }
   deriving (Generic)
 
-makeLenses ''InsertNews
+-- Just for debugging
+processRecord ''InsertNews
 
-data SelectNews = SelectNews
-  { _selectNews_id :: Int
+data SelectedNews = SelectedNews
+  { _selectNews_id :: !Int
   , _selectNews_title :: !Text
   , _selectNews_creationDate :: !UTCTime
-  , _selectNews_creator :: !Text
+  , _selectNews_authorName :: !Text
   , _selectNews_category :: Int
   , _selectNews_text :: !Text
-  , _selectNews_images :: IndexedImages
-  , _selectNews_isPublished :: Bool
+  , _selectNews_images :: !Images
+  , _selectNews_isPublished :: !Bool
   }
   deriving (Generic)
-
-makeLenses ''SelectNews
 
 data Filters f = Filters
-  { _filters_createdUntil :: HKD f UTCTime
-  , _filters_createdSince :: HKD f UTCTime
-  , _filters_createdAt :: HKD f UTCTime
-  , _filters_creator :: HKD f Text
-  , _filters_category :: HKD f Int
-  , _filters_content :: HKD f Text
-  , _filters_block :: HKD f Int
-  , _filters_newsId :: HKD f Int
+  { _filters_createdUntil :: !(HKD f UTCTime)
+  , _filters_createdSince :: !(HKD f UTCTime)
+  , _filters_createdAt :: !(HKD f UTCTime)
+  , _filters_authorName :: !(HKD f Text)
+  , _filters_category :: !(HKD f Int)
+  , _filters_content :: !(HKD f Text)
+  , _filters_block :: !(HKD f Int)
+  , _filters_newsId :: !(HKD f Int)
+  , _filters_showUnpublished :: !(HKD f Bool)
+  -- TODO make separate filters for API?
   }
   deriving (Generic)
-
-makeLenses ''Filters

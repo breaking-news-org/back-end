@@ -33,6 +33,7 @@ default-extensions:
   - RecordWildCards
   - ScopedTypeVariables
   - StrictData
+  - OverloadedLabels
   - TemplateHaskell
   - TupleSections
   - TypeApplications

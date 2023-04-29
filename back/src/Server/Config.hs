@@ -1,6 +1,7 @@
 module Server.Config where
 
 import API.TH (processRecord)
+import Control.Exception (SomeException, catch)
 import Data.Aeson
 import Data.Int (Int64)
 import Data.String.Interpolate (i)
@@ -12,7 +13,6 @@ import Effectful.Reader.Static
 import Effectful.TH (makeEffect)
 import GHC.Generics (Generic)
 import System.Environment (lookupEnv)
-import Control.Exception (catch, SomeException)
 
 data DB = DB
   { _db_db :: Text
@@ -35,9 +35,17 @@ data Web = Web
 
 processRecord ''Web
 
+newtype JWTParameters = JWTParameters
+  { _jwtParameters_expirationTime :: Int
+  }
+  deriving (Show, Generic)
+
+processRecord ''JWTParameters
+
 data App = App
   { _app_db :: DB
   , _app_web :: Web
+  , _app_jwtParameters :: JWTParameters
   }
   deriving (Show, Generic)
 

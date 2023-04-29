@@ -28,7 +28,6 @@ library
       API.Prelude
       API.Root
       API.TH
-      API.Types.Client
       API.Types.Instances
       API.Types.News
       API.Types.User
@@ -68,14 +67,19 @@ library
       BlockArguments
       ConstraintKinds
       DataKinds
+      DeriveAnyClass
       DeriveGeneric
       DuplicateRecordFields
       FlexibleContexts
+      FlexibleInstances
       GADTs
+      ImplicitParams
       ImportQualifiedPost
       KindSignatures
       LambdaCase
+      MultiParamTypeClasses
       NamedFieldPuns
+      OverloadedLabels
       OverloadedRecordDot
       OverloadedStrings
       QuasiQuotes
@@ -88,12 +92,8 @@ library
       TypeApplications
       TypeFamilies
       TypeOperators
-      ViewPatterns
-      ImplicitParams
-      FlexibleInstances
-      DeriveAnyClass
-      MultiParamTypeClasses
       UndecidableInstances
+      ViewPatterns
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin
   build-depends:
       aeson
@@ -110,6 +110,7 @@ library
     , exceptions
     , filepath
     , first-class-families
+    , generic-lens
     , hashable
     , http-api-data
     , insert-ordered-containers
@@ -131,6 +132,7 @@ library
     , servant-queryparam-core
     , servant-queryparam-server
     , servant-server
+    , stm-containers
     , string-interpolate
     , symbols
     , template-haskell
@@ -152,14 +154,19 @@ executable back
       BlockArguments
       ConstraintKinds
       DataKinds
+      DeriveAnyClass
       DeriveGeneric
       DuplicateRecordFields
       FlexibleContexts
+      FlexibleInstances
       GADTs
+      ImplicitParams
       ImportQualifiedPost
       KindSignatures
       LambdaCase
+      MultiParamTypeClasses
       NamedFieldPuns
+      OverloadedLabels
       OverloadedRecordDot
       OverloadedStrings
       QuasiQuotes
@@ -172,12 +179,8 @@ executable back
       TypeApplications
       TypeFamilies
       TypeOperators
-      ViewPatterns
-      ImplicitParams
-      FlexibleInstances
-      DeriveAnyClass
-      MultiParamTypeClasses
       UndecidableInstances
+      ViewPatterns
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       back
@@ -198,14 +201,19 @@ executable gen-openapi3
       BlockArguments
       ConstraintKinds
       DataKinds
+      DeriveAnyClass
       DeriveGeneric
       DuplicateRecordFields
       FlexibleContexts
+      FlexibleInstances
       GADTs
+      ImplicitParams
       ImportQualifiedPost
       KindSignatures
       LambdaCase
+      MultiParamTypeClasses
       NamedFieldPuns
+      OverloadedLabels
       OverloadedRecordDot
       OverloadedStrings
       QuasiQuotes
@@ -218,12 +226,8 @@ executable gen-openapi3
       TypeApplications
       TypeFamilies
       TypeOperators
-      ViewPatterns
-      ImplicitParams
-      FlexibleInstances
-      DeriveAnyClass
-      MultiParamTypeClasses
       UndecidableInstances
+      ViewPatterns
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -fplugin=Effectful.Plugin -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       back

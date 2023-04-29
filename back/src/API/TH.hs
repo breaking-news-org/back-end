@@ -1,6 +1,5 @@
 module API.TH (
   aesonOptions,
-  makeLenses,
   processRecord,
   makeFromToJSON,
   processApiRecord,
@@ -10,7 +9,6 @@ module API.TH (
 ) where
 
 import API.Prelude (ToSchema (..), fromAesonOptions, genericDeclareNamedSchema)
-import Common.Prelude (makeLenses)
 import Common.TH (aesonOptions, makeFromToJSON, makeFromToJSON', mkType, processRecord)
 import Language.Haskell.TH (Dec, Name, Q, Type (ConT))
 
@@ -31,9 +29,8 @@ processApiRecord name = do
 processApiRecord' :: [Name] -> Q [Dec]
 processApiRecord' (x : xs) = do
   r1 <- makeFromToJSON' t
-  r2 <- makeLenses x
   r3 <- makeToSchema' t
-  pure $ r1 <> r2 <> r3
+  pure $ r1 <> r3
  where
   t = mkType (x : xs)
 processApiRecord' [] = error "Not enough names: 0"

@@ -1,7 +1,7 @@
 module API.Root where
 
 import API.Endpoints.API1.Root qualified as API1
-import API.Prelude (GenericMode (type (:-)), type (:>), NamedRoutes)
+import API.Prelude (GenericMode (type (:-)), NamedRoutes, type (:>))
 import Common.Prelude (Generic)
 import Data.Data (Proxy)
 
@@ -18,10 +18,10 @@ type API = NamedRoutes Routes
 -- API :: *
 -- = "api1"
 --   :> (("user"
---        :> ("authorize"
---            :> (ReqBody' '[Required, Strict] '[JSON] UserRegistrationForm
+--        :> ("register"
+--            :> (ReqBody' '[Required, Strict] '[JSON] UserRegisterForm
 --                :> Verb 'POST 200 '[JSON] Text)))
---       :<|> (Auth '[JWT] ClientToken
+--       :<|> (Auth '[JWT] AccessToken
 --             :> ("news"
 --                 :> (("create"
 --                      :> (ReqBody' '[Required, Strict] '[JSON] CreateNews

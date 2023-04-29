@@ -2,11 +2,11 @@ module Server.Server (Server, runServerEffect, startServer, getWaiApplication, w
 
 import API.Endpoints.API1.News as ApiNews (API (API, create, get))
 import API.Endpoints.API1.Root as API1 (API (API, news, user))
-import API.Endpoints.API1.User as ApiUser (API (API, authorize))
+import API.Endpoints.API1.User as ApiUser (API (..))
 import API.Root (Routes (..))
-import API.Types.Client (ClientToken)
 import API.Types.Instances ()
 import API.Types.News ()
+import API.Types.User (AccessToken)
 import Control.Monad.Except (ExceptT (..), runExceptT)
 import Controller.Effects.News (NewsController)
 import Controller.Effects.Users (UserController)
@@ -41,8 +41,8 @@ data Server :: Effect where
 
 makeEffect ''Server
 
-withClientToken :: AuthResult ClientToken -> (ClientToken -> a) -> a
-withClientToken r f = case r of
+withAccessToken :: AuthResult AccessToken -> (AccessToken -> a) -> a
+withAccessToken r f = case r of
   Authenticated c -> f c
   _ -> error "sdsdfsd"
 
@@ -89,11 +89,14 @@ getWaiApplication' jwk = do
           Routes
             { api1 =
                 API1.API
-                  { user = ApiUser.API{authorize = UserController.authorize jwk}
+                  { user = ApiUser.API{
+                      register = UserController.register jwk,
+                      login = UserController.login jwk,
+                      rotateRefreshToken = UserController.rotateRefreshToken jwk refreshToken}
                   , news = \token ->
                       ApiNews.API
-                        { create = withClientToken token NewsController.create
-                        , get = withClientToken token NewsController.get
+                        { create = withAccessToken token NewsController.create
+                        , get = withAccessToken token NewsController.get
                         }
                   }
             }

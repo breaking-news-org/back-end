@@ -7,16 +7,16 @@ components:
           minimum: -9223372036854775808
           type: integer
         images:
-          $ref: '#/components/schemas/IndexedImages'
+          $ref: "#/components/schemas/Images"
         text:
           type: string
         title:
           type: string
       required:
-      - title
-      - text
-      - category
-      - images
+        - title
+        - text
+        - category
+        - images
       type: object
     GetNews:
       properties:
@@ -25,7 +25,7 @@ components:
           minimum: -9223372036854775808
           type: integer
         creationDate:
-          $ref: '#/components/schemas/UTCTime'
+          $ref: "#/components/schemas/UTCTime"
         creator:
           type: string
         id:
@@ -33,7 +33,7 @@ components:
           minimum: -9223372036854775808
           type: integer
         images:
-          $ref: '#/components/schemas/IndexedImages'
+          $ref: "#/components/schemas/Images"
         isPublished:
           type: boolean
         text:
@@ -41,16 +41,16 @@ components:
         title:
           type: string
       required:
-      - title
-      - creationDate
-      - creator
-      - category
-      - text
-      - id
-      - images
-      - isPublished
+        - title
+        - creationDate
+        - creator
+        - category
+        - text
+        - id
+        - images
+        - isPublished
       type: object
-    IndexedImage:
+    Image:
       properties:
         id:
           maximum: 9223372036854775807
@@ -59,12 +59,12 @@ components:
         value:
           type: string
       required:
-      - id
-      - value
+        - id
+        - value
       type: object
-    IndexedImages:
+    Images:
       items:
-        $ref: '#/components/schemas/IndexedImage'
+        $ref: "#/components/schemas/Image"
       type: array
     UTCTime:
       example: 2016-07-22T00:00:00Z
@@ -77,8 +77,8 @@ components:
         password:
           type: string
       required:
-      - email
-      - password
+        - email
+        - password
       type: object
   securitySchemes:
     JWT:
@@ -87,8 +87,8 @@ components:
       scheme: bearer
       type: http
 info:
-  title: ''
-  version: ''
+  title: ""
+  version: ""
 openapi: 3.0.0
 paths:
   /api1/news/create:
@@ -97,95 +97,96 @@ paths:
         content:
           application/json;charset=utf-8:
             schema:
-              $ref: '#/components/schemas/CreateNews'
+              $ref: "#/components/schemas/CreateNews"
       responses:
-        '200':
+        "200":
           content:
             application/json;charset=utf-8: {}
-          description: ''
-        '400':
+          description: ""
+        "400":
           description: Invalid `body`
       security:
-      - JWT: []
+        - JWT: []
   /api1/news/get:
     get:
       parameters:
-      - in: query
-        name: createdUntil
-        required: false
-        schema:
-          format: yyyy-mm-ddThh:MM:ssZ
-          type: string
-      - in: query
-        name: createdSince
-        required: false
-        schema:
-          format: yyyy-mm-ddThh:MM:ssZ
-          type: string
-      - in: query
-        name: createdAt
-        required: false
-        schema:
-          format: yyyy-mm-ddThh:MM:ssZ
-          type: string
-      - in: query
-        name: creator
-        required: false
-        schema:
-          type: string
-      - in: query
-        name: category
-        required: false
-        schema:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
-      - in: query
-        name: content
-        required: false
-        schema:
-          type: string
-      - in: query
-        name: block
-        required: false
-        schema:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
-      - in: query
-        name: newsId
-        required: false
-        schema:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
+        - in: query
+          name: createdUntil
+          required: false
+          schema:
+            format: yyyy-mm-ddThh:MM:ssZ
+            type: string
+        - in: query
+          name: createdSince
+          required: false
+          schema:
+            format: yyyy-mm-ddThh:MM:ssZ
+            type: string
+        - in: query
+          name: createdAt
+          required: false
+          schema:
+            format: yyyy-mm-ddThh:MM:ssZ
+            type: string
+        - in: query
+          name: creator
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: category
+          required: false
+          schema:
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+            type: integer
+        - in: query
+          name: content
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: block
+          required: false
+          schema:
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+            type: integer
+        - in: query
+          name: newsId
+          required: false
+          schema:
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+            type: integer
       responses:
-        '200':
+        "200":
           content:
             application/json;charset=utf-8:
               schema:
                 items:
-                  $ref: '#/components/schemas/GetNews'
+                  $ref: "#/components/schemas/GetNews"
                 type: array
-          description: ''
-        '400':
-          description: Invalid `newsId` or `block` or `content` or `category` or `creator`
+          description: ""
+        "400":
+          description:
+            Invalid `newsId` or `block` or `content` or `category` or `creator`
             or `createdAt` or `createdSince` or `createdUntil`
       security:
-      - JWT: []
+        - JWT: []
   /api1/user/authorize:
     post:
       requestBody:
         content:
           application/json;charset=utf-8:
             schema:
-              $ref: '#/components/schemas/UserRegistrationForm'
+              $ref: "#/components/schemas/UserRegistrationForm"
       responses:
-        '200':
+        "200":
           content:
             application/json;charset=utf-8:
               schema:
                 type: string
-          description: ''
-        '400':
+          description: ""
+        "400":
           description: Invalid `body`

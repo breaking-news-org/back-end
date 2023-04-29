@@ -9,6 +9,11 @@
 
 - [V1](https://redocly.github.io/redoc/?url=https://raw.githubusercontent.com/breaking-news-org/back-end/main/API/v1.yaml)
 
+## Authorization
+
+- [JWT](https://stackoverflow.com/a/62095037)
+- [What Are Refresh Tokens and How to Use Them Securely](https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/#Refresh-Token-Automatic-Reuse-Detection)
+
 ## Infra
 
 - [Pulumi](https://www.pulumi.com/)
@@ -49,6 +54,11 @@
     ```
 
 - On a server, we user `microk8s`.
+  - Run the script to set up environment in a current shell.
+
+    ```console
+    source microk8s.sh
+    ```
 
 ## Nix
 

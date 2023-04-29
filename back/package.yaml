@@ -21,14 +21,19 @@ default-extensions:
   - BlockArguments
   - ConstraintKinds
   - DataKinds
+  - DeriveAnyClass
   - DeriveGeneric
   - DuplicateRecordFields
   - FlexibleContexts
+  - FlexibleInstances
   - GADTs
+  - ImplicitParams
   - ImportQualifiedPost
   - KindSignatures
   - LambdaCase
+  - MultiParamTypeClasses
   - NamedFieldPuns
+  - OverloadedLabels
   - OverloadedRecordDot
   - OverloadedStrings
   - QuasiQuotes
@@ -41,12 +46,8 @@ default-extensions:
   - TypeApplications
   - TypeFamilies
   - TypeOperators
-  - ViewPatterns
-  - ImplicitParams
-  - FlexibleInstances
-  - DeriveAnyClass
-  - MultiParamTypeClasses
   - UndecidableInstances
+  - ViewPatterns
 
 dependencies:
   - base >= 4.7 && < 5
@@ -109,6 +110,8 @@ library:
     - servant-queryparam-core
     - first-class-families
     - symbols
+    - generic-lens
+    - stm-containers
 
 executables:
   back:

@@ -13,7 +13,7 @@ import Effectful.Reader.Static (Reader, ask, runReader)
 import Effectful.TH (makeEffect)
 import External.Logger (Logger, withLogger)
 import Persist.Model (migrateAll)
-import Server.Config (App (_app_db), Loader, db_numConns, getConfig, mkConnStr)
+import Server.Config (App (_app_db), Loader, getConfig, mkConnStr)
 
 data SqlBackendPool :: Effect where
   WithConn :: ReaderT SqlBackend m a -> SqlBackendPool m a
@@ -39,7 +39,7 @@ initSqlBackendPool action = do
   withLogger
     $ withPostgresqlPool
       (conf ^. to mkConnStr . to encodeUtf8)
-      (conf ^. db_numConns)
+      (conf ^. #_db_numConns)
     $ \pool -> do
       lift $ withUnliftStrategy (ConcUnlift Ephemeral Unlimited) $ withEffToIO $ \unlift -> do
         liftIO $ withResource pool $ runReaderT (runMigration migrateAll)

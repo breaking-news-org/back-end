@@ -14,7 +14,7 @@ import API.Prelude (encode)
 import API.Root (API, Routes (..))
 import API.Types.Instances ()
 import API.Types.News
-import API.Types.User (UserRegistrationForm (..))
+import API.Types.User (UserRegisterForm (..))
 import Control.Exception (catch, throwIO)
 import Control.Monad (void)
 import Control.Monad.Free (Free (..))
@@ -32,7 +32,7 @@ import GHC.IO.Exception (ExitCode (..))
 import Integration.Config
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Network.HTTP.Client qualified as HTTP
-import Persist.Types.News (IndexedImages (IndexedImages))
+import Persist.Types.News (Image (..), Images)
 import Servant.API ((:>))
 import Servant.Auth (Auth, JWT)
 import Servant.Client (BaseUrl (BaseUrl), ClientEnv (..), ClientError, HasClient (..), Scheme (Http), mkClientEnv)
@@ -53,7 +53,7 @@ unit_main =
   defaultMain
     ( testGroup
         "Integration Tests"
-        [ userTests
+        [ authorizeCreateNewsGetNews
         ]
     )
     `catch` ( \e -> do
@@ -90,19 +90,10 @@ instance (HasJWT auths, HasClient ClientFree api) => HasClient ClientFree (Auth 
 Routes
   { api1 =
     API.Endpoints.API1.Root.API
-      { user = API.Endpoints.API1.User.API{authorize}
+      { user = API.Endpoints.API1.User.API{register}
       , news
       }
   } = client api
-
-authorizeUser :: ClientFree Token
-authorizeUser =
-  Token . encodeUtf8
-    <$> authorize
-      UserRegistrationForm
-        { _userRegistrationForm_email = "contact@zelinf.net"
-        , _userRegistrationForm_password = "abcdef"
-        }
 
 api :: Proxy API
 api = Proxy
@@ -110,11 +101,22 @@ api = Proxy
 _CONFIG_FILE :: String
 _CONFIG_FILE = "TEST_CONFIG_FILE"
 
-userTests :: TestTree
-userTests = testCase "Registration" do
+authorizeUser :: ClientFree Token
+authorizeUser =
+  Token . encodeUtf8
+    <$> register
+      UserRegisterForm
+        { _userRegisterForm_userName = "contact@zelinf.net"
+        , _userRegisterForm_password = "abcdef"
+        }
+
+authorizeCreateNewsGetNews :: TestTree
+authorizeCreateNewsGetNews = testCase "Authorize, create news, get that news" do
+  -- get config
   testConf <- runEff $ runLoader @TestConf _CONFIG_FILE do
     getConfig @TestConf id
   manager' <- newManager defaultManagerSettings
+  -- run request and be able to show it
   let AppConf{..} = testConf._testConf_app
       withClientEnv :: Show a => ClientFree a -> IO (Either ClientError a)
       withClientEnv f = do
@@ -139,12 +141,12 @@ userTests = testCase "Registration" do
         withClientEnv $
           create
             CreateNews
-              { _createNews_title = "title"
-              , _createNews_text = "text"
-              , _createNews_images = IndexedImages []
-              , _createNews_category = 0
+              { _createNews_title = "test_title"
+              , _createNews_text = "test_text"
+              , _createNews_images = [Image "test_value"]
+              , _createNews_category = -1
               }
-      ns <- withClientEnv $ get (def & queryParams_category ?~ 1)
+      ns <- withClientEnv $ get (def & #_queryParams_category ?~ -1)
       case ns of
         Left err -> error $ show err
         Right ns_ -> BSC.putStrLn $ encode ns_

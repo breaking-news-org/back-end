@@ -1,13 +1,13 @@
 module Controller.Effects.News where
 
-import API.Types.Client (ClientToken)
 import API.Types.News (CreateNews, GetNews)
+import API.Types.User (AccessToken)
 import Common.Prelude (Dispatch (Dynamic), DispatchOf, Effect)
 import Controller.Prelude (NoContent (..), ServerError)
 import Persist.Types.News (Filters)
 
 data NewsController :: Effect where
-  ControllerCreateNews :: ClientToken -> CreateNews -> NewsController m (Either ServerError NoContent)
-  ControllerGetNews :: ClientToken -> Filters Maybe -> NewsController m (Either ServerError [GetNews])
+  ControllerCreateNews :: AccessToken -> CreateNews -> NewsController m (Either ServerError NoContent)
+  ControllerGetNews :: AccessToken -> Filters Maybe -> NewsController m (Either ServerError [GetNews])
 
 type instance DispatchOf NewsController = 'Dynamic

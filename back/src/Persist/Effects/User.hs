@@ -2,9 +2,10 @@ module Persist.Effects.User where
 
 import Effectful
 import Effectful.TH
-import Service.Types.User
+import Persist.Types.User
 
 data UserRepo :: Effect where
-  CreateUser :: User -> UserRepo m ()
+  RepoInsertUser :: InsertUser -> UserRepo m ()
+  RepoSelectUser :: SelectUser -> UserRepo m (Maybe SelectedUser)
 
 makeEffect ''UserRepo

@@ -11,6 +11,7 @@ module API.Prelude (
 ) where
 
 import Data.Data
+import Data.Generics.Labels ()
 import Data.Map
 import Data.OpenApi (OpenApi, ToSchema (declareNamedSchema), fromAesonOptions, genericDeclareNamedSchema)
 import Data.Time
