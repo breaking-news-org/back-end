@@ -24,11 +24,11 @@ components:
       - category
       - images
       type: object
-    Either_(SomeError_LoginError)_FullToken:
+    Either_LoginError_FullToken:
       oneOf:
       - properties:
           Left:
-            $ref: '#/components/schemas/SomeError_LoginError'
+            $ref: '#/components/schemas/LoginError'
         required:
         - Left
         type: object
@@ -38,11 +38,11 @@ components:
         required:
         - Right
         type: object
-    Either_(SomeError_RegisterError)_FullToken:
+    Either_RegisterError_FullToken:
       oneOf:
       - properties:
           Left:
-            $ref: '#/components/schemas/SomeError_RegisterError'
+            $ref: '#/components/schemas/RegisterError'
         required:
         - Left
         type: object
@@ -52,11 +52,11 @@ components:
         required:
         - Right
         type: object
-    Either_(SomeError_RotateError)_FullToken:
+    Either_RotateError_FullToken:
       oneOf:
       - properties:
           Left:
-            $ref: '#/components/schemas/SomeError_RotateError'
+            $ref: '#/components/schemas/RotateError'
         required:
         - Left
         type: object
@@ -125,27 +125,6 @@ components:
       - SessionDoesNotExist
       - SessionHasNewerAccessTokenId
       type: string
-    SomeError_LoginError:
-      properties:
-        error:
-          $ref: '#/components/schemas/LoginError'
-      required:
-      - error
-      type: object
-    SomeError_RegisterError:
-      properties:
-        error:
-          $ref: '#/components/schemas/RegisterError'
-      required:
-      - error
-      type: object
-    SomeError_RotateError:
-      properties:
-        error:
-          $ref: '#/components/schemas/RotateError'
-      required:
-      - error
-      type: object
     UTCTime:
       example: 2016-07-22T00:00:00Z
       format: yyyy-mm-ddThh:MM:ssZ
@@ -280,7 +259,7 @@ paths:
           content:
             application/json;charset=utf-8:
               schema:
-                $ref: '#/components/schemas/Either_(SomeError_LoginError)_FullToken'
+                $ref: '#/components/schemas/Either_LoginError_FullToken'
           description: ''
         '400':
           description: Invalid `body`
@@ -296,7 +275,7 @@ paths:
           content:
             application/json;charset=utf-8:
               schema:
-                $ref: '#/components/schemas/Either_(SomeError_RegisterError)_FullToken'
+                $ref: '#/components/schemas/Either_RegisterError_FullToken'
           description: ''
         '400':
           description: Invalid `body`
@@ -307,7 +286,7 @@ paths:
           content:
             application/json;charset=utf-8:
               schema:
-                $ref: '#/components/schemas/Either_(SomeError_RotateError)_FullToken'
+                $ref: '#/components/schemas/Either_RotateError_FullToken'
           description: ''
       security:
       - JWT: []

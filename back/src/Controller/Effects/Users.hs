@@ -9,8 +9,8 @@ import Effectful (Dispatch (Dynamic), DispatchOf, Effect)
 import Service.Types.User (LoginError, RegisterError, RotateError, SomeError)
 
 data UserController :: Effect where
-  ControllerRegisterUser :: JWKSettings -> UserRegisterForm -> UserController m (Either ServerError (Either (SomeError RegisterError) FullToken))
-  ControllerLoginUser :: JWKSettings -> UserLoginForm -> UserController m (Either ServerError (Either (SomeError LoginError) FullToken))
-  ControllerRotateRefreshToken :: JWKSettings -> RefreshToken -> UserController m (Either ServerError (Either (SomeError RotateError) FullToken))
+  ControllerRegisterUser :: JWKSettings -> UserRegisterForm -> UserController m (Either ServerError (Either RegisterError FullToken))
+  ControllerLoginUser :: JWKSettings -> UserLoginForm -> UserController m (Either ServerError (Either LoginError FullToken))
+  ControllerRotateRefreshToken :: JWKSettings -> RefreshToken -> UserController m (Either ServerError (Either RotateError FullToken))
 
 type instance DispatchOf UserController = Dynamic
