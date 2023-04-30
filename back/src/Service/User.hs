@@ -8,16 +8,15 @@ import Control.Monad.Logger.Aeson
 import Data.Aeson.Text (encodeToLazyText)
 import Effectful
 import Effectful.TH
-import Persist.Effects.User (UserRepo, repoCreateSession, repoInsertUser, repoSelectSession, repoSelectUser)
-import Persist.Types.User (HashedPassword (..))
+import Persist.Effects.User (UserRepo, repoCreateSession, repoInsertUser, repoSelectSessionById, repoSelectUser, repoSessionUpdateLastAccessTokenId)
 import Service.Prelude
 import Service.Types.User
 
 data UserService :: Effect where
-  ServiceRegister :: UserRegisterData -> UserService m (Either RegisterError UserId)
-  ServiceLogin :: UserLoginData -> UserService m (Either LoginError UserId)
-  ServiceCreateSession :: ExpiresAt -> UserService m SessionId
-  ServiceRotateRefreshToken :: SessionId -> TokenId -> UserService m (Either RotateError TokenId)
+  ServiceRegister :: UserRegisterData -> UserService m (Either RegisterError User)
+  ServiceLogin :: UserLoginData -> UserService m (Either LoginError User)
+  ServiceCreateSession :: ExpiresAt -> UserId -> UserService m SessionId
+  ServiceRotateRefreshToken :: ExpiresAt -> SessionId -> TokenId -> UserService m (Either RotateError (TokenId, User))
 
 -- Service
 
@@ -39,19 +38,29 @@ runUserService = interpret $ \_ -> \case
               { _insertUser_userName = _userRegisterData_userName
               , _insertUser_hashedPassword = hashPassword _userRegisterData_password
               , _insertUser_authorName = _userRegisterData_authorName
+              , -- TODO where this role is defined?
+                _insertUser_role = RoleUser
               }
         withLogger $ logDebug $ "Created a new user" :# ["user" .= newUser]
-        pure $ Right newUser._dbUser_id
+        pure $ Right newUser
   ServiceLogin UserLoginData{..} -> do
     user <- getUser _userLoginData_userName _userLoginData_password
     case user of
-      Just user' -> pure $ Right $ user'._dbUser_id
+      Just user' -> pure $ Right user'
       _ -> pure $ Left UserDoesNotExist
-  ServiceCreateSession expiresAt -> repoCreateSession expiresAt
-  ServiceRotateRefreshToken sessionId tokenId -> do
-    session <- repoSelectSession sessionId
-    -- TODO expired -> remove?
-    pure _
+  ServiceCreateSession expiresAt userId -> repoCreateSession expiresAt userId
+  ServiceRotateRefreshToken expiresAt sessionId tokenId -> do
+    session <- repoSelectSessionById sessionId
+    case session of
+      Nothing -> pure $ Left SessionDoesNotExist
+      Just (session1, user) -> do
+        if session1._session_lastAccessTokenId > tokenId
+          then pure $ Left SessionHasNewerAccessTokenId
+          else do
+            repoSessionUpdateLastAccessTokenId expiresAt sessionId
+            pure $ Right (tokenId + 1, user)
+
+-- TODO expired -> remove?
 
 getUser :: (UserRepo :> es, Logger :> es) => UserName -> Password -> Eff es (Maybe User)
 getUser name password = do

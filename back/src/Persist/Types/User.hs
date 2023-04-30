@@ -4,12 +4,14 @@
 
 module Persist.Types.User where
 
-import API.Prelude (Generic, PersistField, UTCTime, Value)
+import API.Prelude (FromHttpApiData, Generic, PersistField, ToHttpApiData, UTCTime, Value)
 import Common.Prelude (ByteString, FromJSON, Text, ToJSON, (^.))
-import Common.TH (processTypes)
+import Common.TH (processRecords)
 import Data.Aeson.Types (FromJSON (parseJSON), Parser, ToJSON (toJSON), withText)
+import Data.String.Interpolate (i)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
-import Database.Esqueleto.Experimental (PersistFieldSql)
+import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql (sqlType), PersistValue (PersistInt64), SqlType (SqlInt64))
+import Data.String (IsString)
 
 newtype HashedPassword = HashedPassword ByteString
   deriving (Show, Eq, Generic)
@@ -26,11 +28,11 @@ instance ToJSON HashedPassword where
 
 newtype UserName = UserName Text
   deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString)
 
 newtype AuthorName = AuthorName Text
   deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, FromHttpApiData, ToHttpApiData, IsString)
 
 newtype UserId = UserId Int
   deriving (Generic)
@@ -40,6 +42,7 @@ data InsertUser = InsertUser
   { _insertUser_userName :: !UserName
   , _insertUser_hashedPassword :: !HashedPassword
   , _insertUser_authorName :: !AuthorName
+  , _insertUser_role :: Role
   }
   deriving (Show, Eq, Generic)
 
@@ -49,23 +52,46 @@ data SelectUser = SelectUser
   }
   deriving (Show, Eq, Generic)
 
+-- | Role of a user
+data Role
+  = RoleUser
+  | RoleAdmin
+  deriving (Generic, Eq, Ord, Show)
+
+instance PersistField Role where
+  toPersistValue :: Role -> PersistValue
+  toPersistValue =
+    PersistInt64 . \case
+      RoleUser -> 1
+      RoleAdmin -> 2
+  fromPersistValue :: PersistValue -> Either Text Role
+  fromPersistValue v
+    | v == toPersistValue RoleUser = Right RoleUser
+    | v == toPersistValue RoleAdmin = Right RoleAdmin
+    | otherwise = Left [i|Role #{v} is undefined|]
+
+instance PersistFieldSql Role where
+  sqlType _ = SqlInt64
+
 -- TODO
 data User = User
-  { _dbUser_userName :: !UserName
-  , _dbUser_hashedPassword :: !HashedPassword
-  , _dbUser_authorName :: !AuthorName
-  , _dbUser_id :: !UserId
+  { _user_userName :: !UserName
+  , _user_hashedPassword :: !HashedPassword
+  , _user_authorName :: !AuthorName
+  , _user_role :: !Role
+  , _user_id :: !UserId
   }
   deriving (Show, Eq, Generic)
 
 data Session = Session
   { _session_lastAccessTokenId :: TokenId
-  , _session_lastAccessTokenExpiresAt :: ExpiresAt
+  , _session_lastRefreshTokenExpiresAt :: ExpiresAt
+  , _session_id :: SessionId
   }
 
 newtype CategoryId = CategoryId Int
   deriving (Generic)
-  deriving newtype (Num, PersistField, Eq, Ord, Show, PersistFieldSql)
+  deriving newtype (Num, PersistField, Eq, Ord, Show, PersistFieldSql, FromHttpApiData, ToHttpApiData)
 
 newtype TokenId = TokenId Int
   deriving (Generic)
@@ -73,10 +99,10 @@ newtype TokenId = TokenId Int
 
 newtype SessionId = SessionId Int
   deriving (Generic)
-  deriving newtype (Num)
+  deriving newtype (Num, Integral, Enum, Real, Ord, Eq)
 
 newtype ExpiresAt = ExpiresAt UTCTime
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
 
-processTypes [''ExpiresAt, ''SessionId, ''User, ''InsertUser, ''UserId, ''AuthorName, ''UserName, ''TokenId, ''CategoryId]
+processRecords [''ExpiresAt, ''SessionId, ''User, ''InsertUser, ''UserId, ''AuthorName, ''UserName, ''TokenId, ''CategoryId, ''Role]

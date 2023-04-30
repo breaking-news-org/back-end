@@ -1,34 +1,69 @@
 module API.TH (
-  aesonOptions,
-  processType,
-  makeFromToJSON,
-  processApiType,
-  processApiTypes,
+  processRecordApiType,
+  processRecordApiTypes,
   mkType,
-  makeToSchema,
-  makeToSchemaTypes,
+  makeRecordToSchema,
+  makeRecordToSchemaTypes,
+  processSumApiType,
+  processSumApiTypes,
+  makeSumToSchema,
+  makeSumToSchemaTypes,
 ) where
 
 import API.Prelude (ToSchema (..), fromAesonOptions, genericDeclareNamedSchema)
-import Common.TH (aesonOptions, makeFromToJSON, mkType, processType)
+import Common.Prelude (ToParamSchema (toParamSchema))
+import Common.TH
+import Data.OpenApi (defaultSchemaOptions)
+import Data.OpenApi.Schema (SchemaOptions (..))
 import Language.Haskell.TH (Dec, Name, Q, Type (ConT))
 
-makeToSchema' :: Type -> Q [Dec]
-makeToSchema' t = do
+makeRecordToSchema' :: Type -> Q [Dec]
+makeRecordToSchema' t = do
   [d|
     instance ToSchema $(pure t) where
-      declareNamedSchema = genericDeclareNamedSchema $ fromAesonOptions aesonOptions
+      declareNamedSchema = genericDeclareNamedSchema $ fromAesonOptions aesonOptionsRecord
     |]
 
-makeToSchema :: Name -> Q [Dec]
-makeToSchema name = makeToSchema' $ ConT name
+makeRecordToSchema :: Name -> Q [Dec]
+makeRecordToSchema name = makeRecordToSchema' $ ConT name
 
-makeToSchemaTypes :: [Name] -> Q [Dec]
-makeToSchemaTypes ns = concat <$> traverse makeToSchema ns
+makeRecordToSchemaTypes :: [Name] -> Q [Dec]
+makeRecordToSchemaTypes ns = concat <$> traverse makeRecordToSchema ns
 
-processApiType :: Name -> Q [Dec]
-processApiType name = do
-  (<>) <$> processType name <*> makeToSchema name
+processRecordApiType :: Name -> Q [Dec]
+processRecordApiType name = do
+  (<>) <$> processRecord name <*> makeRecordToSchema name
 
-processApiTypes :: [Name] -> Q [Dec]
-processApiTypes ns = concat <$> traverse processApiType ns
+processRecordApiTypes :: [Name] -> Q [Dec]
+processRecordApiTypes ns = concat <$> traverse processRecordApiType ns
+
+schemaOptionsSum :: SchemaOptions
+schemaOptionsSum = defaultSchemaOptions{unwrapUnaryRecords = True}
+
+makeSumToSchema' :: Type -> Q [Dec]
+makeSumToSchema' t = do
+  [d|
+    instance ToSchema $(pure t) where
+      declareNamedSchema = genericDeclareNamedSchema $ fromAesonOptions aesonOptionsSum
+
+    instance ToParamSchema $(pure t) where
+      toParamSchema = genericToParamSchema schemaOptionsSum
+    |]
+
+makeSumToSchema :: Name -> Q [Dec]
+makeSumToSchema name = makeSumToSchema' $ ConT name
+
+makeSumToSchemaTypes :: [Name] -> Q [Dec]
+makeSumToSchemaTypes ns = concat <$> traverse makeSumToSchema ns
+
+processSumApiType :: Name -> Q [Dec]
+processSumApiType name = do
+  (<>) <$> processSum name <*> makeSumToSchema name
+
+processSumApiTypes :: [Name] -> Q [Dec]
+processSumApiTypes = processTypes processSumApiType
+
+processTypes :: (Traversable t, Applicative f) => (a1 -> f [a2]) -> t a1 -> f [a2]
+processTypes process ns = concat <$> traverse process ns
+
+-- makeNewtypeToParamSchema

@@ -3,9 +3,8 @@
 module Controller.Effects.Users where
 
 import API.Types.User (FullToken, RefreshToken, UserLoginForm, UserRegisterForm (..))
-import Common.Prelude (Text)
 import Controller.Prelude (ServerError)
-import Controller.Types.JWK (JWKSettings)
+import Controller.Types.User (JWKSettings)
 import Effectful (Dispatch (Dynamic), DispatchOf, Effect)
 import Service.Types.User (LoginError, RegisterError, RotateError)
 

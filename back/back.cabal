@@ -54,6 +54,7 @@ library
       Server.Config
       Server.Server
       Service.Effects.News
+      Service.Effects.User
       Service.News
       Service.Prelude
       Service.Types.News

@@ -7,7 +7,7 @@ module API.Types.News (
 ) where
 
 import API.Prelude (Generic, UTCTime)
-import API.TH (makeToSchemaTypes, processApiTypes)
+import API.TH (makeRecordToSchemaTypes, processRecordApiTypes)
 import Common.Prelude (Text)
 
 import API.Types.User (AuthorName)
@@ -45,5 +45,6 @@ data QueryParams = QueryParams
 
 instance Default QueryParams
 
-makeToSchemaTypes [''GetNews, ''Image, ''CategoryId]
-processApiTypes [''EditNews, ''CreateNews, ''QueryParams]
+makeRecordToSchemaTypes [''GetNews, ''Image]
+
+processRecordApiTypes [''EditNews, ''CreateNews, ''QueryParams]

@@ -9,7 +9,7 @@ import Data.Text (Text)
 import Database.Esqueleto.PostgreSQL.JSON (JSONB)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
 import Persist.Types.News (Images)
-import Persist.Types.User (CategoryId, TokenId, ExpiresAt, UserName, AuthorName)
+import Persist.Types.User (CategoryId, TokenId, ExpiresAt, UserName, AuthorName, Role)
 import Service.Prelude (UTCTime)
 
 share
@@ -19,6 +19,7 @@ Users
     password ByteString
     userName UserName
     authorName AuthorName
+    role Role
     deriving Eq Show
 News
     title Text
@@ -31,7 +32,8 @@ News
     deriving Ord Eq Show
 Sessions
     lastAccessTokenId TokenId
-    lastAccessTokenExpiresAt ExpiresAt
+    lastRefreshTokenExpiresAt ExpiresAt
+    userId UsersId
     deriving Ord Eq Show
 |]
 

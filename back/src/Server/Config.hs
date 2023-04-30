@@ -32,7 +32,7 @@ data Web = Web
   deriving (Show, Generic)
 
 newtype JWTParameters = JWTParameters
-  { _jwtParameters_expirationTime :: Int
+  { _jwtParameters_expirationTime :: Integer
   }
   deriving (Show, Generic)
 
@@ -43,7 +43,7 @@ data App = App
   }
   deriving (Show, Generic)
 
-processTypes [''DB, ''Web, ''JWTParameters, ''App]
+processRecords [''DB, ''Web, ''JWTParameters, ''App]
 
 data Loader conf :: Effect where
   GetConfig :: (FromJSON conf) => (conf -> a) -> Loader conf m a

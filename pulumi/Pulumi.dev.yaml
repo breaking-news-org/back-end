@@ -44,6 +44,8 @@ config:
               web:
                 port: 8080
                 pageSize: 10
+              jwtParameters:
+                expirationTime: 1000000000000000
           jwk:
             varName: JWK_FILE
             filePath: jwk.yaml

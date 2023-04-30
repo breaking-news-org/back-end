@@ -14,7 +14,7 @@ import API.Prelude (encode)
 import API.Root (API, Routes (..))
 import API.Types.Instances ()
 import API.Types.News
-import API.Types.User (UserRegisterForm (..))
+import API.Types.User (FullToken (..), UserRegisterForm (..))
 import Control.Exception (catch, throwIO)
 import Control.Monad (void)
 import Control.Monad.Free (Free (..))
@@ -32,7 +32,6 @@ import GHC.IO.Exception (ExitCode (..))
 import Integration.Config
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Network.HTTP.Client qualified as HTTP
-import Persist.Types.News (Image (..), Images)
 import Servant.API ((:>))
 import Servant.Auth (Auth, JWT)
 import Servant.Client (BaseUrl (BaseUrl), ClientEnv (..), ClientError, HasClient (..), Scheme (Http), mkClientEnv)
@@ -44,6 +43,7 @@ import Servant.Client.Named ()
 import Servant.Client.Record ()
 import Server.Config
 import Service.Prelude (encodeUtf8, (&), (?~))
+import Service.Types.User (Password (..), RegisterError (UserExists))
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -101,13 +101,17 @@ api = Proxy
 _CONFIG_FILE :: String
 _CONFIG_FILE = "TEST_CONFIG_FILE"
 
-authorizeUser :: ClientFree Token
+authorizeUser :: ClientFree FullToken
 authorizeUser =
-  Token . encodeUtf8
+  ( \case
+      Left UserExists -> error "user exists"
+      Right fullToken -> fullToken
+  )
     <$> register
       UserRegisterForm
         { _userRegisterForm_userName = "contact@zelinf.net"
-        , _userRegisterForm_password = "abcdef"
+        , _userRegisterForm_password = Password "abcdef"
+        , _userRegisterForm_authorName = "author"
         }
 
 authorizeCreateNewsGetNews :: TestTree
@@ -136,7 +140,7 @@ authorizeCreateNewsGetNews = testCase "Authorize, create news, get that news" do
   case res of
     Left err -> putStrLn [i|Error: #{err}|]
     Right token -> do
-      let API.Endpoints.API1.News.API{get, create} = news token
+      let API.Endpoints.API1.News.API{get, create} = news (Token (encodeUtf8 token._fullToken_accessToken))
       void $
         withClientEnv $
           create

@@ -5,9 +5,9 @@ module Service.Types.News (
 ) where
 
 import Common.Prelude (Generic, Text, UTCTime)
-import Common.TH (processType)
+import Common.TH (processRecord)
 import Persist.Types.News (Filters (..), Image (..), Images)
-import Persist.Types.User (AuthorName, UserId, CategoryId)
+import Persist.Types.User (AuthorName, CategoryId, UserId)
 
 data GetNews = GetNews
   { _getNews_title :: !Text
@@ -21,7 +21,7 @@ data GetNews = GetNews
   }
   deriving (Generic, Show)
 
-processType ''GetNews
+processRecord ''GetNews
 
 data CreateNews = CreateNews
   { _createNews_title :: !Text

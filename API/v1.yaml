@@ -1,84 +1,158 @@
 components:
   schemas:
+    AuthorName:
+      type: string
+    CategoryId:
+      maximum: 9223372036854775807
+      minimum: -9223372036854775808
+      type: integer
     CreateNews:
       properties:
-        category:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
-        images:
-          $ref: "#/components/schemas/Images"
-        text:
+        _createNews_category:
+          $ref: '#/components/schemas/CategoryId'
+        _createNews_images:
+          items:
+            $ref: '#/components/schemas/Image'
+          type: array
+        _createNews_text:
           type: string
-        title:
+        _createNews_title:
           type: string
       required:
-        - title
-        - text
-        - category
-        - images
+      - _createNews_title
+      - _createNews_text
+      - _createNews_category
+      - _createNews_images
+      type: object
+    Either_LoginError_FullToken:
+      oneOf:
+      - properties:
+          Left:
+            $ref: '#/components/schemas/LoginError'
+        required:
+        - Left
+        type: object
+      - properties:
+          Right:
+            $ref: '#/components/schemas/FullToken'
+        required:
+        - Right
+        type: object
+    Either_RegisterError_FullToken:
+      oneOf:
+      - properties:
+          Left:
+            $ref: '#/components/schemas/RegisterError'
+        required:
+        - Left
+        type: object
+      - properties:
+          Right:
+            $ref: '#/components/schemas/FullToken'
+        required:
+        - Right
+        type: object
+    Either_RotateError_FullToken:
+      oneOf:
+      - properties:
+          Left:
+            $ref: '#/components/schemas/RotateError'
+        required:
+        - Left
+        type: object
+      - properties:
+          Right:
+            $ref: '#/components/schemas/FullToken'
+        required:
+        - Right
+        type: object
+    FullToken:
+      properties:
+        _fullToken_accessToken:
+          type: string
+        _fullToken_refreshToken:
+          type: string
+      required:
+      - _fullToken_refreshToken
+      - _fullToken_accessToken
       type: object
     GetNews:
       properties:
-        category:
+        _getNews_authorName:
+          $ref: '#/components/schemas/AuthorName'
+        _getNews_category:
+          $ref: '#/components/schemas/CategoryId'
+        _getNews_creationDate:
+          $ref: '#/components/schemas/UTCTime'
+        _getNews_id:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
           type: integer
-        creationDate:
-          $ref: "#/components/schemas/UTCTime"
-        creator:
-          type: string
-        id:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
-        images:
-          $ref: "#/components/schemas/Images"
-        isPublished:
+        _getNews_images:
+          items:
+            $ref: '#/components/schemas/Image'
+          type: array
+        _getNews_isPublished:
           type: boolean
-        text:
+        _getNews_text:
           type: string
-        title:
+        _getNews_title:
           type: string
       required:
-        - title
-        - creationDate
-        - creator
-        - category
-        - text
-        - id
-        - images
-        - isPublished
+      - _getNews_title
+      - _getNews_creationDate
+      - _getNews_authorName
+      - _getNews_category
+      - _getNews_text
+      - _getNews_id
+      - _getNews_images
+      - _getNews_isPublished
       type: object
     Image:
-      properties:
-        id:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
-        value:
-          type: string
-      required:
-        - id
-        - value
-      type: object
-    Images:
-      items:
-        $ref: "#/components/schemas/Image"
-      type: array
+      type: string
+    LoginError:
+      enum:
+      - UserDoesNotExist
+      type: string
+    Password:
+      type: string
+    RegisterError:
+      enum:
+      - UserExists
+      type: string
+    RotateError:
+      enum:
+      - SessionDoesNotExist
+      - SessionHasNewerAccessTokenId
+      type: string
     UTCTime:
       example: 2016-07-22T00:00:00Z
       format: yyyy-mm-ddThh:MM:ssZ
       type: string
-    UserRegistrationForm:
+    UserLoginForm:
       properties:
-        email:
-          type: string
-        password:
-          type: string
+        _userLoginForm_password:
+          $ref: '#/components/schemas/Password'
+        _userLoginForm_userName:
+          $ref: '#/components/schemas/UserName'
       required:
-        - email
-        - password
+      - _userLoginForm_userName
+      - _userLoginForm_password
+      type: object
+    UserName:
+      type: string
+    UserRegisterForm:
+      properties:
+        _userRegisterForm_authorName:
+          $ref: '#/components/schemas/AuthorName'
+        _userRegisterForm_password:
+          $ref: '#/components/schemas/Password'
+        _userRegisterForm_userName:
+          $ref: '#/components/schemas/UserName'
+      required:
+      - _userRegisterForm_userName
+      - _userRegisterForm_password
+      - _userRegisterForm_authorName
       type: object
   securitySchemes:
     JWT:
@@ -87,8 +161,8 @@ components:
       scheme: bearer
       type: http
 info:
-  title: ""
-  version: ""
+  title: ''
+  version: ''
 openapi: 3.0.0
 paths:
   /api1/news/create:
@@ -97,96 +171,122 @@ paths:
         content:
           application/json;charset=utf-8:
             schema:
-              $ref: "#/components/schemas/CreateNews"
+              $ref: '#/components/schemas/CreateNews'
       responses:
-        "200":
+        '200':
           content:
             application/json;charset=utf-8: {}
-          description: ""
-        "400":
+          description: ''
+        '400':
           description: Invalid `body`
       security:
-        - JWT: []
+      - JWT: []
   /api1/news/get:
     get:
       parameters:
-        - in: query
-          name: createdUntil
-          required: false
-          schema:
-            format: yyyy-mm-ddThh:MM:ssZ
-            type: string
-        - in: query
-          name: createdSince
-          required: false
-          schema:
-            format: yyyy-mm-ddThh:MM:ssZ
-            type: string
-        - in: query
-          name: createdAt
-          required: false
-          schema:
-            format: yyyy-mm-ddThh:MM:ssZ
-            type: string
-        - in: query
-          name: creator
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: category
-          required: false
-          schema:
-            maximum: 9223372036854775807
-            minimum: -9223372036854775808
-            type: integer
-        - in: query
-          name: content
-          required: false
-          schema:
-            type: string
-        - in: query
-          name: block
-          required: false
-          schema:
-            maximum: 9223372036854775807
-            minimum: -9223372036854775808
-            type: integer
-        - in: query
-          name: newsId
-          required: false
-          schema:
-            maximum: 9223372036854775807
-            minimum: -9223372036854775808
-            type: integer
+      - in: query
+        name: createdUntil
+        required: false
+        schema:
+          format: yyyy-mm-ddThh:MM:ssZ
+          type: string
+      - in: query
+        name: createdSince
+        required: false
+        schema:
+          format: yyyy-mm-ddThh:MM:ssZ
+          type: string
+      - in: query
+        name: createdAt
+        required: false
+        schema:
+          format: yyyy-mm-ddThh:MM:ssZ
+          type: string
+      - in: query
+        name: authorName
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: category
+        required: false
+        schema:
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
+      - in: query
+        name: content
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: block
+        required: false
+        schema:
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
+      - in: query
+        name: newsId
+        required: false
+        schema:
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
       responses:
-        "200":
+        '200':
           content:
             application/json;charset=utf-8:
               schema:
                 items:
-                  $ref: "#/components/schemas/GetNews"
+                  $ref: '#/components/schemas/GetNews'
                 type: array
-          description: ""
-        "400":
-          description:
-            Invalid `newsId` or `block` or `content` or `category` or `creator`
+          description: ''
+        '400':
+          description: Invalid `newsId` or `block` or `content` or `category` or `authorName`
             or `createdAt` or `createdSince` or `createdUntil`
       security:
-        - JWT: []
-  /api1/user/authorize:
+      - JWT: []
+  /api1/user/login:
     post:
       requestBody:
         content:
           application/json;charset=utf-8:
             schema:
-              $ref: "#/components/schemas/UserRegistrationForm"
+              $ref: '#/components/schemas/UserLoginForm'
       responses:
-        "200":
+        '200':
           content:
             application/json;charset=utf-8:
               schema:
-                type: string
-          description: ""
-        "400":
+                $ref: '#/components/schemas/Either_LoginError_FullToken'
+          description: ''
+        '400':
           description: Invalid `body`
+  /api1/user/register:
+    post:
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            schema:
+              $ref: '#/components/schemas/UserRegisterForm'
+      responses:
+        '200':
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/Either_RegisterError_FullToken'
+          description: ''
+        '400':
+          description: Invalid `body`
+  /api1/user/rotate-refresh-token:
+    post:
+      responses:
+        '200':
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/Either_RotateError_FullToken'
+          description: ''
+      security:
+      - JWT: []

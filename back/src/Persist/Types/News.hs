@@ -2,8 +2,8 @@ module Persist.Types.News where
 
 import API.Prelude (Generic, UTCTime)
 import Common.Prelude (HKD, Text)
-import Common.TH (processTypes)
-import Persist.Types.User (CategoryId, UserId, AuthorName)
+import Common.TH (processRecords)
+import Persist.Types.User (AuthorName, CategoryId, UserId)
 
 newtype Image = Image Text
   deriving (Show, Generic, Eq, Ord)
@@ -47,4 +47,4 @@ data Filters f = Filters
   }
   deriving (Generic)
 
-processTypes [''Image, ''InsertNews]
+processRecords [''Image, ''InsertNews]

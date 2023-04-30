@@ -1,4 +1,4 @@
-module Service.Effects.News where
+module Service.Effects.User where
 
 import Effectful (Effect)
 import Effectful.TH (makeEffect)
