@@ -1,15 +1,16 @@
 module API.TH (
   aesonOptions,
-  processRecord,
+  processType,
   makeFromToJSON,
-  processApiRecord,
-  processApiRecord',
+  processApiType,
+  processApiTypes,
   mkType,
   makeToSchema,
+  makeToSchemaTypes,
 ) where
 
 import API.Prelude (ToSchema (..), fromAesonOptions, genericDeclareNamedSchema)
-import Common.TH (aesonOptions, makeFromToJSON, makeFromToJSON', mkType, processRecord)
+import Common.TH (aesonOptions, makeFromToJSON, mkType, processType)
 import Language.Haskell.TH (Dec, Name, Q, Type (ConT))
 
 makeToSchema' :: Type -> Q [Dec]
@@ -22,15 +23,12 @@ makeToSchema' t = do
 makeToSchema :: Name -> Q [Dec]
 makeToSchema name = makeToSchema' $ ConT name
 
-processApiRecord :: Name -> Q [Dec]
-processApiRecord name = do
-  (<>) <$> processRecord name <*> makeToSchema name
+makeToSchemaTypes :: [Name] -> Q [Dec]
+makeToSchemaTypes ns = concat <$> traverse makeToSchema ns
 
-processApiRecord' :: [Name] -> Q [Dec]
-processApiRecord' (x : xs) = do
-  r1 <- makeFromToJSON' t
-  r3 <- makeToSchema' t
-  pure $ r1 <> r3
- where
-  t = mkType (x : xs)
-processApiRecord' [] = error "Not enough names: 0"
+processApiType :: Name -> Q [Dec]
+processApiType name = do
+  (<>) <$> processType name <*> makeToSchema name
+
+processApiTypes :: [Name] -> Q [Dec]
+processApiTypes ns = concat <$> traverse processApiType ns

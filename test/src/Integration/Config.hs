@@ -1,6 +1,6 @@
 module Integration.Config where
 
-import API.TH (processRecord)
+import API.TH (processType)
 import Common.Prelude
 import Service.Types.User (User (..))
 
@@ -10,7 +10,7 @@ data AppConf = AppConf
   }
   deriving (Generic)
 
-processRecord ''AppConf
+processType ''AppConf
 
 data TestConf = TestConf
   { _testConf_app :: AppConf
@@ -18,4 +18,4 @@ data TestConf = TestConf
   }
   deriving (Generic)
 
-processRecord ''TestConf
+processType ''TestConf

@@ -38,8 +38,6 @@ type AppM =
     '[ Server
      , UserController
      , UserService
-     , Error LoginError
-     , Error RegisterError
      , UserRepo
      , NewsController
      , ServiceNews
@@ -62,9 +60,6 @@ runAppM appM =
   runServerEffect appM
     & runUserController
     & runUserService
-    -- TODO is this ok?
-    & (void <$> runError @LoginError)
-    & (void <$> runError @RegisterError)
     & runUserRepo
     & runNewsController
     & runNewsService

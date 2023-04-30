@@ -1,17 +1,13 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module API.Types.User (UserName (..), AuthorName (..), UserRegisterForm (..), UserLoginForm (..), AccessToken (..), RefreshToken (..), FullToken (..)) where
 
-import API.TH (makeToSchema, processApiRecord)
-import Common.Prelude (Generic, Text, UTCTime)
+import API.TH (makeToSchemaTypes, processApiTypes)
+import Common.Prelude (Generic, Text)
 import Servant.Auth.JWT (FromJWT, ToJWT)
-import Service.Types.User (AuthorName (..), Role, UserName (..), Password)
-
-makeToSchema ''UserName
-
-makeToSchema ''AuthorName
-
-makeToSchema ''Password
+import Service.Types.User (AuthorName (..), ExpiresAt, Password, Role, SessionId (..), TokenId (..), UserId (..), UserName (..))
 
 data UserRegisterForm = UserRegisterForm
   { _userRegisterForm_userName :: !UserName
@@ -23,8 +19,6 @@ data UserRegisterForm = UserRegisterForm
   }
   deriving (Show, Eq, Generic)
 
-processApiRecord ''UserRegisterForm
-
 data UserLoginForm = UserLoginForm
   { _userLoginForm_userName :: !UserName
   -- ^ Private name of a user
@@ -33,41 +27,38 @@ data UserLoginForm = UserLoginForm
   }
   deriving (Show, Eq, Generic)
 
-processApiRecord ''UserLoginForm
-
 data AccessToken = AccessToken
   { _accessToken_role :: Role
-  , _accessToken_expiresAt :: UTCTime
-  , _accessToken_authorName :: !AuthorName
-  , _accessToken_tokenId :: Int
+  , _accessToken_expiresAt :: ExpiresAt
+  , _accessToken_userId :: UserId
+  , _accessToken_tokenId :: TokenId
   -- ^ index within a session
-  , _accessToken_sessionId :: Int
+  , _accessToken_sessionId :: SessionId
   -- ^ coincides with the id of the corresponding refresh token
   }
   deriving (Generic)
 
-makeToSchema ''Role
-processApiRecord ''AccessToken
-
-instance FromJWT AccessToken
-instance ToJWT AccessToken
-
 data RefreshToken = RefreshToken
-  { _refreshToken_expiresAt :: UTCTime
+  { _refreshToken_expiresAt :: ExpiresAt
   -- ^ when the token expires
-  , _refeshToken_sessionId :: Int
+  , _refreshToken_sessionId :: SessionId
   -- ^ id of a session starting from registration or login
-  , _refreshToken_id :: Int
+  , _refreshToken_tokenId :: TokenId
   -- ^ index within that session
   }
   deriving (Generic)
 
-processApiRecord ''RefreshToken
-
 data FullToken = FullToken
-  { _fullToken_refreshToken :: RefreshToken
-  , _fullToken_accessToken :: AccessToken
+  { _fullToken_refreshToken :: Text
+  , _fullToken_accessToken :: Text
   }
   deriving (Generic)
 
-processApiRecord ''FullToken
+makeToSchemaTypes [''UserName, ''AuthorName, ''Password, ''UserId, ''TokenId, ''SessionId, ''ExpiresAt, ''Role]
+processApiTypes [''UserLoginForm, ''UserRegisterForm, ''AccessToken, ''RefreshToken, ''FullToken]
+
+instance FromJWT AccessToken
+instance ToJWT AccessToken
+
+instance FromJWT RefreshToken
+instance ToJWT RefreshToken

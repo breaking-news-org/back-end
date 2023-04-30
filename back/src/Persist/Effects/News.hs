@@ -6,6 +6,6 @@ import Persist.Types.News (Filters, InsertNews, SelectedNews)
 
 data NewsRepo :: Effect where
   RepoInsertNews :: InsertNews -> NewsRepo m ()
-  RepoSelectedNews :: Filters Maybe -> NewsRepo m [SelectedNews]
+  RepoSelectNews :: Filters Maybe -> NewsRepo m [SelectedNews]
 
 makeEffect ''NewsRepo

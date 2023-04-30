@@ -37,8 +37,9 @@ runNewsController = interpret $ \_ -> \case
         , Service._createNews_text
         , Service._createNews_category
         , Service._createNews_images
-        , Service._createNews_authorName = _accessToken_authorName
+        , Service._createNews_userId = _accessToken_userId
         }
+    -- TODO send link to news
     pure $ Right NoContent
   ControllerGetNews AccessToken{..} fs -> do
     news <- Service.serviceGetNews fs _accessToken_role

@@ -1,6 +1,6 @@
 module Server.Config where
 
-import API.TH (processRecord)
+import Common.TH
 import Control.Exception (SomeException, catch)
 import Data.Aeson
 import Data.Int (Int64)
@@ -25,22 +25,16 @@ data DB = DB
   }
   deriving (Show, Generic)
 
-processRecord ''DB
-
 data Web = Web
   { _web_port :: Int
   , _web_pageSize :: Int64
   }
   deriving (Show, Generic)
 
-processRecord ''Web
-
 newtype JWTParameters = JWTParameters
   { _jwtParameters_expirationTime :: Int
   }
   deriving (Show, Generic)
-
-processRecord ''JWTParameters
 
 data App = App
   { _app_db :: DB
@@ -49,7 +43,7 @@ data App = App
   }
   deriving (Show, Generic)
 
-processRecord ''App
+processTypes [''DB, ''Web, ''JWTParameters, ''App]
 
 data Loader conf :: Effect where
   GetConfig :: (FromJSON conf) => (conf -> a) -> Loader conf m a

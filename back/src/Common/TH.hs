@@ -1,6 +1,7 @@
 module Common.TH (
   aesonOptions,
-  processRecord,
+  processType,
+  processTypes,
   makeFromToJSON,
   makeFromToJSON',
   mkType,
@@ -32,8 +33,11 @@ makeFromToJSON' t =
 makeFromToJSON :: Name -> Q [Dec]
 makeFromToJSON t = makeFromToJSON' $ ConT t
 
-processRecord :: Name -> Q [Dec]
-processRecord = makeFromToJSON
+processType :: Name -> Q [Dec]
+processType = makeFromToJSON
+
+processTypes :: [Name] -> Q [Dec]
+processTypes ns = concat <$> traverse processType ns
 
 mkType :: [Name] -> Type
 mkType [x] = ConT x

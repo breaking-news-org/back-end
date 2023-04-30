@@ -1,4 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE InstanceSigs #-}
 
 module Service.Types.User (
@@ -8,23 +10,28 @@ module Service.Types.User (
   RegisterError (..),
   LoginError (..),
   InsertUser (..),
-  RefreshError(..),
+  RotateError (..),
   SelectUser (..),
   Password (..),
   AuthorName (..),
   UserName (..),
-  SelectedUser (..),
+  User (..),
+  UserId (..),
+  SessionId (..),
+  TokenId (..),
+  CategoryId (..),
+  ExpiresAt (..),
 ) where
 
 import Common.Prelude (Text)
-import Common.TH (makeFromToJSON, processRecord)
-import Persist.Types.User (AuthorName (..), InsertUser (..), SelectUser (..), SelectedUser (..), UserName (..))
+import Common.TH (processType)
+import Persist.Types.User (AuthorName (..), CategoryId (..), ExpiresAt (..), InsertUser (..), SelectUser (..), SessionId (..), TokenId (..), User (..), UserId (..), UserName (..))
 import Service.Prelude (Generic)
 
 newtype Password = Password Text
   deriving (Show, Eq, Generic)
 
-processRecord ''Password
+processType ''Password
 
 data UserRegisterData = UserRegisterData
   { _userRegisterData_userName :: !UserName
@@ -50,8 +57,8 @@ data Role
   | RoleAdmin
   deriving (Generic)
 
-makeFromToJSON ''Role
+processType ''Role
 
 data RegisterError = UserExists deriving (Generic, Show)
 data LoginError = UserDoesNotExist deriving (Generic, Show)
-data RefreshError = RefreshError deriving (Generic, Show)
+data RotateError = RotateError deriving (Generic, Show)

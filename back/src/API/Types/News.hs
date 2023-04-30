@@ -7,24 +7,21 @@ module API.Types.News (
 ) where
 
 import API.Prelude (Generic, UTCTime)
-import API.TH (makeToSchema, processApiRecord)
+import API.TH (makeToSchemaTypes, processApiTypes)
 import Common.Prelude (Text)
 
+import API.Types.User (AuthorName)
 import Data.Default (Default)
 import Service.Types.News (Filters (..), GetNews (..), Image (..), Images)
-import API.Types.User ()
-
-makeToSchema ''Image
+import Service.Types.User (CategoryId)
 
 data CreateNews = CreateNews
   { _createNews_title :: !Text
   , _createNews_text :: !Text
-  , _createNews_category :: Int
+  , _createNews_category :: CategoryId
   , _createNews_images :: Images
   }
   deriving (Generic)
-
-processApiRecord ''CreateNews
 
 data EditNews = EditNews
   { _editNews_id :: Int
@@ -34,22 +31,19 @@ data EditNews = EditNews
   }
   deriving (Generic)
 
-processApiRecord ''EditNews
-
-makeToSchema ''GetNews
-
 data QueryParams = QueryParams
   { _queryParams_createdUntil :: Maybe UTCTime
   , _queryParams_createdSince :: Maybe UTCTime
   , _queryParams_createdAt :: Maybe UTCTime
-  , _queryParams_authorName :: Maybe Text
-  , _queryParams_category :: Maybe Int
+  , _queryParams_authorName :: Maybe AuthorName
+  , _queryParams_category :: Maybe CategoryId
   , _queryParams_content :: Maybe Text
   , _queryParams_block :: Maybe Int
   , _queryParams_newsId :: Maybe Int
   }
   deriving (Generic)
 
-processApiRecord ''QueryParams
-
 instance Default QueryParams
+
+makeToSchemaTypes [''GetNews, ''Image, ''CategoryId]
+processApiTypes [''EditNews, ''CreateNews, ''QueryParams]
