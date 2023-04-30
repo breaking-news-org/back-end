@@ -23,6 +23,7 @@ module Service.Types.User (
   ExpiresAt (..),
   Session (..),
   HashedPassword (..),
+  SomeError(..)
 ) where
 
 import Common.Prelude (Text)

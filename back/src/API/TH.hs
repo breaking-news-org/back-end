@@ -8,6 +8,7 @@ module API.TH (
   processSumApiTypes,
   makeSumToSchema,
   makeSumToSchemaTypes,
+  processRecordApiTypes',
 ) where
 
 import API.Prelude (ToSchema (..), fromAesonOptions, genericDeclareNamedSchema)
@@ -66,4 +67,5 @@ processSumApiTypes = processTypes processSumApiType
 processTypes :: (Traversable t, Applicative f) => (a1 -> f [a2]) -> t a1 -> f [a2]
 processTypes process ns = concat <$> traverse process ns
 
--- makeNewtypeToParamSchema
+processRecordApiTypes' :: [[Name]] -> Q [Dec]
+processRecordApiTypes' = processTypes' makeRecordToSchema'

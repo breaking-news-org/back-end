@@ -11,17 +11,17 @@ import Data.Text.Lazy.Encoding qualified as LT
 import Effectful (Eff, IOE, type (:>))
 import Effectful.Dispatch.Dynamic (interpret, send)
 import Servant.Auth.Server (defaultJWTSettings, makeJWT)
-import Service.Types.User (ExpiresAt (ExpiresAt), LoginError (UserDoesNotExist), RegisterError (UserExists), RotateError, SessionId, TokenId, User (..), UserLoginData (..), UserRegisterData (..))
+import Service.Types.User (ExpiresAt (ExpiresAt), LoginError (UserDoesNotExist), RegisterError (UserExists), RotateError, SessionId, SomeError (..), TokenId, User (..), UserLoginData (..), UserRegisterData (..))
 import Service.User (UserService, serviceRotateRefreshToken)
 import Service.User qualified as UserService
 
-register :: UserController :> es => JWKSettings -> UserRegisterForm -> ExceptT ServerError (Eff es) (Either RegisterError FullToken)
+register :: UserController :> es => JWKSettings -> UserRegisterForm -> ExceptT ServerError (Eff es) (Either (SomeError RegisterError) FullToken)
 register jwkSettings = ExceptT . send . ControllerRegisterUser jwkSettings
 
-login :: UserController :> es => JWKSettings -> UserLoginForm -> ExceptT ServerError (Eff es) (Either LoginError FullToken)
+login :: UserController :> es => JWKSettings -> UserLoginForm -> ExceptT ServerError (Eff es) (Either (SomeError LoginError) FullToken)
 login jwkSettings = ExceptT . send . ControllerLoginUser jwkSettings
 
-rotateRefreshToken :: UserController :> es => JWKSettings -> RefreshToken -> ExceptT ServerError (Eff es) (Either RotateError FullToken)
+rotateRefreshToken :: UserController :> es => JWKSettings -> RefreshToken -> ExceptT ServerError (Eff es) (Either (SomeError RotateError) FullToken)
 rotateRefreshToken jwkSettings = ExceptT . send . ControllerRotateRefreshToken jwkSettings
 
 runUserController :: (UserService :> es, IOE :> es) => Eff (UserController : es) a -> Eff es a
@@ -35,7 +35,7 @@ runUserController = interpret $ \_ -> \case
           , _userRegisterData_authorName = _userRegisterForm_authorName
           }
     case res of
-      Left UserExists -> pure $ Right $ Left UserExists
+      Left UserExists -> pure $ Right (Left (SomeError UserExists))
       Right user -> do
         fullToken <- getFreshFullToken jwkSettings user
         pure $ Right $ Right fullToken
@@ -47,7 +47,7 @@ runUserController = interpret $ \_ -> \case
           , _userLoginData_password = _userLoginForm_password
           }
     case res of
-      Left UserDoesNotExist -> pure $ Right $ Left UserDoesNotExist
+      Left UserDoesNotExist -> pure $ Right $ Left (SomeError UserDoesNotExist)
       Right userId -> do
         fullToken <- getFreshFullToken jwkSettings userId
         pure $ Right $ Right fullToken
@@ -55,7 +55,7 @@ runUserController = interpret $ \_ -> \case
     expiresAt <- getExpiresAt _jwkSettings_jwtLifetimeSeconds
     tokenIdUser <- serviceRotateRefreshToken expiresAt _refreshToken_sessionId _refreshToken_id
     case tokenIdUser of
-      Left x -> pure $ Right $ Left x
+      Left x -> pure $ Right $ Left (SomeError x)
       Right (tokenId, user) -> Right . Right <$> makeFullToken _jwkSettings_jwk _refreshToken_sessionId tokenId expiresAt user
 
 -- Right <$> getRotatedFullToken jwkSettings refreshToken

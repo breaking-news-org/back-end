@@ -18,6 +18,7 @@ module Common.TH (
   makeSumFromToJSON',
   processSum',
   processSums',
+  processTypes',
   mkType,
 ) where
 
@@ -65,8 +66,7 @@ processRecord' (x : xs) = makeRecordFromToJSON' (mkType (x : xs))
 processRecord' [] = error "Not enough names: 0"
 
 processRecords' :: [[Name]] -> Q [Dec]
-processRecords' (x : xs) = concat <$> traverse (makeRecordFromToJSON' . mkType) (x : xs)
-processRecords' [] = error "Not enough names: 0"
+processRecords' = processTypes' makeRecordFromToJSON'
 
 aesonOptionsSum :: Options
 aesonOptionsSum =
@@ -101,5 +101,8 @@ processSum' (x : xs) = makeSumFromToJSON' (mkType (x : xs))
 processSum' [] = error "Not enough names: 0"
 
 processSums' :: [[Name]] -> Q [Dec]
-processSums' (x : xs) = concat <$> traverse (makeSumFromToJSON' . mkType) (x : xs)
-processSums' [] = error "Not enough names: 0"
+processSums' = processTypes' makeSumFromToJSON'
+
+processTypes' :: Applicative f => (Type -> f [a]) -> [[Name]] -> f [a]
+processTypes' process (x : xs) = concat <$> traverse (process . mkType) (x : xs)
+processTypes' _ [] = error "Not enough names: 0"

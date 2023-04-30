@@ -8,27 +8,27 @@ components:
       type: integer
     CreateNews:
       properties:
-        _createNews_category:
+        category:
           $ref: '#/components/schemas/CategoryId'
-        _createNews_images:
+        images:
           items:
             $ref: '#/components/schemas/Image'
           type: array
-        _createNews_text:
+        text:
           type: string
-        _createNews_title:
+        title:
           type: string
       required:
-      - _createNews_title
-      - _createNews_text
-      - _createNews_category
-      - _createNews_images
+      - title
+      - text
+      - category
+      - images
       type: object
-    Either_LoginError_FullToken:
+    Either_(SomeError_LoginError)_FullToken:
       oneOf:
       - properties:
           Left:
-            $ref: '#/components/schemas/LoginError'
+            $ref: '#/components/schemas/SomeError_LoginError'
         required:
         - Left
         type: object
@@ -38,11 +38,11 @@ components:
         required:
         - Right
         type: object
-    Either_RegisterError_FullToken:
+    Either_(SomeError_RegisterError)_FullToken:
       oneOf:
       - properties:
           Left:
-            $ref: '#/components/schemas/RegisterError'
+            $ref: '#/components/schemas/SomeError_RegisterError'
         required:
         - Left
         type: object
@@ -52,11 +52,11 @@ components:
         required:
         - Right
         type: object
-    Either_RotateError_FullToken:
+    Either_(SomeError_RotateError)_FullToken:
       oneOf:
       - properties:
           Left:
-            $ref: '#/components/schemas/RotateError'
+            $ref: '#/components/schemas/SomeError_RotateError'
         required:
         - Left
         type: object
@@ -68,45 +68,45 @@ components:
         type: object
     FullToken:
       properties:
-        _fullToken_accessToken:
+        accessToken:
           type: string
-        _fullToken_refreshToken:
+        refreshToken:
           type: string
       required:
-      - _fullToken_refreshToken
-      - _fullToken_accessToken
+      - refreshToken
+      - accessToken
       type: object
     GetNews:
       properties:
-        _getNews_authorName:
+        authorName:
           $ref: '#/components/schemas/AuthorName'
-        _getNews_category:
+        category:
           $ref: '#/components/schemas/CategoryId'
-        _getNews_creationDate:
+        creationDate:
           $ref: '#/components/schemas/UTCTime'
-        _getNews_id:
+        id:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
           type: integer
-        _getNews_images:
+        images:
           items:
             $ref: '#/components/schemas/Image'
           type: array
-        _getNews_isPublished:
+        isPublished:
           type: boolean
-        _getNews_text:
+        text:
           type: string
-        _getNews_title:
+        title:
           type: string
       required:
-      - _getNews_title
-      - _getNews_creationDate
-      - _getNews_authorName
-      - _getNews_category
-      - _getNews_text
-      - _getNews_id
-      - _getNews_images
-      - _getNews_isPublished
+      - title
+      - creationDate
+      - authorName
+      - category
+      - text
+      - id
+      - images
+      - isPublished
       type: object
     Image:
       type: string
@@ -125,34 +125,55 @@ components:
       - SessionDoesNotExist
       - SessionHasNewerAccessTokenId
       type: string
+    SomeError_LoginError:
+      properties:
+        error:
+          $ref: '#/components/schemas/LoginError'
+      required:
+      - error
+      type: object
+    SomeError_RegisterError:
+      properties:
+        error:
+          $ref: '#/components/schemas/RegisterError'
+      required:
+      - error
+      type: object
+    SomeError_RotateError:
+      properties:
+        error:
+          $ref: '#/components/schemas/RotateError'
+      required:
+      - error
+      type: object
     UTCTime:
       example: 2016-07-22T00:00:00Z
       format: yyyy-mm-ddThh:MM:ssZ
       type: string
     UserLoginForm:
       properties:
-        _userLoginForm_password:
+        password:
           $ref: '#/components/schemas/Password'
-        _userLoginForm_userName:
+        userName:
           $ref: '#/components/schemas/UserName'
       required:
-      - _userLoginForm_userName
-      - _userLoginForm_password
+      - userName
+      - password
       type: object
     UserName:
       type: string
     UserRegisterForm:
       properties:
-        _userRegisterForm_authorName:
+        authorName:
           $ref: '#/components/schemas/AuthorName'
-        _userRegisterForm_password:
+        password:
           $ref: '#/components/schemas/Password'
-        _userRegisterForm_userName:
+        userName:
           $ref: '#/components/schemas/UserName'
       required:
-      - _userRegisterForm_userName
-      - _userRegisterForm_password
-      - _userRegisterForm_authorName
+      - userName
+      - password
+      - authorName
       type: object
   securitySchemes:
     JWT:
@@ -259,7 +280,7 @@ paths:
           content:
             application/json;charset=utf-8:
               schema:
-                $ref: '#/components/schemas/Either_LoginError_FullToken'
+                $ref: '#/components/schemas/Either_(SomeError_LoginError)_FullToken'
           description: ''
         '400':
           description: Invalid `body`
@@ -275,7 +296,7 @@ paths:
           content:
             application/json;charset=utf-8:
               schema:
-                $ref: '#/components/schemas/Either_RegisterError_FullToken'
+                $ref: '#/components/schemas/Either_(SomeError_RegisterError)_FullToken'
           description: ''
         '400':
           description: Invalid `body`
@@ -286,7 +307,7 @@ paths:
           content:
             application/json;charset=utf-8:
               schema:
-                $ref: '#/components/schemas/Either_RotateError_FullToken'
+                $ref: '#/components/schemas/Either_(SomeError_RotateError)_FullToken'
           description: ''
       security:
       - JWT: []

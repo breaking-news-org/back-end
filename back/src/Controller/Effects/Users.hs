@@ -6,11 +6,11 @@ import API.Types.User (FullToken, RefreshToken, UserLoginForm, UserRegisterForm 
 import Controller.Prelude (ServerError)
 import Controller.Types.User (JWKSettings)
 import Effectful (Dispatch (Dynamic), DispatchOf, Effect)
-import Service.Types.User (LoginError, RegisterError, RotateError)
+import Service.Types.User (LoginError, RegisterError, RotateError, SomeError)
 
 data UserController :: Effect where
-  ControllerRegisterUser :: JWKSettings -> UserRegisterForm -> UserController m (Either ServerError (Either RegisterError FullToken))
-  ControllerLoginUser :: JWKSettings -> UserLoginForm -> UserController m (Either ServerError (Either LoginError FullToken))
-  ControllerRotateRefreshToken :: JWKSettings -> RefreshToken -> UserController m (Either ServerError (Either RotateError FullToken))
+  ControllerRegisterUser :: JWKSettings -> UserRegisterForm -> UserController m (Either ServerError (Either (SomeError RegisterError) FullToken))
+  ControllerLoginUser :: JWKSettings -> UserLoginForm -> UserController m (Either ServerError (Either (SomeError LoginError) FullToken))
+  ControllerRotateRefreshToken :: JWKSettings -> RefreshToken -> UserController m (Either ServerError (Either (SomeError RotateError) FullToken))
 
 type instance DispatchOf UserController = Dynamic
