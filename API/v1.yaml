@@ -88,10 +88,6 @@ components:
           $ref: '#/components/schemas/CategoryId'
         createdAt:
           $ref: '#/components/schemas/CreatedAt'
-        id:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
         images:
           items:
             $ref: '#/components/schemas/Image'
@@ -108,7 +104,6 @@ components:
       - authorName
       - category
       - text
-      - id
       - images
       - isPublished
       type: object
