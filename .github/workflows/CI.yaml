@@ -79,6 +79,10 @@ jobs:
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v3
+      - name: Config git for github-actions
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
       - name: Install Nix
         uses: cachix/install-nix-action@v18
         with:

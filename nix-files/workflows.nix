@@ -97,6 +97,7 @@ let
         runs-on = os.ubuntu-20;
         steps = [
           steps.checkout
+          steps.configGitAsGHActions
           steps.installNix
           {
             name = "Generate specification";
