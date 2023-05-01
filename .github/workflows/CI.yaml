@@ -115,4 +115,6 @@ name: CI
     - cron: 0 0 * * *
   workflow_dispatch: {}
 permissions:
-  contents: write
+  contents: read
+  id-token: write
+  pages: write

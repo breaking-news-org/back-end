@@ -33,8 +33,11 @@ let
       group = "pages";
       cancel-in-progress = false;
     };
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
     permissions = {
-      contents = "write";
+      contents = "read";
+      pages = "write";
+      id-token = "write";
     };
     jobs = {
       "${job1}" = {
