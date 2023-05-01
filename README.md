@@ -18,9 +18,13 @@
 
 - [Pulumi](https://www.pulumi.com/)
 
-## Kubernetes
+## Development
 
-- For local development, we use `minikube`.
+Set up the cluster and make test requests.
+
+1. Install `minikube`, `pulumi`, `kubernetes`, `Postman`, `psql`.
+
+1. Run a cluster
 
     ```console
     # start a minikube vm
@@ -37,21 +41,74 @@
 
     # check that all pods are ready
     kubectl get po
+    ```
 
-    # make a request to the server
-    curl --location --request POST "http://$(minikube ip):30003/api1/user/authorize" \
-            --header 'Content-Type: application/json' \
-            --data-raw '{
-                "email": "contact@zelinf.net",
-                "password": "abcdef"
-            }'
+1. Get the IP address of the cluster (let's call it `<IP>`).
 
+    ```console
+    minikube ip
+    ```
+
+1. Get the port of the server `dev:back.service.nodePort` (let's call it `<port>`).
+
+1. Import the [API](./API/v1.yaml) into `Postman` as a `Postman Collection`.
+
+1. In that collection, set the variable `baseUrl` to `http://<IP>:<port>`.
+
+1. Send a request to `/api1/user/register`.
+
+    1. Set the values in the request `Body`.
+    1. You'll get a refresh token (`refreshToken`) and an access token (`accessToken`).
+
+1. Send a request to `/api1/user/rotate-refresh-token`.
+
+    1. Copy `refreshToken` to `Authorization` -> `BearerToken` -> `Token`.
+    1. You'll get a renewed pair of a refresh token and an access token.
+
+1. Send the request again with the old `refreshToken`.
+
+    1. You'll get a message that the session has a newer token.
+    1. This is due to refresh token reuse detection (see [Authorization](#authorization))
+
+1. Send a request to `/api1/user/login`.
+
+    1. Copy the values from the request to `/api1/user/register` into `Body`.
+    1. You'll get a renewed pair of a refresh token and an access token.
+
+1. Send a request to `api/news/create`.
+
+   1. Copy the last `accessToken` to `Authorization` -> `BearerToken` -> `Token`.
+   1. Edit the value in `Body`.
+   1. You'll get nothing in the response body.
+
+1. Send a request to `api/news/get`.
+   1. Copy the last `accessToken` to `Authorization` -> `BearerToken` -> `Token`.
+   1. Remove all query parameters
+   1. You'll get a list of news in the response body
+
+1. Check database
+
+    ```console
     # connect to the database
     psql postgresql://admin:psltest@localhost:30002/postgresdb
 
     # check records
     select * from users;
     ```
+
+1. If you delete a resource, refresh `pulumi`.
+
+    ```console
+    # delete some pod
+    kubectl delete po ...
+    
+    # after deleting resources, run
+    pulumi refresh
+
+    pulumi up
+    ```
+
+## Production
 
 - On a server, we user `microk8s`.
   - Run the script to set up environment in a current shell.
