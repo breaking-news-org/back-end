@@ -75,7 +75,7 @@ runServerEffect = interpret $ \_ -> \case
 getJWKSettings :: forall es. Constraints es => Eff es JWKSettings
 getJWKSettings = do
   lifeTime <- getConfig @App (._app_jwtParameters._jwtParameters_expirationTime)
-  let lifetime_ = secondsToNominalDiffTime (MkFixed lifeTime)
+  let lifetime_ = secondsToNominalDiffTime (MkFixed (lifeTime * (10 ^ 12)))
   jwk <- getConfig id
   pure JWKSettings{_jwkSettings_jwk = jwk, _jwkSettings_jwtLifetimeSeconds = lifetime_}
 
