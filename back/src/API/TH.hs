@@ -12,7 +12,7 @@ module API.TH (
 ) where
 
 import API.Prelude (ToSchema (..), fromAesonOptions, genericDeclareNamedSchema)
-import Common.Prelude (ToParamSchema (toParamSchema))
+import Common.Prelude (ToParamSchema (..), genericToParamSchema)
 import Common.TH
 import Data.OpenApi (defaultSchemaOptions)
 import Data.OpenApi.Schema (SchemaOptions (..))

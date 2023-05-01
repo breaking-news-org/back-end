@@ -4,7 +4,6 @@ module Persist.User (
 where
 
 import Control.Lens (Bifunctor (bimap))
-import Control.Lens qualified as Lens
 import Database.Esqueleto.Experimental (Entity (Entity, entityKey), fromSqlKey, innerJoin, on, selectOne, set, toSqlKey, update, (+.), (=.), (==.), type (:&) ((:&)))
 import Persist.Effects.User (UserRepo (..))
 import Persist.Model (EntityField (..), Sessions (..), Users (..))
@@ -27,7 +26,7 @@ runUserRepo = interpret $ \_ -> \case
   RepoSelectUser SelectUser{..} -> withConn do
     user <- selectOne do
       users <- from $ table @Users
-      where_ (users ^. UsersUserName ==. val _selectUser_userName)
+      where_ (users.userName ==. val _selectUser_userName &&. users.password ==. val _selectUser_hashedPassword)
       pure users
     pure $ userFromModel <$> user
   RepoCreateSession expiresAt userId -> do
@@ -61,7 +60,7 @@ userToModel :: InsertUser -> Model.Users
 userToModel InsertUser{..} =
   Users -- this might be more complex in production code
     { usersUserName = _insertUser_userName
-    , usersPassword = _insertUser_hashedPassword Lens.^. #_HashedPassword
+    , usersPassword = _insertUser_hashedPassword
     , usersAuthorName = _insertUser_authorName
     , usersRole = _insertUser_role
     }
@@ -70,7 +69,7 @@ userFromModel :: Entity Users -> User
 userFromModel Entity{entityKey, entityVal = Users{..}} =
   User
     { _user_userName = usersUserName
-    , _user_hashedPassword = HashedPassword usersPassword
+    , _user_hashedPassword = usersPassword
     , _user_authorName = usersAuthorName
     , _user_id = fromIntegral $ fromSqlKey entityKey
     , _user_role = usersRole

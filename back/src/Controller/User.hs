@@ -11,7 +11,7 @@ import Data.Text.Lazy.Encoding qualified as LT
 import Effectful (Eff, IOE, type (:>))
 import Effectful.Dispatch.Dynamic (interpret, send)
 import Servant.Auth.Server (defaultJWTSettings, makeJWT)
-import Service.Types.User (ExpiresAt (ExpiresAt), LoginError (UserDoesNotExist), RegisterError (UserExists), RotateError, SessionId, SomeError (..), TokenId, User (..), UserLoginData (..), UserRegisterData (..))
+import Service.Types.User (ExpiresAt (ExpiresAt), LoginError (UserDoesNotExist), RegisterError (UserExists), RotateError, SessionId, TokenId, User (..), UserLoginData (..), UserRegisterData (..))
 import Service.User (UserService, serviceRotateRefreshToken)
 import Service.User qualified as UserService
 

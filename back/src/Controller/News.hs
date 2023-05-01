@@ -22,9 +22,9 @@ get
     , _queryParams_createdAt = _filters_createdAt
     , _queryParams_authorName = _filters_authorName
     , _queryParams_category = _filters_category
-    , _queryParams_content = _filters_content
+    , _queryParams_titleLike = _filters_titleLike
+    , _queryParams_textLike = _filters_textLike
     , _queryParams_block = _filters_block
-    , _queryParams_newsId = _filters_newsId
     } =
     ExceptT $ send $ ControllerGetNews clientToken API.Filters{_filters_showUnpublished = Nothing, ..}
 

@@ -6,15 +6,16 @@ module Persist.Types.User where
 
 import API.Prelude (FromHttpApiData, Generic, PersistField, ToHttpApiData, UTCTime, Value)
 import Common.Prelude (ByteString, FromJSON, Text, ToJSON, (^.))
-import Common.TH (processRecords)
+import Common.TH (processRecords, processSums)
 import Data.Aeson.Types (FromJSON (parseJSON), Parser, ToJSON (toJSON), withText)
+import Data.String (IsString)
 import Data.String.Interpolate (i)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql (sqlType), PersistValue (PersistInt64), SqlType (SqlInt64))
-import Data.String (IsString)
 
 newtype HashedPassword = HashedPassword ByteString
-  deriving (Show, Eq, Generic)
+  deriving (Generic)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString)
 
 -- Unsafe because doesn't check if password was hashed
 instance FromJSON HashedPassword where
@@ -105,4 +106,34 @@ newtype ExpiresAt = ExpiresAt UTCTime
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
 
-processRecords [''ExpiresAt, ''SessionId, ''User, ''InsertUser, ''UserId, ''AuthorName, ''UserName, ''TokenId, ''CategoryId, ''Role]
+newtype CreatedAt = CreatedAt UTCTime
+  deriving (Generic)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, FromHttpApiData, ToHttpApiData)
+
+newtype CreatedSince = CreatedSince UTCTime
+  deriving (Generic)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, FromHttpApiData, ToHttpApiData)
+
+newtype CreatedUntil = CreatedUntil UTCTime
+  deriving (Generic)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, FromHttpApiData, ToHttpApiData)
+
+-- TODO sums or records?
+processSums
+  [ ''ExpiresAt
+  , ''SessionId
+  , ''UserId
+  , ''AuthorName
+  , ''UserName
+  , ''TokenId
+  , ''CategoryId
+  , ''Role
+  , ''CreatedAt
+  , ''CreatedUntil
+  , ''CreatedSince
+  ]
+
+processRecords
+  [ ''User
+  , ''InsertUser
+  ]

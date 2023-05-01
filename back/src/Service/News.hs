@@ -1,7 +1,7 @@
 module Service.News where
 
 import Common.Prelude (getCurrentTime)
-import Control.Lens (has)
+import Control.Lens (has, (#))
 import Effectful (Eff, IOE, MonadIO (liftIO), type (:>))
 import Effectful.Dispatch.Dynamic (interpret)
 import External.Logger (Logger, logDebug, withLogger)
@@ -19,7 +19,7 @@ runNewsService =
         InsertNews
           { _insertNews_title = _createNews_title
           , _insertNews_category = _createNews_category
-          , _insertNews_creationDate = now
+          , _insertNews_createdAt = #_CreatedAt # now
           , _insertNews_authorId = _createNews_userId
           , _insertNews_text = _createNews_text
           , _insertNews_images = _createNews_images
@@ -32,7 +32,7 @@ runNewsService =
         ( \SelectedNews{..} ->
             GetNews
               { _getNews_title = _selectNews_title
-              , _getNews_creationDate = _selectNews_creationDate
+              , _getNews_createdAt = _selectNews_createdAt
               , _getNews_authorName = _selectNews_authorName
               , _getNews_category = _selectNews_category
               , _getNews_text = _selectNews_text

@@ -55,7 +55,7 @@ runUserService = interpret $ \_ -> \case
       Nothing -> pure $ Left SessionDoesNotExist
       Just (session1, user) -> do
         if session1._session_lastAccessTokenId > tokenId
-          then pure $ Left SessionHasNewerAccessTokenId
+          then pure $ Left SessionHasNewerRefreshTokenId
           else do
             repoSessionUpdateLastAccessTokenId expiresAt sessionId
             pure $ Right (tokenId + 1, user)

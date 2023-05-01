@@ -23,12 +23,14 @@ module Service.Types.User (
   ExpiresAt (..),
   Session (..),
   HashedPassword (..),
-  SomeError(..)
+  CreatedSince (..),
+  CreatedUntil (..),
+  CreatedAt(..)
 ) where
 
 import Common.Prelude (Text)
-import Common.TH (processRecords, processRecords', processSums)
-import Persist.Types.User (AuthorName (..), CategoryId (..), ExpiresAt (..), HashedPassword (..), InsertUser (..), Role (..), SelectUser (..), Session (..), SessionId (..), TokenId (..), User (..), UserId (..), UserName (..))
+import Common.TH (processRecords, processSums)
+import Persist.Types.User (AuthorName (..), CategoryId (..), CreatedAt (..), CreatedSince (..), CreatedUntil (..), ExpiresAt (..), HashedPassword (..), InsertUser (..), Role (..), SelectUser (..), Session (..), SessionId (..), TokenId (..), User (..), UserId (..), UserName (..))
 import Service.Prelude (Generic)
 
 newtype Password = Password Text
@@ -54,15 +56,9 @@ data UserLoginData = UserLoginData
 
 data RegisterError = UserExists deriving (Generic, Show)
 data LoginError = UserDoesNotExist deriving (Generic, Show)
-data RotateError = SessionDoesNotExist | SessionHasNewerAccessTokenId deriving (Generic, Show)
-
-newtype SomeError e = SomeError {_someError_error :: e} deriving (Generic)
+data RotateError = SessionDoesNotExist | SessionHasNewerRefreshTokenId deriving (Generic, Show)
 
 processSums [''RegisterError, ''LoginError, ''RotateError]
-processRecords' [[''SomeError, ''LoginError], [''SomeError, ''RegisterError], [''SomeError, ''RotateError]]
-
--- >>> encode $ SomeError UserExists
--- "{\"error\":\"UserExists\"}"
 
 -- TODO better instances for err
 processRecords [''Password]
