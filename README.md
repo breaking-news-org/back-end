@@ -68,7 +68,7 @@ Set up the cluster and make test requests.
 1. Send the request again with the old `refreshToken`.
 
     1. You'll get a message that the session has a newer token.
-    1. This is due to refresh token reuse detection (see [Authorization](#authorization))
+    1. This is due to refresh token reuse detection (see [Authorization](#authorization)).
 
 1. Send a request to `/api1/user/login`.
 
@@ -77,14 +77,13 @@ Set up the cluster and make test requests.
 
 1. Send a request to `api/news/create`.
 
-   1. Copy the last `accessToken` to `Authorization` -> `BearerToken` -> `Token`.
-   1. Edit the value in `Body`.
+   1. Copy the last `accessToken` to your Collection -> `Variables` -> `{{bearerToken}}`.
+   1. Edit the value in the request `Body`.
    1. You'll get nothing in the response body.
 
 1. Send a request to `api/news/get`.
-   1. Copy the last `accessToken` to `Authorization` -> `BearerToken` -> `Token`.
    1. Remove all query parameters
-   1. You'll get a list of news in the response body
+   1. You'll get a list of news in the response body.
 
 1. Check database
 
