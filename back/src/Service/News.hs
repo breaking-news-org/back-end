@@ -36,7 +36,6 @@ runNewsService =
               , _getNews_authorName = _selectNews_authorName
               , _getNews_category = _selectNews_category
               , _getNews_text = _selectNews_text
-              , _getNews_id = _selectNews_id
               , _getNews_images = _selectNews_images
               , _getNews_isPublished = _selectNews_isPublished
               }

@@ -15,7 +15,6 @@ data GetNews = GetNews
   , _getNews_authorName :: !AuthorName
   , _getNews_category :: !CategoryId
   , _getNews_text :: !NewsText
-  , _getNews_id :: Int
   , _getNews_images :: Images
   , _getNews_isPublished :: Bool
   }
