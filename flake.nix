@@ -34,7 +34,7 @@
         inherit (inputs.flakes-tools.functions.${system}) mkFlakesTools;
         inherit (inputs.devshell.functions.${system}) mkCommands mkShell mkRunCommands;
         inherit (inputs.haskell-tools.functions.${system}) toolsGHC;
-        inherit (inputs.workflows.functions.${system}) writeWorkflow;
+        inherit (inputs.workflows.functions.${system}) writeWorkflow run;
         inherit (inputs.workflows.configs.${system}) nixCI;
 
         # Next, set the desired GHC version
@@ -174,7 +174,6 @@
             tag = imageTag;
             config.Cmd = [ exeName ];
             contents = [
-              # pkgs.bash
               exe
             ];
           };
@@ -227,9 +226,17 @@
         testLocalImageName = testImageName;
         testImageTag = "latest";
 
+        genOpenApi3 = "gen-openapi3";
+
         scripts =
           (mkScripts { name = "app"; imageName = appDockerHubImageName; imageTag = "latest"; exeName = "back"; exe = appExe; })
-          // (mkScripts { name = "test"; imageName = testDockerHubImageName; imageTag = "latest"; exeName = "test"; exe = testExe; });
+          // (mkScripts { name = "test"; imageName = testDockerHubImageName; imageTag = "latest"; exeName = "test"; exe = testExe; })
+          // (mkShellApps {
+            genOpenApi3 = {
+              text = ''${mkExe appPackageName genOpenApi3}/bin/${genOpenApi3}'';
+              description = ''Generate OpenAPI3 specification for the server'';
+            };
+          });
 
         tools = [
           ghcid

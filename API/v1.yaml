@@ -15,15 +15,19 @@ components:
             $ref: '#/components/schemas/Image'
           type: array
         text:
-          type: string
+          $ref: '#/components/schemas/NewsText'
         title:
-          type: string
+          $ref: '#/components/schemas/Title'
       required:
       - title
       - text
       - category
       - images
       type: object
+    CreatedAt:
+      example: 2016-07-22T00:00:00Z
+      format: yyyy-mm-ddThh:MM:ssZ
+      type: string
     Either_LoginError_FullToken:
       oneOf:
       - properties:
@@ -82,8 +86,8 @@ components:
           $ref: '#/components/schemas/AuthorName'
         category:
           $ref: '#/components/schemas/CategoryId'
-        creationDate:
-          $ref: '#/components/schemas/UTCTime'
+        createdAt:
+          $ref: '#/components/schemas/CreatedAt'
         id:
           maximum: 9223372036854775807
           minimum: -9223372036854775808
@@ -95,12 +99,12 @@ components:
         isPublished:
           type: boolean
         text:
-          type: string
+          $ref: '#/components/schemas/NewsText'
         title:
-          type: string
+          $ref: '#/components/schemas/Title'
       required:
       - title
-      - creationDate
+      - createdAt
       - authorName
       - category
       - text
@@ -114,6 +118,8 @@ components:
       enum:
       - UserDoesNotExist
       type: string
+    NewsText:
+      type: string
     Password:
       type: string
     RegisterError:
@@ -123,11 +129,9 @@ components:
     RotateError:
       enum:
       - SessionDoesNotExist
-      - SessionHasNewerAccessTokenId
+      - SessionHasNewerRefreshTokenId
       type: string
-    UTCTime:
-      example: 2016-07-22T00:00:00Z
-      format: yyyy-mm-ddThh:MM:ssZ
+    Title:
       type: string
     UserLoginForm:
       properties:
@@ -215,19 +219,17 @@ paths:
           minimum: -9223372036854775808
           type: integer
       - in: query
-        name: content
+        name: titleLike
+        required: false
+        schema:
+          type: string
+      - in: query
+        name: textLike
         required: false
         schema:
           type: string
       - in: query
         name: block
-        required: false
-        schema:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
-      - in: query
-        name: newsId
         required: false
         schema:
           maximum: 9223372036854775807
@@ -243,8 +245,8 @@ paths:
                 type: array
           description: ''
         '400':
-          description: Invalid `newsId` or `block` or `content` or `category` or `authorName`
-            or `createdAt` or `createdSince` or `createdUntil`
+          description: Invalid `block` or `textLike` or `titleLike` or `category`
+            or `authorName` or `createdAt` or `createdSince` or `createdUntil`
       security:
       - JWT: []
   /api1/user/login:

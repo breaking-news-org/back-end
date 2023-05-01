@@ -1,10 +1,12 @@
 { workflows, backDir, name, system, scripts }:
 let
-  inherit (workflows.functions.${system}) writeWorkflow expr mkAccessors genAttrsId;
+  inherit (workflows.functions.${system}) writeWorkflow expr mkAccessors genAttrsId run;
   inherit (workflows.configs.${system}) steps os oss;
   job1 = "_1_update_flake_locks";
   job2 = "_2_push_to_cachix";
   job3 = "_3_push_to_docker_hub";
+  job4 = "_4_gen_openapi3_specification";
+  job5 = "_5_build_deploy_gh_pages";
   names = mkAccessors {
     matrix.os = "";
     secrets = genAttrsId [
@@ -27,6 +29,13 @@ let
   workflow = {
     name = "CI";
     inherit on;
+    concurrency = {
+      group = "pages";
+      cancel-in-progress = false;
+    };
+    permissions = {
+      contents = "write";
+    };
     jobs = {
       "${job1}" = {
         name = "Update flake locks";
@@ -40,7 +49,7 @@ let
       };
       "${job2}" = {
         name = "Push to cachix";
-        needs = job1;
+        # needs = job1;
         strategy.matrix.os = oss;
         runs-on = expr names.matrix.os;
         steps = [
@@ -52,7 +61,7 @@ let
       };
       "${job3}" = {
         name = "Push to Docker Hub";
-        needs = job1;
+        # needs = job1;
         runs-on = os.ubuntu-20;
         steps = [
           steps.checkout
@@ -76,6 +85,47 @@ let
               nix run .#${scripts.appPushToDockerHub.pname}
               nix run .#${scripts.testPushToDockerHub.pname}
             '';
+          }
+        ];
+      };
+      "${job4}" = {
+        name = "Generate OpenAPI3 specification for the server";
+        # needs = job1;
+        runs-on = os.ubuntu-20;
+        steps = [
+          steps.checkout
+          steps.installNix
+          {
+            name = "Generate specification";
+            run = run.nixRunAndCommit scripts.genOpenApi3.pname "update OpenAPI3 spec";
+          }
+        ];
+      };
+      "${job5}" = {
+        needs = job4;
+        environment = {
+          name = "github-pages";
+          url = expr "steps.deployment.outputs.page_url";
+        };
+        runs-on = os.ubuntu-20;
+        steps = [
+          steps.checkout
+          {
+            name = "Setup Pages";
+            uses = "actions/configure-pages@v3";
+          }
+          {
+            name = "Upload artifact";
+            uses = "actions/upload-pages-artifact@v1";
+            "with" = {
+              # Upload entire repository
+              path = ".";
+            };
+          }
+          {
+            name = "Deploy to GitHub Pages";
+            id = "deployment";
+            uses = "actions/deploy-pages@v2";
           }
         ];
       };
