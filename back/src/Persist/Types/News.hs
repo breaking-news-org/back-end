@@ -60,5 +60,6 @@ newtype NewsText = NewsText Text
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)
 
-processSums [''Title, ''NewsText]
-processRecords [''Image, ''InsertNews]
+-- processSums []
+processRecords [''Image, ''InsertNews, ''Title, ''NewsText]
+

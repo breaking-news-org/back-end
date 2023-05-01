@@ -119,11 +119,14 @@ newtype CreatedUntil = CreatedUntil UTCTime
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, FromHttpApiData, ToHttpApiData)
 
 -- TODO sums or records?
-processSums
-  [ ''ExpiresAt
+-- processSums
+--   []
+
+processRecords
+  [ ''User
+  , ''ExpiresAt
   , ''SessionId
   , ''UserId
-  , ''AuthorName
   , ''UserName
   , ''TokenId
   , ''CategoryId
@@ -131,9 +134,6 @@ processSums
   , ''CreatedAt
   , ''CreatedUntil
   , ''CreatedSince
-  ]
-
-processRecords
-  [ ''User
   , ''InsertUser
+  , ''AuthorName
   ]

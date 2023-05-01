@@ -71,7 +71,8 @@ processRecords' = processTypes' makeRecordFromToJSON'
 aesonOptionsSum :: Options
 aesonOptionsSum =
   defaultOptions
-    { tagSingleConstructors = True
+    { allNullaryToStringTag = True
+    , tagSingleConstructors = True
     }
 
 makeSumFromToJSON' :: Type -> Q [Dec]

@@ -25,11 +25,12 @@ module Service.Types.User (
   HashedPassword (..),
   CreatedSince (..),
   CreatedUntil (..),
-  CreatedAt(..)
+  CreatedAt (..),
 ) where
 
 import Common.Prelude (Text)
 import Common.TH (processRecords, processSums)
+import Data.Aeson ( encode )
 import Persist.Types.User (AuthorName (..), CategoryId (..), CreatedAt (..), CreatedSince (..), CreatedUntil (..), ExpiresAt (..), HashedPassword (..), InsertUser (..), Role (..), SelectUser (..), Session (..), SessionId (..), TokenId (..), User (..), UserId (..), UserName (..))
 import Service.Prelude (Generic)
 
@@ -58,7 +59,24 @@ data RegisterError = UserExists deriving (Generic, Show)
 data LoginError = UserDoesNotExist deriving (Generic, Show)
 data RotateError = SessionDoesNotExist | SessionHasNewerRefreshTokenId deriving (Generic, Show)
 
-processSums [''RegisterError, ''LoginError, ''RotateError]
+-- processSums []
 
 -- TODO better instances for err
 processRecords [''Password]
+
+processSums [''RegisterError, ''LoginError, ''RotateError]
+
+-- Demo encoding
+
+ex1 = encode (Left SessionDoesNotExist :: Either RotateError Int)
+ex2 = encode (Left UserExists :: Either RegisterError Int)
+ex3 = encode $ AuthorName "heul"
+
+-- >>> ex1
+-- "{\"Left\":\"SessionDoesNotExist\"}"
+
+-- >>> ex2
+-- "{\"Left\":\"UserExists\"}"
+
+-- >>> ex3
+-- "\"heu\""

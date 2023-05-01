@@ -4,11 +4,10 @@
 
 module API.Types.User (UserName (..), AuthorName (..), UserRegisterForm (..), UserLoginForm (..), AccessToken (..), RefreshToken (..), FullToken (..)) where
 
-import API.Prelude (FromHttpApiData, ToHttpApiData)
 import API.TH
-import Common.Prelude (Generic, Text, genericToParamSchema)
+import Common.Prelude (Generic, Text)
 import Servant.Auth.JWT (FromJWT, ToJWT)
-import Service.Types.User (AuthorName (..), CategoryId, CreatedAt, ExpiresAt, LoginError, Password, RegisterError, Role, RotateError, SessionId (..), TokenId (..), UserId (..), UserName (..))
+import Service.Types.User (AuthorName (..), CategoryId, ExpiresAt, LoginError, Password, RegisterError, Role, RotateError, SessionId (..), TokenId (..), UserId (..), UserName (..))
 
 data UserRegisterForm = UserRegisterForm
   { _userRegisterForm_userName :: !UserName
