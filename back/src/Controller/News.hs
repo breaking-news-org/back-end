@@ -11,11 +11,11 @@ import Service.Prelude (interpret, send)
 import Service.Types.News qualified as Service
 
 create :: (NewsController :> es) => AccessToken -> API.CreateNews -> ExceptT ServerError (Eff es) NoContent
-create clientToken = ExceptT . send . ControllerCreateNews clientToken
+create accessToken = ExceptT . send . ControllerCreateNews accessToken
 
 get :: (NewsController :> es) => AccessToken -> QueryParams -> ExceptT ServerError (Eff es) [API.GetNews]
 get
-  clientToken
+  accessToken
   QueryParams
     { _queryParams_createdUntil = _filters_createdUntil
     , _queryParams_createdSince = _filters_createdSince
@@ -26,7 +26,7 @@ get
     , _queryParams_textLike = _filters_textLike
     , _queryParams_block = _filters_block
     } =
-    ExceptT $ send $ ControllerGetNews clientToken API.Filters{_filters_showUnpublished = Nothing, ..}
+    ExceptT $ send $ ControllerGetNews accessToken API.Filters{_filters_showUnpublished = Nothing, ..}
 
 runNewsController :: (Service.ServiceNews :> es) => Eff (NewsController : es) a -> Eff es a
 runNewsController = interpret $ \_ -> \case
@@ -42,5 +42,5 @@ runNewsController = interpret $ \_ -> \case
     -- TODO send link to news
     pure $ Right NoContent
   ControllerGetNews AccessToken{..} fs -> do
-    news <- Service.serviceGetNews fs _accessToken_role
+    news <- Service.serviceGetNews fs _accessToken_userId _accessToken_role
     pure $ pure news

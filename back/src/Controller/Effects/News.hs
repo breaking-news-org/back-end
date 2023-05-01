@@ -8,6 +8,6 @@ import Persist.Types.News (Filters)
 
 data NewsController :: Effect where
   ControllerCreateNews :: AccessToken -> CreateNews -> NewsController m (Either ServerError NoContent)
-  ControllerGetNews :: AccessToken -> Filters Maybe -> NewsController m (Either ServerError [GetNews])
+  ControllerGetNews :: AccessToken -> Filters -> NewsController m (Either ServerError [GetNews])
 
 type instance DispatchOf NewsController = 'Dynamic

@@ -4,8 +4,8 @@
 module Persist.Types.News where
 
 import API.Prelude (Generic)
-import Common.Prelude (HKD, Text)
-import Common.TH (processRecords, processSums)
+import Common.Prelude (Text)
+import Common.TH (processRecords)
 import Data.String (IsString)
 import Database.Esqueleto.Experimental (PersistField, PersistFieldSql, SqlString)
 import Persist.Types.User (AuthorName, CategoryId, CreatedAt, CreatedSince, CreatedUntil, UserId)
@@ -39,16 +39,16 @@ data SelectedNews = SelectedNews
   }
   deriving (Generic)
 
-data Filters f = Filters
-  { _filters_createdUntil :: !(HKD f CreatedUntil)
-  , _filters_createdSince :: !(HKD f CreatedSince)
-  , _filters_createdAt :: !(HKD f CreatedAt)
-  , _filters_authorName :: !(HKD f AuthorName)
-  , _filters_category :: !(HKD f CategoryId)
-  , _filters_titleLike :: !(HKD f Title)
-  , _filters_textLike :: !(HKD f NewsText)
-  , _filters_block :: !(HKD f Int)
-  , _filters_showUnpublished :: !(HKD f Bool)
+data Filters = Filters
+  { _filters_createdUntil :: !(Maybe CreatedUntil)
+  , _filters_createdSince :: !(Maybe CreatedSince)
+  , _filters_createdAt :: !(Maybe CreatedAt)
+  , _filters_authorName :: !(Maybe AuthorName)
+  , _filters_category :: !(Maybe CategoryId)
+  , _filters_titleLike :: !(Maybe Title)
+  , _filters_textLike :: !(Maybe NewsText)
+  , _filters_block :: !(Maybe Int)
+  , _filters_showUnpublished :: !(Maybe Bool)
   }
   deriving (Generic)
 
@@ -60,6 +60,4 @@ newtype NewsText = NewsText Text
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)
 
--- processSums []
 processRecords [''Image, ''InsertNews, ''Title, ''NewsText]
-

@@ -25,8 +25,8 @@ runNewsService =
           , _insertNews_images = _createNews_images
           , _insertNews_isPublished = True
           }
-    ServiceGetNews ServiceNews.Filters{..} role -> do
-      news <- repoSelectNews PersistNews.Filters{_filters_showUnpublished = Just $ has #_RoleAdmin role, ..}
+    ServiceGetNews ServiceNews.Filters{..} userId role -> do
+      news <- repoSelectNews PersistNews.Filters{_filters_showUnpublished = Just $ has #_RoleAdmin role, ..} userId
       withLogger $ logDebug "Got news list"
       pure $
         ( \SelectedNews{..} ->
