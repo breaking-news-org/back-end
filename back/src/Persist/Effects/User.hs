@@ -6,7 +6,8 @@ import Persist.Types.User
 
 data UserRepo :: Effect where
   RepoInsertUser :: InsertUser -> UserRepo m User
-  RepoSelectUser :: SelectUser -> UserRepo m (Maybe User)
+  RepoSelectRegisteredUser :: SelectUser -> UserRepo m (Maybe User)
+  RepoSelectUserByUserName :: UserName -> UserRepo m (Maybe User)
   RepoCreateSession :: ExpiresAt -> UserId -> UserRepo m SessionId
   RepoSelectSessionById :: SessionId -> UserRepo m (Maybe (Session, User))
   RepoSessionUpdateLastAccessTokenId :: ExpiresAt -> SessionId -> UserRepo m ()

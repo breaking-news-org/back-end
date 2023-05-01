@@ -23,12 +23,10 @@ runUserRepo = interpret $ \_ -> \case
         , _user_id = fromIntegral $ fromSqlKey key
         , _user_role = _insertUser_role
         }
-  RepoSelectUser SelectUser{..} -> withConn do
-    user <- selectOne do
-      users <- from $ table @Users
-      where_ (users.userName ==. val _selectUser_userName &&. users.password ==. val _selectUser_hashedPassword)
-      pure users
-    pure $ userFromModel <$> user
+  RepoSelectRegisteredUser SelectUser{..} -> do
+    user <- selectUser _selectUser_userName
+    pure (user >>= (\x -> if x._user_hashedPassword == _selectUser_hashedPassword then Just x else Nothing))
+  RepoSelectUserByUserName userName -> selectUser userName
   RepoCreateSession expiresAt userId -> do
     fromIntegral . fromSqlKey
       <$> withConn
@@ -55,6 +53,15 @@ runUserRepo = interpret $ \_ -> \case
       set p [SessionsLastAccessTokenId =. n +. val 1]
       set p [SessionsLastRefreshTokenExpiresAt =. val expiresAt]
       where_ (p.id ==. val (toSqlKey (fromIntegral sessionId)))
+
+selectUser :: (IOE :> es, SqlBackendPool :> es) => UserName -> Eff es (Maybe User)
+selectUser userName =
+  withConn do
+    user <- selectOne do
+      users <- from $ table @Users
+      where_ (users.userName ==. val userName)
+      pure users
+    pure $ userFromModel <$> user
 
 userToModel :: InsertUser -> Model.Users
 userToModel InsertUser{..} =

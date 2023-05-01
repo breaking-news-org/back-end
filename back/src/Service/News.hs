@@ -23,7 +23,7 @@ runNewsService =
           , _insertNews_authorId = _createNews_userId
           , _insertNews_text = _createNews_text
           , _insertNews_images = _createNews_images
-          , _insertNews_isPublished = False
+          , _insertNews_isPublished = True
           }
     ServiceGetNews ServiceNews.Filters{..} role -> do
       news <- repoSelectNews PersistNews.Filters{_filters_showUnpublished = Just $ has #_RoleAdmin role, ..}

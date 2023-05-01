@@ -8,7 +8,7 @@ import Control.Monad.Logger.Aeson
 import Data.Aeson.Text (encodeToLazyText)
 import Effectful
 import Effectful.TH
-import Persist.Effects.User (UserRepo, repoCreateSession, repoInsertUser, repoSelectSessionById, repoSelectUser, repoSessionUpdateLastAccessTokenId)
+import Persist.Effects.User (UserRepo, repoCreateSession, repoInsertUser, repoSelectRegisteredUser, repoSelectSessionById, repoSelectUserByUserName, repoSessionUpdateLastAccessTokenId)
 import Service.Prelude
 import Service.Types.User
 
@@ -18,16 +18,12 @@ data UserService :: Effect where
   ServiceCreateSession :: ExpiresAt -> UserId -> UserService m SessionId
   ServiceRotateRefreshToken :: ExpiresAt -> SessionId -> TokenId -> UserService m (Either RotateError (TokenId, User))
 
--- Service
-
 makeEffect ''UserService
-
--- TODO add type instance Dynamic
 
 runUserService :: (UserRepo :> es, Logger :> es) => Eff (UserService : es) a -> Eff es a
 runUserService = interpret $ \_ -> \case
   ServiceRegister UserRegisterData{..} -> do
-    user <- getUser _userRegisterData_userName _userRegisterData_password
+    user <- getUserByUserName _userRegisterData_userName
     if is _Just user
       then pure $ Left UserExists
       else do
@@ -44,7 +40,7 @@ runUserService = interpret $ \_ -> \case
         withLogger $ logDebug $ "Created a new user" :# ["user" .= newUser]
         pure $ Right newUser
   ServiceLogin UserLoginData{..} -> do
-    user <- getUser _userLoginData_userName _userLoginData_password
+    user <- getRegisteredUser _userLoginData_userName _userLoginData_password
     case user of
       Just user' -> pure $ Right user'
       _ -> pure $ Left UserDoesNotExist
@@ -60,23 +56,23 @@ runUserService = interpret $ \_ -> \case
             repoSessionUpdateLastAccessTokenId expiresAt sessionId
             pure $ Right (tokenId + 1, user)
 
--- TODO expired -> remove?
-
-getUser :: (UserRepo :> es, Logger :> es) => UserName -> Password -> Eff es (Maybe User)
-getUser name password = do
+getRegisteredUser :: (UserRepo :> es, Logger :> es) => UserName -> Password -> Eff es (Maybe User)
+getRegisteredUser name password = do
   user <-
-    repoSelectUser $
+    repoSelectRegisteredUser $
       SelectUser
         { _selectUser_userName = name
         , _selectUser_hashedPassword = hashPassword password
         }
-  withLogger $ logDebug $ "Check user: " :# ["name" .= name, "exists" .= encodeToLazyText user]
+  withLogger $ logDebug $ "Get registered user: " :# ["user" .= encodeToLazyText user]
+  pure user
+
+getUserByUserName :: (UserRepo :> es, Logger :> es) => UserName -> Eff es (Maybe User)
+getUserByUserName userName = do
+  user <- repoSelectUserByUserName userName
+  withLogger $ logDebug $ "Get registered user: " :# ["user" .= encodeToLazyText user]
   pure user
 
 -- TODO generate a salt, and calculate sha512(salt <> password)
 hashPassword :: Password -> HashedPassword
 hashPassword (Password p) = HashedPassword $ encodeUtf8 p
-
---
--- runLoginError :: (UserRepo :> es, Logger :> es, Error RegisterError :> es, Error LoginError :> es) => Eff (UserService : es) a -> Eff es a
--- runLoginError
