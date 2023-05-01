@@ -9,6 +9,9 @@ let
   job5 = "_5_build_deploy_gh_pages";
   names = mkAccessors {
     matrix.os = "";
+    matrix.scriptName = genAttrsId [
+      "scriptName"
+    ];
     secrets = genAttrsId [
       "GITHUB_TOKEN"
       "DOCKER_HUB_USERNAME"
@@ -62,35 +65,44 @@ let
           steps.pushFlakesToCachix
         ];
       };
-      "${job3}" = {
-        name = "Push to Docker Hub";
-        # needs = job1;
-        runs-on = os.ubuntu-20;
-        steps = [
-          steps.checkout
-          steps.installNix
-          {
-            name = "Log in to Docker";
-            uses = "docker/login-action@v2.1.0";
-            "with" = {
-              username = expr names.secrets.DOCKER_HUB_USERNAME;
-              password = expr names.secrets.DOCKER_HUB_PASSWORD;
+    } // (
+      {
+        "${job3}" = {
+          name = "Push ${expr names.matrix.scriptName} to Docker Hub";
+          # needs = job1;
+          runs-on = os.ubuntu-20;
+          strategy = {
+            matrix = {
+              scriptName = [ "app" "test" ];
             };
-          }
-          {
-            name = "Push to Docker Hub";
-            env = {
-              DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
-              DOCKER_HUB_PASSWORD = expr names.secrets.DOCKER_HUB_PASSWORD;
-            };
-            run = ''
-              cd ${backDir}
-              nix run .#${scripts.appPushToDockerHub.pname}
-              nix run .#${scripts.testPushToDockerHub.pname}
-            '';
-          }
-        ];
-      };
+          };
+          steps = [
+            steps.checkout
+            steps.installNix
+            {
+              name = "Log in to Docker";
+              uses = "docker/login-action@v2.1.0";
+              "with" = {
+                username = expr names.secrets.DOCKER_HUB_USERNAME;
+                password = expr names.secrets.DOCKER_HUB_PASSWORD;
+              };
+            }
+            {
+              name = "Push to Docker Hub";
+              env = {
+                DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
+                DOCKER_HUB_PASSWORD = expr names.secrets.DOCKER_HUB_PASSWORD;
+              };
+              working-directory = backDir;
+              run = ''
+                nix run .#${expr names.matrix.scriptName}PushToDockerHub
+              '';
+            }
+          ];
+        };
+      }
+    )
+    // {
       "${job4}" = {
         name = "Generate OpenAPI3 specification for the server";
         # needs = job1;

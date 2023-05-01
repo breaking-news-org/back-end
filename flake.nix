@@ -202,7 +202,7 @@
                   docker tag ${imageName}:${imageTag} ${env.DOCKER_HUB_USERNAME}/${imageName}:${imageTag}
                   docker push ${env.DOCKER_HUB_USERNAME}/${imageName}:${imageTag}
                 '';
-                description = ''Push image to Docker Hub'';
+                description = ''Push ${name} image to Docker Hub'';
                 longDescription = ''
                   ${description}
 

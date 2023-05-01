@@ -50,7 +50,7 @@ jobs:
           - ubuntu-20.04
           - ubuntu-22.04
   _3_push_to_docker_hub:
-    name: Push to Docker Hub
+    name: Push ${{ matrix.scriptName }} to Docker Hub
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout this repo
@@ -70,9 +70,13 @@ jobs:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
         name: Push to Docker Hub
         run: |
-          cd back
-          nix run .#appPushToDockerHub
-          nix run .#testPushToDockerHub
+          nix run .#${{ matrix.scriptName }}PushToDockerHub
+        working-directory: back
+    strategy:
+      matrix:
+        scriptName:
+          - app
+          - test
   _4_gen_openapi3_specification:
     name: Generate OpenAPI3 specification for the server
     runs-on: ubuntu-20.04
