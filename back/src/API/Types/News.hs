@@ -1,27 +1,21 @@
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving #-}
+
 module API.Types.News (
   CreateNews (..),
   EditNews (..),
-  GetNews (..),
-  module Service.Types.News,
   QueryParams (..),
+  module Service.Types.News,
 ) where
 
-import API.Prelude (Generic)
-import API.TH (makeRecordToSchemaTypes, makeSumToSchemaTypes, processRecordApiTypes)
-import Common.Prelude (Text)
-
-import API.Types.User (AuthorName)
+import API.Prelude (FromHttpApiData, Generic, ToHttpApiData)
+import API.TH (deriveNewtypeInstances', makeRecordToSchemaTypes, makeSumToSchemaTypes, processRecordApiTypes, schemaOptionsSum)
+import API.Types.User (AuthorName (..), CategoryId (..))
+import Common.Prelude (Text, ToParamSchema, genericToParamSchema)
 import Data.Default (Default)
-import Service.Types.News (Filters (..), GetNews (..), Image (..), Images, NewsText, Title)
-import Service.Types.User (CategoryId, CreatedAt, CreatedSince, CreatedUntil)
-
-data CreateNews = CreateNews
-  { _createNews_title :: !Title
-  , _createNews_text :: !NewsText
-  , _createNews_category :: CategoryId
-  , _createNews_images :: Images
-  }
-  deriving (Generic)
+import Data.OpenApi.Internal.ParamSchema (ToParamSchema (toParamSchema))
+import Service.Types.News (CreateNews (..), CreatedAt (..), CreatedSince (..), CreatedUntil (..), Image (..), Images, NewsIdHashed (..), NewsText (..), NewsTitle (..), SelectedNews (..), SetIsPublished)
 
 data EditNews = EditNews
   { _editNews_id :: Int
@@ -37,7 +31,7 @@ data QueryParams = QueryParams
   , _queryParams_createdAt :: Maybe CreatedAt
   , _queryParams_authorName :: Maybe AuthorName
   , _queryParams_category :: Maybe CategoryId
-  , _queryParams_titleLike :: Maybe Title
+  , _queryParams_titleLike :: Maybe NewsTitle
   , _queryParams_textLike :: Maybe NewsText
   , _queryParams_block :: Maybe Int
   }
@@ -45,8 +39,13 @@ data QueryParams = QueryParams
 
 instance Default QueryParams
 
-makeSumToSchemaTypes [''CreatedAt, ''CreatedSince, ''CreatedUntil, ''NewsText, ''Title]
+makeSumToSchemaTypes [''CreatedAt, ''CreatedSince, ''CreatedUntil, ''NewsText, ''NewsTitle, ''NewsIdHashed]
 
-makeRecordToSchemaTypes [''GetNews, ''Image]
+makeRecordToSchemaTypes [''SelectedNews, ''Image, ''CategoryId, ''SetIsPublished]
+
+instance ToParamSchema CategoryId where
+  toParamSchema = genericToParamSchema schemaOptionsSum
 
 processRecordApiTypes [''EditNews, ''CreateNews, ''QueryParams]
+
+deriveNewtypeInstances' [''ToHttpApiData, ''FromHttpApiData] [''CategoryId, ''AuthorName, ''CreatedAt, ''CreatedSince, ''CreatedUntil]

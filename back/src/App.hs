@@ -7,13 +7,12 @@ where
 
 import Control.Monad (void)
 import Controller.Effects.News (NewsController)
-import Controller.Effects.Users (UserController)
+import Controller.Effects.User (UserController)
 import Controller.News (runNewsController)
 import Controller.User (runUserController)
 import Crypto.JOSE (JWK)
 import Data.Function ((&))
 import Effectful
-import Effectful.Error.Static (Error, runError)
 import External.Logger (Logger, runLogger)
 import Persist.Effects.News (NewsRepo)
 import Persist.Effects.User (UserRepo)

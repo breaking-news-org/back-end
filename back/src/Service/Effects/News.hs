@@ -2,11 +2,12 @@ module Service.Effects.News where
 
 import Effectful (Effect)
 import Effectful.TH (makeEffect)
-import Service.Types.News as ServiceNews (CreateNews (..), Filters (..), GetNews (..))
-import Service.Types.User (UserId, Role)
+import Service.Types.News as ServiceNews (CreateNews (..), Filters (..), SelectedNews (..), UnavailableNews, SetIsPublished, NewsIdHashed)
+import Service.Types.User (AccessToken)
 
 data ServiceNews :: Effect where
-  ServiceCreateNews :: CreateNews -> ServiceNews m ()
-  ServiceGetNews :: Filters -> UserId -> Role -> ServiceNews m [GetNews]
+  ServiceCreateNews :: AccessToken -> CreateNews -> ServiceNews m NewsIdHashed
+  ServiceSelectNews :: AccessToken -> Filters -> ServiceNews m [SelectedNews]
+  ServiceSetIsPublished :: AccessToken -> SetIsPublished -> ServiceNews m UnavailableNews
 
 makeEffect ''ServiceNews

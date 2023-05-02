@@ -1,17 +1,17 @@
 module Controller.User where
 
 import API.Types.User (AccessToken (..), FullToken (FullToken, _fullToken_accessToken, _fullToken_refreshToken), RefreshToken (..), UserLoginForm (..), UserRegisterForm (..))
-import Common.Prelude (NominalDiffTime, addUTCTime, getCurrentTime)
-import Controller.Effects.Users (UserController (..))
+import Common.Prelude (NominalDiffTime, addUTCTime, getCurrentTime, (^?))
+import Controller.Effects.User (UserController (..))
 import Controller.Prelude (ExceptT (..), MonadIO (liftIO), ServerError)
-import Controller.Types.User (JWKSettings (..))
+import Controller.Types.User (JWKSettings (..), RotateError)
 import Crypto.JOSE (JWK)
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Encoding qualified as LT
 import Effectful (Eff, IOE, type (:>))
 import Effectful.Dispatch.Dynamic (interpret, send)
 import Servant.Auth.Server (defaultJWTSettings, makeJWT)
-import Service.Types.User (ExpiresAt (ExpiresAt), LoginError (UserDoesNotExist), RegisterError (UserExists), RotateError, SessionId, TokenId, User (..), UserLoginData (..), UserRegisterData (..))
+import Service.Types.User (DBUser (..), ExpiresAt (ExpiresAt), LoginError (UserDoesNotExist), RegisterError (UserExists), SessionId, TokenId)
 import Service.User (UserService, serviceRotateRefreshToken)
 import Service.User qualified as UserService
 
@@ -29,10 +29,10 @@ runUserController = interpret $ \_ -> \case
   ControllerRegisterUser jwkSettings UserRegisterForm{..} -> do
     res <-
       UserService.serviceRegister
-        UserRegisterData
-          { _userRegisterData_userName = _userRegisterForm_userName
-          , _userRegisterData_password = _userRegisterForm_password
-          , _userRegisterData_authorName = _userRegisterForm_authorName
+        UserRegisterForm
+          { _userRegisterForm_userName = _userRegisterForm_userName
+          , _userRegisterForm_password = _userRegisterForm_password
+          , _userRegisterForm_authorName = _userRegisterForm_authorName
           }
     case res of
       Left UserExists -> pure $ Right (Left UserExists)
@@ -42,9 +42,9 @@ runUserController = interpret $ \_ -> \case
   ControllerLoginUser jwkSettings UserLoginForm{..} -> do
     res <-
       UserService.serviceLogin
-        UserLoginData
-          { _userLoginData_userName = _userLoginForm_userName
-          , _userLoginData_password = _userLoginForm_password
+        UserLoginForm
+          { _userLoginForm_userName = _userLoginForm_userName
+          , _userLoginForm_password = _userLoginForm_password
           }
     case res of
       Left UserDoesNotExist -> pure $ Right $ Left UserDoesNotExist
@@ -58,13 +58,7 @@ runUserController = interpret $ \_ -> \case
       Left x -> pure $ Right $ Left x
       Right (tokenId, user) -> Right . Right <$> makeFullToken _jwkSettings_jwk _refreshToken_sessionId tokenId expiresAt user
 
--- Right <$> getRotatedFullToken jwkSettings refreshToken
-
--- TODO separate thread ban expired in database
--- TODO go to database-
--- TODO store refresh tokens in database
--- TODO ask about refresh tokens
-getFreshFullToken :: (UserService :> es, IOE :> es) => JWKSettings -> User -> Eff es FullToken
+getFreshFullToken :: (UserService :> es, IOE :> es) => JWKSettings -> DBUser -> Eff es FullToken
 getFreshFullToken settings user = do
   expiresAt <- getExpiresAt settings._jwkSettings_jwtLifetimeSeconds
   sessionId <- UserService.serviceCreateSession expiresAt user._user_id
@@ -73,7 +67,7 @@ getFreshFullToken settings user = do
 getExpiresAt :: MonadIO m => NominalDiffTime -> m ExpiresAt
 getExpiresAt lifetime = liftIO getCurrentTime >>= \now -> pure (ExpiresAt $ addUTCTime lifetime now)
 
-makeFullToken :: (IOE :> es) => JWK -> SessionId -> TokenId -> ExpiresAt -> User -> Eff es FullToken
+makeFullToken :: (IOE :> es) => JWK -> SessionId -> TokenId -> ExpiresAt -> DBUser -> Eff es FullToken
 makeFullToken jwkSettings sessionId tokenId expiresAt user = do
   let accessToken =
         AccessToken
@@ -89,14 +83,16 @@ makeFullToken jwkSettings sessionId tokenId expiresAt user = do
           , _refreshToken_sessionId = sessionId
           , _refreshToken_id = tokenId
           }
+      -- TODO why not lens?
+      expiresAt' = expiresAt ^? #_ExpiresAt
   accessTokenJWT <-
     liftIO $
-      makeJWT accessToken (defaultJWTSettings jwkSettings) Nothing >>= \case
+      makeJWT accessToken (defaultJWTSettings jwkSettings) expiresAt' >>= \case
         Left e -> error (show e)
         Right v -> pure v
   refreshTokenJWT <-
     liftIO $
-      makeJWT refreshToken (defaultJWTSettings jwkSettings) Nothing >>= \case
+      makeJWT refreshToken (defaultJWTSettings jwkSettings) expiresAt' >>= \case
         Left e -> error (show e)
         Right v -> pure v
   let

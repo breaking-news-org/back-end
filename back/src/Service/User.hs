@@ -13,17 +13,17 @@ import Service.Prelude
 import Service.Types.User
 
 data UserService :: Effect where
-  ServiceRegister :: UserRegisterData -> UserService m (Either RegisterError User)
-  ServiceLogin :: UserLoginData -> UserService m (Either LoginError User)
+  ServiceRegister :: UserRegisterForm -> UserService m (Either RegisterError DBUser)
+  ServiceLogin :: UserLoginForm -> UserService m (Either LoginError DBUser)
   ServiceCreateSession :: ExpiresAt -> UserId -> UserService m SessionId
-  ServiceRotateRefreshToken :: ExpiresAt -> SessionId -> TokenId -> UserService m (Either RotateError (TokenId, User))
+  ServiceRotateRefreshToken :: ExpiresAt -> SessionId -> TokenId -> UserService m (Either RotateError (TokenId, DBUser))
 
 makeEffect ''UserService
 
 runUserService :: (UserRepo :> es, Logger :> es) => Eff (UserService : es) a -> Eff es a
 runUserService = interpret $ \_ -> \case
-  ServiceRegister UserRegisterData{..} -> do
-    user <- getUserByUserName _userRegisterData_userName
+  ServiceRegister UserRegisterForm{..} -> do
+    user <- getUserByUserName _userRegisterForm_userName
     if is _Just user
       then pure $ Left UserExists
       else do
@@ -31,16 +31,16 @@ runUserService = interpret $ \_ -> \case
           repoInsertUser $
             -- TODO hash usernames
             InsertUser
-              { _insertUser_userName = _userRegisterData_userName
-              , _insertUser_hashedPassword = hashPassword _userRegisterData_password
-              , _insertUser_authorName = _userRegisterData_authorName
+              { _insertUser_userName = _userRegisterForm_userName
+              , _insertUser_hashedPassword = hashPassword _userRegisterForm_password
+              , _insertUser_authorName = _userRegisterForm_authorName
               , -- TODO where this role is defined?
                 _insertUser_role = RoleUser
               }
         withLogger $ logDebug $ "Created a new user" :# ["user" .= newUser]
         pure $ Right newUser
-  ServiceLogin UserLoginData{..} -> do
-    user <- getRegisteredUser _userLoginData_userName _userLoginData_password
+  ServiceLogin UserLoginForm{..} -> do
+    user <- getRegisteredUser _userLoginForm_userName _userLoginForm_password
     case user of
       Just user' -> pure $ Right user'
       _ -> pure $ Left UserDoesNotExist
@@ -56,7 +56,7 @@ runUserService = interpret $ \_ -> \case
             repoSessionUpdateLastAccessTokenId expiresAt sessionId
             pure $ Right (tokenId + 1, user)
 
-getRegisteredUser :: (UserRepo :> es, Logger :> es) => UserName -> Password -> Eff es (Maybe User)
+getRegisteredUser :: (UserRepo :> es, Logger :> es) => UserName -> Password -> Eff es (Maybe DBUser)
 getRegisteredUser name password = do
   user <-
     repoSelectRegisteredUser $
@@ -67,7 +67,7 @@ getRegisteredUser name password = do
   withLogger $ logDebug $ "Get registered user: " :# ["user" .= encodeToLazyText user]
   pure user
 
-getUserByUserName :: (UserRepo :> es, Logger :> es) => UserName -> Eff es (Maybe User)
+getUserByUserName :: (UserRepo :> es, Logger :> es) => UserName -> Eff es (Maybe DBUser)
 getUserByUserName userName = do
   user <- repoSelectUserByUserName userName
   withLogger $ logDebug $ "Get registered user: " :# ["user" .= encodeToLazyText user]

@@ -18,11 +18,20 @@
 
 - [Pulumi](https://www.pulumi.com/)
 
+## Architecture
+
+- Units:
+  - `API` - describes API.
+  - `Persist` - provides operations with a database.
+  - `Service` - provides services on top of `Persist`.
+  - `Controller` - provides operations for `API` endpoints on top of `Service`.
+  - `Server` - binds `API` endpoints and `Controller` operations to produce a server.
+
 ## Development
 
 Set up the cluster and make test requests.
 
-1. Install `minikube`, `pulumi`, `kubernetes`, `Postman`, `psql`.
+1. Install `minikube`, `pulumi`, `kubernetes`, `Postman`, `psql`, `docker`, `microk8s`, `nodejs` (16).
 
 1. Run a cluster
 
@@ -33,11 +42,19 @@ Set up the cluster and make test requests.
     # go to pulumi config
     cd pulumi
 
+    # install node package
+    npm i
+
+    # select dev stack
+    pulumi stack select dev
+
     # select dev stack
     pulumi stack select dev
 
     # start cluster
     pulumi up
+
+    # select `yes`
 
     # check that all pods are ready
     kubectl get po
@@ -45,7 +62,7 @@ Set up the cluster and make test requests.
 
 1. Get the IP address of the cluster (let's call it `<IP>`).
 
-    ```console
+    ```console  
     minikube ip
     ```
 
@@ -54,6 +71,8 @@ Set up the cluster and make test requests.
 1. Import the [API](./API/v1.yaml) into `Postman` as a `Postman Collection`.
 
 1. In that collection, set the variable `baseUrl` to `http://<IP>:<port>`.
+   1. Click on the collection -> `Variables` -> `Current Value`
+   1. Save
 
 1. Send a request to `/api1/user/register`.
 

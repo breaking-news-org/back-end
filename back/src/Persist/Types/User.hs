@@ -4,9 +4,9 @@
 
 module Persist.Types.User where
 
-import API.Prelude (FromHttpApiData, Generic, PersistField, ToHttpApiData, UTCTime, Value)
+import API.Prelude (Generic, PersistField, UTCTime, Value)
 import Common.Prelude (ByteString, FromJSON, Text, ToJSON, (^.))
-import Common.TH (processRecords, processSums)
+import Common.TH (processRecords)
 import Data.Aeson.Types (FromJSON (parseJSON), Parser, ToJSON (toJSON), withText)
 import Data.String (IsString)
 import Data.String.Interpolate (i)
@@ -33,11 +33,22 @@ newtype UserName = UserName Text
 
 newtype AuthorName = AuthorName Text
   deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, FromHttpApiData, ToHttpApiData, IsString)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString)
 
 newtype UserId = UserId Int
   deriving (Generic)
   deriving newtype (Num, Enum, Show, Eq, Ord, Real, Integral)
+
+data AccessToken = AccessToken
+  { _accessToken_role :: Role
+  , _accessToken_expiresAt :: ExpiresAt
+  , _accessToken_userId :: UserId
+  , _accessToken_id :: TokenId
+  -- ^ index within a session
+  , _accessToken_sessionId :: SessionId
+  -- ^ coincides with the id of the corresponding refresh token
+  }
+  deriving (Generic)
 
 data InsertUser = InsertUser
   { _insertUser_userName :: !UserName
@@ -74,8 +85,7 @@ instance PersistField Role where
 instance PersistFieldSql Role where
   sqlType _ = SqlInt64
 
--- TODO
-data User = User
+data DBUser = DBUser
   { _user_userName :: !UserName
   , _user_hashedPassword :: !HashedPassword
   , _user_authorName :: !AuthorName
@@ -92,7 +102,7 @@ data Session = Session
 
 newtype CategoryId = CategoryId Int
   deriving (Generic)
-  deriving newtype (Num, PersistField, Eq, Ord, Show, PersistFieldSql, FromHttpApiData, ToHttpApiData)
+  deriving newtype (Num, PersistField, Eq, Ord, Show, PersistFieldSql)
 
 newtype TokenId = TokenId Int
   deriving (Generic)
@@ -108,22 +118,18 @@ newtype ExpiresAt = ExpiresAt UTCTime
 
 newtype CreatedAt = CreatedAt UTCTime
   deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, FromHttpApiData, ToHttpApiData)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
 
 newtype CreatedSince = CreatedSince UTCTime
   deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, FromHttpApiData, ToHttpApiData)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
 
 newtype CreatedUntil = CreatedUntil UTCTime
   deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, FromHttpApiData, ToHttpApiData)
-
--- TODO sums or records?
--- processSums
---   []
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
 
 processRecords
-  [ ''User
+  [ ''DBUser
   , ''ExpiresAt
   , ''SessionId
   , ''UserId

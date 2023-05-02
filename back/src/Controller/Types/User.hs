@@ -1,14 +1,15 @@
 {-# LANGUAGE DerivingStrategies #-}
 
 module Controller.Types.User (
-  AccessToken (..),
-  JWKSettings(..)
+  JWKSettings (..),
+  module API.Types.User,
+  module Service.Types.User,
 ) where
 
-import API.Types.User (AccessToken (..))
-
 import API.Prelude (NominalDiffTime)
+import API.Types.User (AccessToken (..), FullToken (..), RefreshToken (..), UserLoginForm (..), UserRegisterForm (..))
 import Crypto.JOSE (JWK)
+import Service.Types.User (LoginError (..), RegisterError (..), RotateError (..))
 
 data JWKSettings = JWKSettings
   { _jwkSettings_jwk :: JWK

@@ -16,7 +16,7 @@ runUserRepo = interpret $ \_ -> \case
   RepoInsertUser user@InsertUser{..} -> do
     key <- withConn $ insert $ userToModel user
     pure $
-      User
+      DBUser
         { _user_authorName = _insertUser_authorName
         , _user_hashedPassword = _insertUser_hashedPassword
         , _user_userName = _insertUser_userName
@@ -54,7 +54,7 @@ runUserRepo = interpret $ \_ -> \case
       set p [SessionsLastRefreshTokenExpiresAt =. val expiresAt]
       where_ (p.id ==. val (toSqlKey (fromIntegral sessionId)))
 
-selectUser :: (IOE :> es, SqlBackendPool :> es) => UserName -> Eff es (Maybe User)
+selectUser :: (IOE :> es, SqlBackendPool :> es) => UserName -> Eff es (Maybe DBUser)
 selectUser userName =
   withConn do
     user <- selectOne do
@@ -72,9 +72,9 @@ userToModel InsertUser{..} =
     , usersRole = _insertUser_role
     }
 
-userFromModel :: Entity Users -> User
+userFromModel :: Entity Users -> DBUser
 userFromModel Entity{entityKey, entityVal = Users{..}} =
-  User
+  DBUser
     { _user_userName = usersUserName
     , _user_hashedPassword = usersPassword
     , _user_authorName = usersAuthorName

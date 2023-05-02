@@ -35,7 +35,7 @@ library
       Common.Prelude
       Common.TH
       Controller.Effects.News
-      Controller.Effects.Users
+      Controller.Effects.User
       Controller.News
       Controller.Prelude
       Controller.Types.News
@@ -70,10 +70,13 @@ library
       DataKinds
       DeriveAnyClass
       DeriveGeneric
+      DeriveGeneric
+      DerivingStrategies
       DuplicateRecordFields
       FlexibleContexts
       FlexibleInstances
       GADTs
+      GeneralizedNewtypeDeriving
       ImplicitParams
       ImportQualifiedPost
       KindSignatures
@@ -87,6 +90,7 @@ library
       RankNTypes
       RecordWildCards
       ScopedTypeVariables
+      StandaloneDeriving
       StrictData
       TemplateHaskell
       TupleSections
@@ -157,10 +161,13 @@ executable back
       DataKinds
       DeriveAnyClass
       DeriveGeneric
+      DeriveGeneric
+      DerivingStrategies
       DuplicateRecordFields
       FlexibleContexts
       FlexibleInstances
       GADTs
+      GeneralizedNewtypeDeriving
       ImplicitParams
       ImportQualifiedPost
       KindSignatures
@@ -174,6 +181,7 @@ executable back
       RankNTypes
       RecordWildCards
       ScopedTypeVariables
+      StandaloneDeriving
       StrictData
       TemplateHaskell
       TupleSections
@@ -204,10 +212,13 @@ executable gen-openapi3
       DataKinds
       DeriveAnyClass
       DeriveGeneric
+      DeriveGeneric
+      DerivingStrategies
       DuplicateRecordFields
       FlexibleContexts
       FlexibleInstances
       GADTs
+      GeneralizedNewtypeDeriving
       ImplicitParams
       ImportQualifiedPost
       KindSignatures
@@ -221,6 +232,7 @@ executable gen-openapi3
       RankNTypes
       RecordWildCards
       ScopedTypeVariables
+      StandaloneDeriving
       StrictData
       TemplateHaskell
       TupleSections

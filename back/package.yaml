@@ -23,10 +23,13 @@ default-extensions:
   - DataKinds
   - DeriveAnyClass
   - DeriveGeneric
+  - DeriveGeneric
+  - DerivingStrategies
   - DuplicateRecordFields
   - FlexibleContexts
   - FlexibleInstances
   - GADTs
+  - GeneralizedNewtypeDeriving
   - ImplicitParams
   - ImportQualifiedPost
   - KindSignatures
@@ -40,6 +43,7 @@ default-extensions:
   - RankNTypes
   - RecordWildCards
   - ScopedTypeVariables
+  - StandaloneDeriving
   - StrictData
   - TemplateHaskell
   - TupleSections
@@ -81,7 +85,12 @@ library:
     - esqueleto
     - exceptions
     - filepath
+    - first-class-families
+    - generic-lens
     - hashable
+    - http-api-data
+    - insert-ordered-containers
+    - jose
     - lens
     - monad-logger
     - monad-logger-aeson
@@ -91,27 +100,22 @@ library:
     - persistent-postgresql
     - resource-pool
     - servant
+    - servant-auth
+    - servant-auth-server
     - servant-client
     - servant-docs
     - servant-openapi3
+    - servant-queryparam-core
+    - servant-queryparam-server
     - servant-server
+    - stm-containers
+    - symbols
     - template-haskell
     - text
     - time
     - transformers
     - warp
     - yaml
-    - servant-auth-server
-    - servant-auth
-    - jose
-    - insert-ordered-containers
-    - http-api-data
-    - servant-queryparam-server
-    - servant-queryparam-core
-    - first-class-families
-    - symbols
-    - generic-lens
-    - stm-containers
 
 executables:
   back:

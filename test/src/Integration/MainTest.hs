@@ -53,7 +53,7 @@ unit_main =
   defaultMain
     ( testGroup
         "Integration Tests"
-        [ authorizeCreateNewsGetNews
+        [ authorizeCreateNewsSelectedNews
         ]
     )
     `catch` ( \e -> do
@@ -114,8 +114,8 @@ authorizeUser =
         , _userRegisterForm_authorName = "author"
         }
 
-authorizeCreateNewsGetNews :: TestTree
-authorizeCreateNewsGetNews = testCase "Authorize, create news, get that news" do
+authorizeCreateNewsSelectedNews :: TestTree
+authorizeCreateNewsSelectedNews = testCase "Authorize, create news, get that news" do
   -- get config
   testConf <- runEff $ runLoader @TestConf _CONFIG_FILE do
     getConfig @TestConf id

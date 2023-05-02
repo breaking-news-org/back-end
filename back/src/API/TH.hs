@@ -1,3 +1,6 @@
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE StandaloneDeriving #-}
+
 module API.TH (
   processRecordApiType,
   processRecordApiTypes,
@@ -9,6 +12,8 @@ module API.TH (
   makeSumToSchema,
   makeSumToSchemaTypes,
   processRecordApiTypes',
+  deriveNewtypeInstances',
+  schemaOptionsSum
 ) where
 
 import API.Prelude (ToSchema (..), fromAesonOptions, genericDeclareNamedSchema)
@@ -69,3 +74,9 @@ processTypes process ns = concat <$> traverse process ns
 
 processRecordApiTypes' :: [[Name]] -> Q [Dec]
 processRecordApiTypes' = processTypes' makeRecordToSchema'
+
+deriveNewtypeInstances :: Name -> [Name] -> Q [Dec]
+deriveNewtypeInstances c ns = concat <$> traverse (\x -> [d|deriving instance $(pure $ ConT c) $(pure $ ConT x)|]) ns
+
+deriveNewtypeInstances' :: [Name] -> [Name] -> Q [Dec]
+deriveNewtypeInstances' cs ns = concat <$> traverse (`deriveNewtypeInstances` ns) cs

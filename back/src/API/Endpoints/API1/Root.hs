@@ -11,5 +11,3 @@ data API route = API
   , news :: route :- "news" :> Auth '[JWT] AccessToken :> NamedRoutes News.API
   }
   deriving (Generic)
-
--- rotateRefreshToken :: route :- "rotate-refresh-token" :> ReqBody '[JSON] RefreshToken :> Post '[JSON] Text

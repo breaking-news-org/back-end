@@ -1,6 +1,6 @@
 module Server.Server (Server, runServerEffect, startServer, getWaiApplication, writeJWK) where
 
-import API.Endpoints.API1.News as ApiNews (API (API, create, get))
+import API.Endpoints.API1.News as ApiNews (API (API, create, get), publish)
 import API.Endpoints.API1.Root as API1 (API (API, news, user))
 import API.Endpoints.API1.User as ApiUser (API (..))
 import API.Prelude (secondsToNominalDiffTime)
@@ -10,7 +10,7 @@ import API.Types.News ()
 import API.Types.User (AccessToken, RefreshToken)
 import Control.Monad.Except (ExceptT (..), runExceptT)
 import Controller.Effects.News (NewsController)
-import Controller.Effects.Users (UserController)
+import Controller.Effects.User (UserController)
 import Controller.News qualified as NewsController
 import Controller.Types.User (JWKSettings (..))
 import Controller.User qualified as UserController
@@ -26,7 +26,7 @@ import External.Logger (Logger, logInfo, withLogger)
 import GHC.Generics (Generic (..))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
-import Servant (Context (EmptyContext), HasServer (ServerT))
+import Servant (Context (..), HasServer (ServerT))
 import Servant.API (GServantProduct, NamedRoutes, ToServant, ToServantApi, toServant)
 import Servant.Auth.Server (AuthResult (..), defaultCookieSettings, defaultJWTSettings)
 import Servant.Auth.Server.Internal.AddSetCookie (AddSetCookieApi, AddSetCookies (..), Nat (S))
@@ -113,10 +113,11 @@ getWaiApplication' jwkSettings = do
                       ApiNews.API
                         { create = withAccessToken token NewsController.create
                         , get = withAccessToken token NewsController.get
+                        , publish = withAccessToken token NewsController.setIsPublished
                         }
                   }
             }
-          (defaultJWTSettings jwkSettings._jwkSettings_jwk Servant.:. defaultCookieSettings Servant.:. EmptyContext)
+          (defaultJWTSettings jwkSettings._jwkSettings_jwk :. defaultCookieSettings :. EmptyContext)
     pure waiApp
 
 writeJWK :: IO ()

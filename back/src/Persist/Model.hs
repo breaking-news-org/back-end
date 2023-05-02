@@ -6,7 +6,7 @@ module Persist.Model where
 
 import Database.Esqueleto.PostgreSQL.JSON (JSONB)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
-import Persist.Types.News (Images, NewsText, Title)
+import Persist.Types.News (Images, NewsText, NewsTitle, NewsIdHashed)
 import Persist.Types.User (AuthorName, CategoryId, CreatedAt, ExpiresAt, HashedPassword, Role, TokenId, UserName)
 
 share
@@ -19,7 +19,7 @@ Users
     role Role
     deriving Eq Show
 News
-    title Title
+    title NewsTitle
     createdAt CreatedAt
     authorId UsersId
     category CategoryId

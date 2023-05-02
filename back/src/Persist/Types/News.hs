@@ -17,7 +17,7 @@ newtype Image = Image Text
 type Images = [Image]
 
 data InsertNews = InsertNews
-  { _insertNews_title :: !Title
+  { _insertNews_title :: !NewsTitle
   , _insertNews_createdAt :: !CreatedAt
   , _insertNews_authorId :: !UserId
   , _insertNews_category :: !CategoryId
@@ -29,7 +29,7 @@ data InsertNews = InsertNews
 
 data SelectedNews = SelectedNews
   { _selectNews_id :: !Int
-  , _selectNews_title :: !Title
+  , _selectNews_title :: !NewsTitle
   , _selectNews_createdAt :: !CreatedAt
   , _selectNews_authorName :: !AuthorName
   , _selectNews_category :: !CategoryId
@@ -39,20 +39,26 @@ data SelectedNews = SelectedNews
   }
   deriving (Generic)
 
+data SetIsPublished = SetIsPublished
+  { _setIsPublished_news :: ![NewsIdHashed]
+  , _setIsPublished_isPublished :: !Bool
+  }
+  deriving (Generic)
+
 data Filters = Filters
   { _filters_createdUntil :: !(Maybe CreatedUntil)
   , _filters_createdSince :: !(Maybe CreatedSince)
   , _filters_createdAt :: !(Maybe CreatedAt)
   , _filters_authorName :: !(Maybe AuthorName)
   , _filters_category :: !(Maybe CategoryId)
-  , _filters_titleLike :: !(Maybe Title)
+  , _filters_titleLike :: !(Maybe NewsTitle)
   , _filters_textLike :: !(Maybe NewsText)
   , _filters_block :: !(Maybe Int)
   , _filters_showUnpublished :: !(Maybe Bool)
   }
   deriving (Generic)
 
-newtype Title = Title Text
+newtype NewsTitle = NewsTitle Text
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)
 
@@ -60,4 +66,8 @@ newtype NewsText = NewsText Text
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)
 
-processRecords [''Image, ''InsertNews, ''Title, ''NewsText]
+newtype NewsIdHashed = NewsIdHashed Text
+  deriving (Generic)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)
+
+processRecords [''Image, ''InsertNews, ''NewsTitle, ''NewsText, ''NewsIdHashed, ''SetIsPublished]

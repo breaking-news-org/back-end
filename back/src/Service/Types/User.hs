@@ -4,53 +4,39 @@
 {-# LANGUAGE InstanceSigs #-}
 
 module Service.Types.User (
-  UserRegisterData (..),
-  UserLoginData (..),
-  Role (..),
+  UserRegisterForm (..),
+  UserLoginForm (..),
   RegisterError (..),
   LoginError (..),
-  InsertUser (..),
   RotateError (..),
-  SelectUser (..),
   Password (..),
-  AuthorName (..),
-  UserName (..),
-  User (..),
-  UserId (..),
-  SessionId (..),
-  TokenId (..),
-  CategoryId (..),
-  ExpiresAt (..),
-  Session (..),
-  HashedPassword (..),
-  CreatedSince (..),
-  CreatedUntil (..),
-  CreatedAt (..),
+  AccessToken (..),
+  module Persist.Types.User,
 ) where
 
 import Common.Prelude (Text)
 import Common.TH (processRecords, processSums)
-import Data.Aeson ( encode )
-import Persist.Types.User (AuthorName (..), CategoryId (..), CreatedAt (..), CreatedSince (..), CreatedUntil (..), ExpiresAt (..), HashedPassword (..), InsertUser (..), Role (..), SelectUser (..), Session (..), SessionId (..), TokenId (..), User (..), UserId (..), UserName (..))
+import Data.Aeson (encode)
+import Persist.Types.User (AuthorName (..), CategoryId (..), CreatedAt (..), CreatedSince (..), CreatedUntil (..), DBUser (..), ExpiresAt (..), HashedPassword (..), InsertUser (..), Role (..), SelectUser (..), Session (..), SessionId (..), TokenId (..), UserId (..), UserName (..), AccessToken(..))
 import Service.Prelude (Generic)
 
 newtype Password = Password Text
   deriving (Show, Eq, Generic)
 
-data UserRegisterData = UserRegisterData
-  { _userRegisterData_userName :: !UserName
+data UserRegisterForm = UserRegisterForm
+  { _userRegisterForm_userName :: !UserName
   -- ^ Private name of a user
-  , _userRegisterData_password :: !Password
+  , _userRegisterForm_password :: !Password
   -- ^ User password
-  , _userRegisterData_authorName :: !AuthorName
+  , _userRegisterForm_authorName :: !AuthorName
   -- ^ Public name of a user
   }
   deriving (Show, Eq, Generic)
 
-data UserLoginData = UserLoginData
-  { _userLoginData_userName :: !UserName
+data UserLoginForm = UserLoginForm
+  { _userLoginForm_userName :: !UserName
   -- ^ Private name of a user
-  , _userLoginData_password :: !Password
+  , _userLoginForm_password :: !Password
   -- ^ User password
   }
   deriving (Show, Eq, Generic)
@@ -58,8 +44,6 @@ data UserLoginData = UserLoginData
 data RegisterError = UserExists deriving (Generic, Show)
 data LoginError = UserDoesNotExist deriving (Generic, Show)
 data RotateError = SessionDoesNotExist | SessionHasNewerRefreshTokenId deriving (Generic, Show)
-
--- processSums []
 
 -- TODO better instances for err
 processRecords [''Password]
