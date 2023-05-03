@@ -17,7 +17,7 @@ components:
         text:
           $ref: '#/components/schemas/NewsText'
         title:
-          $ref: '#/components/schemas/Title'
+          $ref: '#/components/schemas/NewsTitle'
       required:
       - title
       - text
@@ -80,40 +80,17 @@ components:
       - refreshToken
       - accessToken
       type: object
-    GetNews:
-      properties:
-        authorName:
-          $ref: '#/components/schemas/AuthorName'
-        category:
-          $ref: '#/components/schemas/CategoryId'
-        createdAt:
-          $ref: '#/components/schemas/CreatedAt'
-        images:
-          items:
-            $ref: '#/components/schemas/Image'
-          type: array
-        isPublished:
-          type: boolean
-        text:
-          $ref: '#/components/schemas/NewsText'
-        title:
-          $ref: '#/components/schemas/Title'
-      required:
-      - title
-      - createdAt
-      - authorName
-      - category
-      - text
-      - images
-      - isPublished
-      type: object
     Image:
       type: string
     LoginError:
       enum:
       - UserDoesNotExist
       type: string
+    NewsIdHashed:
+      type: string
     NewsText:
+      type: string
+    NewsTitle:
       type: string
     Password:
       type: string
@@ -126,8 +103,50 @@ components:
       - SessionDoesNotExist
       - SessionHasNewerRefreshTokenId
       type: string
-    Title:
-      type: string
+    SelectedNews:
+      properties:
+        authorName:
+          $ref: '#/components/schemas/AuthorName'
+        category:
+          $ref: '#/components/schemas/CategoryId'
+        createdAt:
+          $ref: '#/components/schemas/CreatedAt'
+        id:
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
+        images:
+          items:
+            $ref: '#/components/schemas/Image'
+          type: array
+        isPublished:
+          type: boolean
+        text:
+          $ref: '#/components/schemas/NewsText'
+        title:
+          $ref: '#/components/schemas/NewsTitle'
+      required:
+      - id
+      - title
+      - createdAt
+      - authorName
+      - category
+      - text
+      - images
+      - isPublished
+      type: object
+    SetIsPublished:
+      properties:
+        isPublished:
+          type: boolean
+        news:
+          items:
+            $ref: '#/components/schemas/NewsIdHashed'
+          type: array
+      required:
+      - news
+      - isPublished
+      type: object
     UserLoginForm:
       properties:
         password:
@@ -236,12 +255,32 @@ paths:
             application/json;charset=utf-8:
               schema:
                 items:
-                  $ref: '#/components/schemas/GetNews'
+                  $ref: '#/components/schemas/SelectedNews'
                 type: array
           description: ''
         '400':
           description: Invalid `block` or `textLike` or `titleLike` or `category`
             or `authorName` or `createdAt` or `createdSince` or `createdUntil`
+      security:
+      - JWT: []
+  /api1/news/set-published:
+    get:
+      requestBody:
+        content:
+          application/json;charset=utf-8:
+            schema:
+              $ref: '#/components/schemas/SetIsPublished'
+      responses:
+        '200':
+          content:
+            application/json;charset=utf-8:
+              schema:
+                items:
+                  $ref: '#/components/schemas/NewsIdHashed'
+                type: array
+          description: ''
+        '400':
+          description: Invalid `body`
       security:
       - JWT: []
   /api1/user/login:
