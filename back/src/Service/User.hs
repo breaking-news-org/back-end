@@ -1,30 +1,21 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 module Service.User where
 
 import Control.Lens.Extras (is)
 import Control.Monad.Logger.Aeson
 import Data.Aeson.Text (encodeToLazyText)
 import Effectful
-import Effectful.TH
-import Persist.Effects.User (UserRepo, repoCreateSession, repoInsertUser, repoSelectRegisteredUser, repoSelectSessionById, repoSelectUserByUserName, repoSessionUpdateLastAccessTokenId)
+import Persist.Effects.User
+import Service.Effects.User
 import Service.Prelude
 import Service.Types.User
-
-data UserService :: Effect where
-  ServiceRegister :: UserRegisterForm -> UserService m (Either RegisterError DBUser)
-  ServiceLogin :: UserLoginForm -> UserService m (Either LoginError DBUser)
-  ServiceCreateSession :: ExpiresAt -> UserId -> UserService m SessionId
-  ServiceRotateRefreshToken :: ExpiresAt -> SessionId -> TokenId -> UserService m (Either RotateError (TokenId, DBUser))
-
-makeEffect ''UserService
 
 runUserService :: (UserRepo :> es, Logger :> es) => Eff (UserService : es) a -> Eff es a
 runUserService = interpret $ \_ -> \case
   ServiceRegister UserRegisterForm{..} -> do
     user <- getUserByUserName _userRegisterForm_userName
     if is _Just user
+      -- don't need to remove a session here
+      -- because a user may have tried to register mistakenly
       then pure $ Left UserExists
       else do
         newUser <-
@@ -34,29 +25,34 @@ runUserService = interpret $ \_ -> \case
               { _insertUser_userName = _userRegisterForm_userName
               , _insertUser_hashedPassword = hashPassword _userRegisterForm_password
               , _insertUser_authorName = _userRegisterForm_authorName
-              , -- TODO where this role is defined?
-                _insertUser_role = RoleUser
+              , _insertUser_role = RoleUser
               }
         withLogger $ logDebug $ "Created a new user" :# ["user" .= newUser]
         pure $ Right newUser
   ServiceLogin UserLoginForm{..} -> do
     user <- getRegisteredUser _userLoginForm_userName _userLoginForm_password
     case user of
-      Just user' -> pure $ Right user'
-      _ -> pure $ Left UserDoesNotExist
+      Right user' -> do
+        repoRemoveSessionsByUserId user'._user_id
+        pure $ Right user'
+      Left err -> pure $ Left err
   ServiceCreateSession expiresAt userId -> repoCreateSession expiresAt userId
-  ServiceRotateRefreshToken expiresAt sessionId tokenId -> do
-    session <- repoSelectSessionById sessionId
-    case session of
+  ServiceRotateRefreshToken RefreshToken{..} newTokenExpiresAt -> do
+    sessionUser <- repoSelectSessionById _refreshToken_sessionId
+    case sessionUser of
       Nothing -> pure $ Left SessionDoesNotExist
-      Just (session1, user) -> do
-        if session1._session_lastAccessTokenId > tokenId
+      Just (session, user) -> do
+        if session._session_lastAccessTokenId > _refreshToken_id
           then pure $ Left SessionHasNewerRefreshTokenId
           else do
-            repoSessionUpdateLastAccessTokenId expiresAt sessionId
-            pure $ Right (tokenId + 1, user)
+            repoSessionUpdateTokenId _refreshToken_sessionId newTokenExpiresAt
+            pure $ Right (_refreshToken_id + 1, user)
+  ServiceSetAdmins admins -> do
+    repoUpdateAdmins (admins <&> (\Admin{..} -> (_admin_userName, hashPassword _admin_password)))
+  ServiceUnRegister sessionId -> do
+    repoRemoveUser sessionId
 
-getRegisteredUser :: (UserRepo :> es, Logger :> es) => UserName -> Password -> Eff es (Maybe DBUser)
+getRegisteredUser :: (UserRepo :> es, Logger :> es) => UserName -> Password -> Eff es (Either RegisteredUserError DBUser)
 getRegisteredUser name password = do
   user <-
     repoSelectRegisteredUser $

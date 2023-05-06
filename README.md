@@ -14,6 +14,10 @@
 - [JWT](https://stackoverflow.com/a/62095037)
 - [What Are Refresh Tokens and How to Use Them Securely](https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/#Refresh-Token-Automatic-Reuse-Detection)
 
+## Encryption
+
+- [password](https://hackage.haskell.org/package/password)
+
 ## Infra
 
 - [Pulumi](https://www.pulumi.com/)
@@ -177,6 +181,12 @@ See these for additional info:
 
 ## References
 
+- Running server in a `VM`
+  - Host shouldn't be Windows
+  - Forward port to internal server - [src](https://www.cyberciti.biz/faq/how-to-configure-ufw-to-forward-port-80443-to-internal-server-hosted-on-lan/)
+  - How to Setup Port Forward with NAT Network in Virtualbox - [YT](https://www.youtube.com/watch?v=FBcFNdzJOes)
+  - Set up prerouting on guest - [SO](https://serverfault.com/a/859440)
+  - Disable firewall on guest - `sudo ufw disable`
 - [kustomization.yaml](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/)
 - [configmap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/#create-a-configmap-from-generator)
 - [web app](https://www.endpointdev.com/blog/2022/01/kubernetes-101/)

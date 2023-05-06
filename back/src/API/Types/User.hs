@@ -1,5 +1,4 @@
 module API.Types.User (
-  RefreshToken (..),
   FullToken (..),
   module Service.Types.User,
 ) where
@@ -7,17 +6,7 @@ module API.Types.User (
 import API.TH
 import Common.Prelude (Generic, Text)
 import Servant.Auth.JWT (FromJWT, ToJWT)
-import Service.Types.User (AccessToken (..), AuthorName (..), CategoryId (..), ExpiresAt (..), LoginError (..), Password (..), RegisterError, Role, RotateError, SessionId (..), TokenId (..), UserId (..), UserLoginForm (..), UserName (..), UserRegisterForm (..))
-
-data RefreshToken = RefreshToken
-  { _refreshToken_expiresAt :: ExpiresAt
-  -- ^ when the token expires
-  , _refreshToken_sessionId :: SessionId
-  -- ^ id of a session starting from registration or login
-  , _refreshToken_id :: TokenId
-  -- ^ index within that session
-  }
-  deriving (Generic)
+import Service.Types.User
 
 data FullToken = FullToken
   { _fullToken_refreshToken :: Text
@@ -30,4 +19,4 @@ processRecordApiTypes [''UserLoginForm, ''UserRegisterForm, ''AccessToken, ''Ref
 
 deriveNewtypeInstances' [''FromJWT, ''ToJWT] [''AccessToken, ''RefreshToken]
 
-makeSumToSchemaTypes [''RegisterError, ''LoginError, ''RotateError]
+makeSumToSchemaTypes [''RegisterError, ''RegisteredUserError, ''RotateError]

@@ -36,6 +36,5 @@ runNewsService =
             }
       withLogger $ logDebug "Got news list"
       pure news
-    -- TODO
-    ServiceSetIsPublished accessToken setIsPublishedNews -> 
+    ServiceSetIsPublished accessToken setIsPublishedNews ->
       repoUpdateIsPublished accessToken setIsPublishedNews

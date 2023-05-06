@@ -46,6 +46,7 @@ import Service.Prelude (encodeUtf8, (&), (?~))
 import Service.Types.User (Password (..), RegisterError (UserExists))
 import Test.Tasty
 import Test.Tasty.HUnit
+import Text.Pretty.Simple (pPrint)
 
 -- https://hackage.haskell.org/package/tasty-1.4.3/docs/Test-Tasty.html#v:defaultMain
 unit_main :: IO ()
@@ -101,19 +102,28 @@ api = Proxy
 _CONFIG_FILE :: String
 _CONFIG_FILE = "TEST_CONFIG_FILE"
 
-authorizeUser :: ClientFree FullToken
-authorizeUser =
+-- TODO create admin in a database on server start
+-- server ensures only the admins from the config are in a db
+
+registerUser :: ClientFree FullToken
+registerUser =
   ( \case
       Left UserExists -> error "user exists"
       Right fullToken -> fullToken
   )
     <$> register
       UserRegisterForm
-        { _userRegisterForm_userName = "contact@zelinf.net"
+        { _userRegisterForm_userName = "testUser1"
         , _userRegisterForm_password = Password "abcdef"
         , _userRegisterForm_authorName = "author"
         }
 
+-- admin 
+
+-- TODO admin user removes test user
+-- test and admin are given in a config
+
+-- full workflow
 authorizeCreateNewsSelectedNews :: TestTree
 authorizeCreateNewsSelectedNews = testCase "Authorize, create news, get that news" do
   -- get config
@@ -134,9 +144,9 @@ authorizeCreateNewsSelectedNews = testCase "Authorize, create news, get that new
             putStrLn $ "Got response:\n" <> show resp
             let res = I.clientResponseToResponse id resp
             case k res of
-              Pure n -> print n >> pure (pure n)
+              Pure n -> pPrint n >> pure (pure n)
               _ -> error "Error: didn't get a response"
-  res <- withClientEnv authorizeUser
+  res <- withClientEnv registerUser
   case res of
     Left err -> putStrLn [i|Error: #{err}|]
     Right token -> do
@@ -149,6 +159,7 @@ authorizeCreateNewsSelectedNews = testCase "Authorize, create news, get that new
               , _createNews_text = "test_text"
               , _createNews_images = [Image "test_value"]
               , _createNews_category = -1
+              , _createNews_isPublished = True
               }
       ns <- withClientEnv $ get (def & #_queryParams_category ?~ -1)
       case ns of

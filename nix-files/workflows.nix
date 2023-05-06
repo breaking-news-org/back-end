@@ -1,4 +1,4 @@
-{ workflows, backDir, name, system, scripts }:
+{ workflows, backDir, name, system, back, test, scripts }:
 let
   inherit (workflows.functions.${system}) writeWorkflow expr mkAccessors genAttrsId run;
   inherit (workflows.configs.${system}) steps os oss;
@@ -7,6 +7,7 @@ let
   job3 = "_3_push_to_docker_hub";
   job4 = "_4_gen_openapi3_specification";
   job5 = "_5_build_deploy_gh_pages";
+  job6 = "_6_write_image_digests";
   names = mkAccessors {
     matrix.os = "";
     matrix.scriptName = genAttrsId [
@@ -17,6 +18,17 @@ let
       "DOCKER_HUB_USERNAME"
       "DOCKER_HUB_PASSWORD"
     ];
+  };
+  steps_ = {
+    dockerHubLogin = {
+      # not sure it's necessary
+      name = "Log in to Docker";
+      uses = "docker/login-action@v2.1.0";
+      "with" = {
+        username = expr names.secrets.DOCKER_HUB_USERNAME;
+        password = expr names.secrets.DOCKER_HUB_PASSWORD;
+      };
+    };
   };
 
   on = {
@@ -65,52 +77,40 @@ let
           steps.pushFlakesToCachix
         ];
       };
-    } // (
-      {
-        "${job3}" = {
-          name = "Push ${expr names.matrix.scriptName} to Docker Hub";
-          # needs = job1;
-          runs-on = os.ubuntu-20;
-          strategy = {
-            matrix = {
-              scriptName = [ "app" "test" ];
-            };
+      "${job3}" = {
+        name = "Push ${expr names.matrix.scriptName} to Docker Hub";
+        # needs = job1;
+        runs-on = os.ubuntu-20;
+        strategy = {
+          matrix = {
+            scriptName = [ back test ];
           };
-          steps = [
-            steps.checkout
-            steps.installNix
-            {
-              name = "Log in to Docker";
-              uses = "docker/login-action@v2.1.0";
-              "with" = {
-                username = expr names.secrets.DOCKER_HUB_USERNAME;
-                password = expr names.secrets.DOCKER_HUB_PASSWORD;
-              };
-            }
-            {
-              name = "Push to Docker Hub";
-              env = {
-                DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
-                DOCKER_HUB_PASSWORD = expr names.secrets.DOCKER_HUB_PASSWORD;
-              };
-              working-directory = backDir;
-              run = ''
-                nix run .#${expr names.matrix.scriptName}PushToDockerHub
-              '';
-            }
-          ];
         };
-      }
-    )
-    // {
+        steps = [
+          steps.checkout
+          steps.installNix
+          steps_.dockerHubLogin
+          {
+            name = "Push to Docker Hub";
+            env = {
+              DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
+              DOCKER_HUB_PASSWORD = expr names.secrets.DOCKER_HUB_PASSWORD;
+            };
+            working-directory = backDir;
+            run = ''
+              nix run .#${expr names.matrix.scriptName}PushToDockerHub
+            '';
+          }
+        ];
+      };
       "${job4}" = {
         name = "Generate OpenAPI3 specification for the server";
         # needs = job1;
         runs-on = os.ubuntu-20;
         steps = [
           steps.checkout
-          steps.configGitAsGHActions
           steps.installNix
+          steps.configGitAsGHActions
           {
             name = "Generate specification";
             run = run.nixRunAndCommit scripts.genOpenApi3.pname "update OpenAPI3 spec";
@@ -118,6 +118,7 @@ let
         ];
       };
       "${job5}" = {
+        name = "Build and deploy GH Pages";
         needs = job4;
         environment = {
           name = "github-pages";
@@ -142,6 +143,23 @@ let
             name = "Deploy to GitHub Pages";
             id = "deployment";
             uses = "actions/deploy-pages@v2";
+          }
+        ];
+      };
+      "${job6}" = {
+        name = "Push ${expr names.matrix.scriptName} to Docker Hub";
+        needs = [ job3 ];
+        runs-on = os.ubuntu-20;
+        steps = [
+          steps.checkout
+          steps.installNix
+          steps.configGitAsGHActions
+          {
+            name = "Write digests";
+            env = {
+              DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
+            };
+            run = run.nixRunAndCommit scripts.writeDigests.pname "Write image digests";
           }
         ];
       };

@@ -10,7 +10,7 @@ import Service.Effects.News
 import Service.Prelude (interpret, send)
 import Service.Types.News (UnavailableNews, SetIsPublished)
 
-create :: (NewsController :> es) => AccessToken -> CreateNews -> ExceptT ServerError (Eff es) NoContent
+create :: (NewsController :> es) => AccessToken -> CreateNews -> ExceptT ServerError (Eff es) NewsIdHashed
 create accessToken = ExceptT . send . ControllerCreateNews accessToken
 
 get :: (NewsController :> es) => AccessToken -> QueryParams -> ExceptT ServerError (Eff es) [SelectedNews]
@@ -37,9 +37,8 @@ setIsPublished accessToken = ExceptT . send . ControllerSetIsPublishedNews acces
 runNewsController :: (ServiceNews :> es) => Eff (NewsController : es) a -> Eff es a
 runNewsController = interpret $ \_ -> \case
   ControllerCreateNews accessToken createNews -> do
-    serviceCreateNews accessToken createNews
-    -- TODO send link to news
-    pure $ Right NoContent
+    newsIdHashed <- serviceCreateNews accessToken createNews
+    pure $ Right newsIdHashed
   ControllerSelectedNews accessToken fs ->
     pure <$> serviceSelectNews accessToken fs
   ControllerSetIsPublishedNews accessToken setIsPublishedNews -> do

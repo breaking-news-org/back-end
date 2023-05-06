@@ -14,6 +14,8 @@ components:
           items:
             $ref: '#/components/schemas/Image'
           type: array
+        isPublished:
+          type: boolean
         text:
           $ref: '#/components/schemas/NewsText'
         title:
@@ -23,16 +25,17 @@ components:
       - text
       - category
       - images
+      - isPublished
       type: object
     CreatedAt:
       example: 2016-07-22T00:00:00Z
       format: yyyy-mm-ddThh:MM:ssZ
       type: string
-    Either_LoginError_FullToken:
+    Either_RegisterError_FullToken:
       oneOf:
       - properties:
           Left:
-            $ref: '#/components/schemas/LoginError'
+            $ref: '#/components/schemas/RegisterError'
         required:
         - Left
         type: object
@@ -42,11 +45,11 @@ components:
         required:
         - Right
         type: object
-    Either_RegisterError_FullToken:
+    Either_RegisteredUserError_FullToken:
       oneOf:
       - properties:
           Left:
-            $ref: '#/components/schemas/RegisterError'
+            $ref: '#/components/schemas/RegisteredUserError'
         required:
         - Left
         type: object
@@ -82,10 +85,6 @@ components:
       type: object
     Image:
       type: string
-    LoginError:
-      enum:
-      - UserDoesNotExist
-      type: string
     NewsIdHashed:
       type: string
     NewsText:
@@ -97,6 +96,11 @@ components:
     RegisterError:
       enum:
       - UserExists
+      type: string
+    RegisteredUserError:
+      enum:
+      - WrongPassword
+      - UserDoesNotExist
       type: string
     RotateError:
       enum:
@@ -193,7 +197,9 @@ paths:
       responses:
         '200':
           content:
-            application/json;charset=utf-8: {}
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/NewsIdHashed'
           description: ''
         '400':
           description: Invalid `body`
@@ -295,7 +301,7 @@ paths:
           content:
             application/json;charset=utf-8:
               schema:
-                $ref: '#/components/schemas/Either_LoginError_FullToken'
+                $ref: '#/components/schemas/Either_RegisteredUserError_FullToken'
           description: ''
         '400':
           description: Invalid `body`
@@ -316,13 +322,22 @@ paths:
         '400':
           description: Invalid `body`
   /api1/user/rotate-refresh-token:
-    post:
+    get:
       responses:
         '200':
           content:
             application/json;charset=utf-8:
               schema:
                 $ref: '#/components/schemas/Either_RotateError_FullToken'
+          description: ''
+      security:
+      - JWT: []
+  /api1/user/unregister:
+    get:
+      responses:
+        '200':
+          content:
+            application/json;charset=utf-8: {}
           description: ''
       security:
       - JWT: []

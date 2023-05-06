@@ -5,6 +5,8 @@
 import * as pulumi from "@pulumi/pulumi"
 import * as k8s from "@pulumi/kubernetes"
 import { Output, Input } from "@pulumi/pulumi"
+import { parse } from "yaml"
+import { readFileSync } from "node:fs"
 
 function mkFullName(environment: string, name: string): string {
   return `${environment}-${name}`
@@ -253,7 +255,7 @@ interface BackConfig {
     container: {
       replicaCount: number
       name: string
-      dockerHubImage: string
+      dockerHubImage?: string
       config: {
         mountPath: string
         app: {
@@ -281,12 +283,17 @@ function mkBack(
   environment: string,
   postgresHost: Output<string>,
   postgresPort: number,
+  dockerHubImage: string,
   provider: k8s.Provider
 ) {
   const appName = config.name
   const fullName = mkFullName(environment, appName)
   const deploymentConfig = config.deployment
-  const containerConfig = deploymentConfig.container
+
+  const containerConfig = {
+    ...deploymentConfig.container,
+    ...{ dockerHubImage: dockerHubImage },
+  }
   const serviceConfig = config.service
   const labels = {
     environment: environment,
@@ -460,7 +467,7 @@ interface TestConfig {
     container: {
       replicaCount: 1
       name: string
-      dockerHubImage: string
+      dockerHubImage?: string
       port: number
       app: {
         mountPath: string
@@ -487,11 +494,15 @@ function mkTest(
   environment: string,
   backHost: Output<string>,
   backPort: number,
+  dockerHubImage: string,
   provider: k8s.Provider
 ) {
   const appName = config.name
   const fullName = mkFullName(environment, appName)
-  const containerConfig = config.deployment.container
+  const containerConfig = {
+    ...config.deployment.container,
+    ...{ dockerHubImage: dockerHubImage },
+  }
   const labels = {
     environment: environment,
   }
@@ -608,7 +619,16 @@ function mkTest(
     ))()
 }
 
-function mkSetup(environment: string, provider: k8s.Provider) {
+interface Digests {
+  back: string
+  test: string
+}
+
+function mkSetup(
+  environment: string,
+  digests: Digests,
+  provider: k8s.Provider
+) {
   const config = new pulumi.Config(environment)
 
   const postgres = mkPostgres(
@@ -622,6 +642,7 @@ function mkSetup(environment: string, provider: k8s.Provider) {
     environment,
     postgres.host,
     postgres.port,
+    digests.back,
     provider
   )
 
@@ -631,7 +652,8 @@ function mkSetup(environment: string, provider: k8s.Provider) {
       environment,
       back.host,
       back.port,
-      (provider = provider)
+      digests.test,
+      provider
     )
   }
 }
@@ -641,8 +663,12 @@ function mkSetup(environment: string, provider: k8s.Provider) {
 // })
 const provider = new k8s.Provider("kubernetes-provider")
 
+
+const digests = parse(readFileSync("digests.yaml", "utf8")) as Digests
+// console.log(digests)
+
 if (pulumi.getStack() == "dev") {
-  mkSetup("dev", provider)
+  mkSetup("dev", digests, provider)
 } else if (pulumi.getStack() == "prod") {
-  mkSetup("prod", provider)
+  mkSetup("prod", digests, provider)
 }

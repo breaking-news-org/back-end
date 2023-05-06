@@ -37,7 +37,7 @@ data SelectedNews = SelectedNews
   , _selectNews_images :: !Images
   , _selectNews_isPublished :: !Bool
   }
-  deriving (Generic)
+  deriving (Generic, Show)
 
 data SetIsPublished = SetIsPublished
   { _setIsPublished_news :: ![NewsIdHashed]
@@ -66,6 +66,7 @@ newtype NewsText = NewsText Text
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)
 
+-- | News id is hashed to prevent brute-forcing all news
 newtype NewsIdHashed = NewsIdHashed Text
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)

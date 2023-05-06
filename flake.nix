@@ -41,18 +41,20 @@
         ghcVersion_ = "927";
 
         # and the name of the package
-        appPackageName = "back";
+        backPackageName = "back";
+        back = backPackageName;
 
         # and the name of the package
         testPackageName = "test";
+        test = testPackageName;
 
         # Then, we list separately the libraries that our package needs
-        appPackageDepsLib = [ pkgs.zlib pkgs.libpqxx ];
-        testPackageDepsLib = appPackageDepsLib;
+        backPackageDepsLib = [ pkgs.zlib pkgs.libpqxx ];
+        testPackageDepsLib = backPackageDepsLib;
 
         # And the binaries. 
         # In our case, the Haskell app will call the `hello` command
-        appPackageDepsBin = [ ];
+        backPackageDepsBin = [ ];
         testPackageDepsBin = [ ];
 
         # --- shells ---
@@ -97,7 +99,7 @@
             } //
             (
               let mkPackage = name: path: deps: depsLib: depsBin: overrideCabal
-                (dontCheck (dontHaddock (dontBenchmark (super.callCabal2nix appPackageName path deps))))
+                (dontCheck (dontHaddock (dontBenchmark (super.callCabal2nix backPackageName path deps))))
                 (x: {
                   # we can combine the existing deps and new deps
                   # we should write the new deps before the existing deps to override them
@@ -113,8 +115,8 @@
                   ] ++ (x.testHaskellDepends or [ ]);
                 }); in
               {
-                "${appPackageName}" = mkPackage appPackageName ./back { } appPackageDepsLib appPackageDepsBin;
-                "${testPackageName}" = mkPackage testPackageName ./test { "${appPackageName}" = self."${appPackageName}"; } testPackageDepsLib testPackageDepsBin;
+                "${backPackageName}" = mkPackage backPackageName ./back { } backPackageDepsLib backPackageDepsBin;
+                "${testPackageName}" = mkPackage testPackageName ./test { "${backPackageName}" = self."${backPackageName}"; } testPackageDepsLib testPackageDepsBin;
               }
             );
         };
@@ -132,10 +134,10 @@
           version = ghcVersion_;
           inherit override;
           packages = (ps: [
-            ps.${appPackageName}
+            ps.${backPackageName}
             ps.${testPackageName}
           ]);
-          runtimeDependencies = appPackageDepsBin ++ testPackageDepsBin;
+          runtimeDependencies = backPackageDepsBin ++ testPackageDepsBin;
         })
           hls cabal implicit-hie justStaticExecutable
           ghcid callCabal2nix haskellPackages hpack;
@@ -151,10 +153,10 @@
             executableName = exeName;
           };
 
-        appExeName = "back";
-        appExe = mkExe appPackageName appExeName;
+        backExeName = back;
+        backExe = mkExe backPackageName backExeName;
 
-        testExeName = "test";
+        testExeName = test;
         testExe = mkExe testPackageName testExeName;
 
         # A disadvantage of this approach is that the package and all its local dependencies
@@ -186,22 +188,40 @@
                 (name_: { "${name_}" = "\$${name_}"; })
                 [ "DOCKER_HUB_USERNAME" "DOCKER_HUB_PASSWORD" ];
 
+            dockerBuild = "${name}DockerBuild";
+            digests = "pulumi/digests.yaml";
             scripts1 = mkShellApps {
-              "${name}DockerBuild" = {
+              "${dockerBuild}" = {
                 text = ''docker load < ${image}'';
                 runtimeInputs = [ pkgs.docker ];
                 description = "Load an image into docker";
+              };
+              "${name}WriteDigest" = rec {
+                text = let imageRef = "${env.DOCKER_HUB_USERNAME}/${imageName}:${imageTag}"; in
+                  ''
+                    docker pull ${imageRef}
+
+                    touch ${digests}
+                    tmp=$(mktemp)
+
+                    printf "a: %s" $(docker inspect --format='{{index .RepoDigests 0}}' ${imageRef}) \
+                      | yq e '.'"\"${name}\""' = .a | del(.a)' > $tmp
+                      
+                    yq eval-all -i 'select(fileIndex == 0) * select(fileIndex == 1)' ${digests} $tmp
+                  '';
+                description = ''Write digest of ${name} image from Docker Hub'';
               };
             };
 
             scripts2 = mkShellApps {
               "${name}PushToDockerHub" = rec {
                 text = ''
-                  ${mkBin scripts1."${name}DockerBuild"}
+                  ${mkBin scripts1.${dockerBuild}}
                   docker login -u ${env.DOCKER_HUB_USERNAME} -p ${env.DOCKER_HUB_PASSWORD}
                   docker tag ${imageName}:${imageTag} ${env.DOCKER_HUB_USERNAME}/${imageName}:${imageTag}
                   docker push ${env.DOCKER_HUB_USERNAME}/${imageName}:${imageTag}
                 '';
+                runtimeInputs = [ pkgs.docker ];
                 description = ''Push ${name} image to Docker Hub'';
                 longDescription = ''
                   ${description}
@@ -215,12 +235,12 @@
           in
           scripts1 // scripts2;
 
-        appDockerHubImageName = appImageName;
+        backDockerHubImageName = backImageName;
         testDockerHubImageName = testImageName;
 
-        appImageName = "breaking-news-back-app";
-        appLocalImageName = appImageName;
-        appImageTag = "latest";
+        backImageName = "breaking-news-${back}-app";
+        backLocalImageName = backImageName;
+        backImageTag = "latest";
 
         testImageName = "breaking-news-back-test";
         testLocalImageName = testImageName;
@@ -229,12 +249,20 @@
         genOpenApi3 = "gen-openapi3";
 
         scripts =
-          (mkScripts { name = "app"; imageName = appDockerHubImageName; imageTag = "latest"; exeName = "back"; exe = appExe; })
-          // (mkScripts { name = "test"; imageName = testDockerHubImageName; imageTag = "latest"; exeName = "test"; exe = testExe; })
-          // (mkShellApps {
+          let scripts1 =
+            (mkScripts { name = back; imageName = backDockerHubImageName; imageTag = "latest"; exeName = "back"; exe = backExe; })
+            // (mkScripts { name = test; imageName = testDockerHubImageName; imageTag = "latest"; exeName = "test"; exe = testExe; });
+          in
+          scripts1 // (mkShellApps {
             genOpenApi3 = {
-              text = ''${mkExe appPackageName genOpenApi3}/bin/${genOpenApi3}'';
+              text = ''${mkExe backPackageName genOpenApi3}/bin/${genOpenApi3}'';
               description = ''Generate OpenAPI3 specification for the server'';
+            };
+            writeDigests = {
+              text = ''
+                ${mkBin scripts.backWriteDigest}
+                ${mkBin scripts.testWriteDigest}
+              '';
             };
           });
 
@@ -258,6 +286,8 @@
 
           # node
           pkgs.nodejs-16_x
+
+          pkgs.deno
         ];
 
         extraTools = [
@@ -287,6 +317,7 @@
             name = "CI";
             inherit system;
             inherit scripts;
+            inherit back test;
           };
         } // scripts;
 
@@ -315,7 +346,8 @@
               ++ (mkRunCommands "ide" { inherit (packages) writeSettings; "codium ." = packages.codium; })
               ++ (mkRunCommands "infra" {
                 inherit (packages)
-                  appPushToDockerHub testPushToDockerHub
+                  backPushToDockerHub testPushToDockerHub
+                  backWriteDigest
                   writeWorkflows updateLocks pushToCachix;
               })
             ;

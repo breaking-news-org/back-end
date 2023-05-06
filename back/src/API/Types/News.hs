@@ -10,11 +10,10 @@ module API.Types.News (
 ) where
 
 import API.Prelude (FromHttpApiData, Generic, ToHttpApiData)
-import API.TH (deriveNewtypeInstances', makeRecordToSchemaTypes, makeSumToSchemaTypes, processRecordApiTypes, schemaOptionsSum)
+import API.TH (deriveNewtypeInstances', makeRecordToSchemaTypes, makeSumToSchemaTypes, processRecordApiTypes)
 import API.Types.User (AuthorName (..), CategoryId (..))
-import Common.Prelude (Text, ToParamSchema, genericToParamSchema)
+import Common.Prelude (Text)
 import Data.Default (Default)
-import Data.OpenApi.Internal.ParamSchema (ToParamSchema (toParamSchema))
 import Service.Types.News (CreateNews (..), CreatedAt (..), CreatedSince (..), CreatedUntil (..), Image (..), Images, NewsIdHashed (..), NewsText (..), NewsTitle (..), SelectedNews (..), SetIsPublished)
 
 data EditNews = EditNews
@@ -39,12 +38,9 @@ data QueryParams = QueryParams
 
 instance Default QueryParams
 
-makeSumToSchemaTypes [''CreatedAt, ''CreatedSince, ''CreatedUntil, ''NewsText, ''NewsTitle, ''NewsIdHashed]
+makeSumToSchemaTypes [''CreatedAt, ''CreatedSince, ''CreatedUntil, ''NewsText, ''NewsTitle, ''NewsIdHashed, ''CategoryId]
 
-makeRecordToSchemaTypes [''SelectedNews, ''Image, ''CategoryId, ''SetIsPublished]
-
-instance ToParamSchema CategoryId where
-  toParamSchema = genericToParamSchema schemaOptionsSum
+makeRecordToSchemaTypes [''SelectedNews, ''Image, ''SetIsPublished]
 
 processRecordApiTypes [''EditNews, ''CreateNews, ''QueryParams]
 

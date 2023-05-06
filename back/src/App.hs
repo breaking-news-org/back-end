@@ -5,7 +5,6 @@ module App (
 )
 where
 
-import Control.Monad (void)
 import Controller.Effects.News (NewsController)
 import Controller.Effects.User (UserController)
 import Controller.News (runNewsController)
@@ -22,9 +21,9 @@ import Persist.User (runUserRepo)
 import Server.Config
 import Server.Server
 import Service.Effects.News (ServiceNews)
+import Service.Effects.User (UserService)
 import Service.News
-import Service.Types.User (LoginError, RegisterError)
-import Service.User (UserService, runUserService)
+import Service.User (runUserService)
 import System.IO (BufferMode (..), hSetBuffering, stdout)
 
 main :: IO ()

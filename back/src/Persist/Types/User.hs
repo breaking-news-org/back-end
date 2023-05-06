@@ -6,12 +6,16 @@ module Persist.Types.User where
 
 import API.Prelude (Generic, PersistField, UTCTime, Value)
 import Common.Prelude (ByteString, FromJSON, Text, ToJSON, (^.))
-import Common.TH (processRecords)
+import Common.TH (processRecords, processSums)
+import Data.Aeson (encode)
 import Data.Aeson.Types (FromJSON (parseJSON), Parser, ToJSON (toJSON), withText)
 import Data.String (IsString)
 import Data.String.Interpolate (i)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql (sqlType), PersistValue (PersistInt64), SqlType (SqlInt64))
+
+newtype Password = Password Text
+  deriving (Show, Eq, Generic)
 
 newtype HashedPassword = HashedPassword ByteString
   deriving (Generic)
@@ -40,13 +44,20 @@ newtype UserId = UserId Int
   deriving newtype (Num, Enum, Show, Eq, Ord, Real, Integral)
 
 data AccessToken = AccessToken
-  { _accessToken_role :: Role
-  , _accessToken_expiresAt :: ExpiresAt
-  , _accessToken_userId :: UserId
-  , _accessToken_id :: TokenId
+  { _accessToken_role :: !Role
+  , _accessToken_userId :: !UserId
+  , _accessToken_id :: !TokenId
   -- ^ index within a session
-  , _accessToken_sessionId :: SessionId
+  , _accessToken_sessionId :: !SessionId
   -- ^ coincides with the id of the corresponding refresh token
+  }
+  deriving (Generic)
+
+data RefreshToken = RefreshToken
+  { _refreshToken_sessionId :: !SessionId
+  -- ^ id of a session starting from registration or login
+  , _refreshToken_id :: !TokenId
+  -- ^ index within that session
   }
   deriving (Generic)
 
@@ -100,6 +111,12 @@ data Session = Session
   , _session_id :: SessionId
   }
 
+data Admin = Admin
+  { _admin_userName :: UserName
+  , _admin_password :: Password
+  }
+  deriving (Show, Generic)
+
 newtype CategoryId = CategoryId Int
   deriving (Generic)
   deriving newtype (Num, PersistField, Eq, Ord, Show, PersistFieldSql)
@@ -143,3 +160,24 @@ processRecords
   , ''InsertUser
   , ''AuthorName
   ]
+
+data RegisterError = UserExists deriving (Generic, Show)
+data RotateError = SessionDoesNotExist | SessionHasNewerRefreshTokenId deriving (Generic, Show)
+data RegisteredUserError = WrongPassword | UserDoesNotExist deriving (Generic, Show)
+
+processSums [''RegisterError, ''RegisteredUserError, ''RotateError]
+
+-- Demo encoding
+
+ex1 = encode (Left SessionDoesNotExist :: Either RotateError Int)
+ex2 = encode (Left UserExists :: Either RegisterError Int)
+ex3 = encode $ AuthorName "authorName"
+
+-- >>> ex1
+-- "{\"Left\":\"SessionDoesNotExist\"}"
+
+-- >>> ex2
+-- "{\"Left\":\"UserExists\"}"
+
+-- >>> ex3
+-- "\"authorName\""

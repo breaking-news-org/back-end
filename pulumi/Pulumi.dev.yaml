@@ -46,6 +46,9 @@ config:
                 pageSize: 10
               jwtParameters:
                 expirationTime: 3600
+              admins:
+              - userName: admin
+                password: admin
           jwk:
             varName: JWK_FILE
             filePath: jwk.yaml

@@ -15,6 +15,7 @@ data CreateNews = CreateNews
   , _createNews_text :: !NewsText
   , _createNews_category :: !CategoryId
   , _createNews_images :: !Images
+  , _createNews_isPublished :: Bool
   }
   deriving (Generic)
 

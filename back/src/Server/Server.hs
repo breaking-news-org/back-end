@@ -3,7 +3,7 @@ module Server.Server (Server, runServerEffect, startServer, getWaiApplication, w
 import API.Endpoints.API1.News as ApiNews (API (API, create, get), publish)
 import API.Endpoints.API1.Root as API1 (API (API, news, user))
 import API.Endpoints.API1.User as ApiUser (API (..))
-import API.Prelude (secondsToNominalDiffTime)
+import API.Prelude (NoContent (NoContent), secondsToNominalDiffTime)
 import API.Root (Routes (..))
 import API.Types.Instances ()
 import API.Types.News ()
@@ -18,6 +18,7 @@ import Crypto.JOSE (JWK, KeyMaterialGenParam (..), genJWK)
 import Data.Aeson qualified
 import Data.ByteString.Lazy qualified as BSL
 import Data.Fixed (Fixed (MkFixed))
+import Data.Functor (($>))
 import Data.String (fromString)
 import Effectful (Eff, Effect, IOE, Limit (..), MonadIO (liftIO), Persistence (Ephemeral), UnliftStrategy (ConcUnlift), withEffToIO, withUnliftStrategy, type (:>))
 import Effectful.Dispatch.Dynamic (interpret)
@@ -35,6 +36,7 @@ import Servant.Server.Generic (AsServerT, genericServeTWithContext)
 import Servant.Server.Named ()
 import Servant.Server.Record ()
 import Server.Config (App (..), JWTParameters (..), Loader, Web (_web_port), getConfig)
+import Controller.User
 
 -- wire up all controllers here
 
@@ -66,9 +68,13 @@ type Constraints es =
 runServerEffect :: forall es a. Constraints es => Eff (Server : es) a -> Eff es a
 runServerEffect = interpret $ \_ -> \case
   StartServer -> do
-    port <- getConfig @App (._app_web._web_port)
+    app <- getConfig @App id
+    let port = app._app_web._web_port
+        admins = app._app_admins
     waiApp <- getWaiApplication' =<< getJWKSettings
     withLogger . logInfo . fromString $ "listening at port " <> show port
+    -- TODO run when database ready
+    updateAdmins admins
     liftIO $ Warp.run port waiApp
   GetWaiApplication -> getWaiApplication' =<< getJWKSettings
 
@@ -78,6 +84,8 @@ getJWKSettings = do
   let lifetime_ = secondsToNominalDiffTime (MkFixed (lifeTime * (10 ^ 12)))
   jwk <- getConfig id
   pure JWKSettings{_jwkSettings_jwk = jwk, _jwkSettings_jwtLifetimeSeconds = lifetime_}
+
+
 
 type instance AddSetCookieApi (NamedRoutes api) = AddSetCookieApi (ToServantApi api)
 instance
@@ -106,6 +114,7 @@ getWaiApplication' jwkSettings = do
                   { user =
                       ApiUser.API
                         { register = UserController.register jwkSettings
+                        , unRegister = \token -> withRefreshToken token UserController.unRegister $> NoContent
                         , login = UserController.login jwkSettings
                         , rotateRefreshToken = \token -> withRefreshToken token (UserController.rotateRefreshToken jwkSettings)
                         }

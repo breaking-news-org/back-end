@@ -6,7 +6,7 @@ module Persist.Model where
 
 import Database.Esqueleto.PostgreSQL.JSON (JSONB)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
-import Persist.Types.News (Images, NewsText, NewsTitle, NewsIdHashed)
+import Persist.Types.News (Images, NewsText, NewsTitle)
 import Persist.Types.User (AuthorName, CategoryId, CreatedAt, ExpiresAt, HashedPassword, Role, TokenId, UserName)
 
 share
@@ -14,26 +14,33 @@ share
   [persistLowerCase|
 Users
     password HashedPassword
-    userName UserName
+    name UserName
     authorName AuthorName
     role Role
+    UniqueUserName name
     deriving Eq Show
 News
     title NewsTitle
     createdAt CreatedAt
-    authorId UsersId
+    authorId UsersId OnDeleteCascade
     category CategoryId
     text' NewsText
     images (JSONB Images)
     isPublished Bool
     deriving Ord Eq Show
 Sessions
-    lastAccessTokenId TokenId
-    lastRefreshTokenExpiresAt ExpiresAt
-    userId UsersId
+    tokenId TokenId
+    tokenExpiresAt ExpiresAt
+    userId UsersId OnDeleteCascade
+    UniqueUserId userId
     deriving Ord Eq Show
 |]
 
+
+-- A session has tokens whose ids are incremented when refreshing
+-- Tokens may expire.
+-- These tokens should be removed from time to time
+
 -- TODO add to News
--- uniqueAddress Text
--- to make urls constructible
+-- titles may be not unique
+-- urls are constructed from news ids

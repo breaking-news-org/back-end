@@ -1,13 +1,15 @@
 module Controller.Effects.User where
 
-import Controller.Prelude (ExceptT (..), ServerError)
-import Controller.Types.User (FullToken, JWKSettings, LoginError, RefreshToken, RegisterError, RotateError, UserLoginForm, UserRegisterForm)
-import Effectful (Dispatch (Dynamic), DispatchOf, Eff, Effect, (:>))
-import Effectful.Dispatch.Dynamic (send)
+import Controller.Prelude (ServerError)
+import Controller.Types.User (FullToken, JWKSettings)
+import Effectful (Dispatch (Dynamic), DispatchOf, Effect)
+import Service.Types.User
 
 data UserController :: Effect where
-  ControllerRegisterUser :: JWKSettings -> UserRegisterForm -> UserController m (Either ServerError (Either RegisterError FullToken))
-  ControllerLoginUser :: JWKSettings -> UserLoginForm -> UserController m (Either ServerError (Either LoginError FullToken))
+  ControllerRegister :: JWKSettings -> UserRegisterForm -> UserController m (Either ServerError (Either RegisterError FullToken))
+  ControllerUnRegister :: RefreshToken -> UserController m (Either ServerError ())
+  ControllerLogin :: JWKSettings -> UserLoginForm -> UserController m (Either ServerError (Either RegisteredUserError FullToken))
   ControllerRotateRefreshToken :: JWKSettings -> RefreshToken -> UserController m (Either ServerError (Either RotateError FullToken))
+  ControllerUpdateAdmins :: [Admin] -> UserController m ()
 
 type instance DispatchOf UserController = 'Dynamic

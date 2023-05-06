@@ -12,6 +12,7 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Static
 import Effectful.TH (makeEffect)
 import GHC.Generics (Generic)
+import Service.Types.User
 import System.Environment (lookupEnv)
 
 data DB = DB
@@ -40,10 +41,11 @@ data App = App
   { _app_db :: DB
   , _app_web :: Web
   , _app_jwtParameters :: JWTParameters
+  , _app_admins :: [Admin]
   }
   deriving (Show, Generic)
 
-processRecords [''DB, ''Web, ''JWTParameters, ''App]
+processRecords [''DB, ''Web, ''JWTParameters, ''App, ''Admin]
 
 data Loader conf :: Effect where
   GetConfig :: (FromJSON conf) => (conf -> a) -> Loader conf m a

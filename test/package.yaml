@@ -49,28 +49,30 @@ library:
   source-dirs: src
   dependencies:
     - back
+    - bytestring
+    - containers
+    - data-default
     - effectful
+    - free
     - hspec
+    - http-api-data
     - http-client
     - http-types
     - jose
+    - pretty-simple
     - servant
     - servant-auth
     - servant-client
+    - servant-client-core
+    - servant-queryparam-client
+    - servant-queryparam-core
     - string-interpolate
     - tasty
     - tasty-hspec
     - tasty-hunit
+    - text
     - wai
     - wai-extra
-    - bytestring
-    - servant-client-core
-    - servant-queryparam-core
-    - servant-queryparam-client
-    - containers
-    - http-api-data
-    - data-default
-    - free
 
 ghc-options:
   - -Wall
