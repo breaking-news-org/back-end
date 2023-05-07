@@ -42,6 +42,7 @@ library
       Controller.Types.User
       Controller.User
       External.Logger
+      External.Passwords
       External.SqlDatabase
       Persist.Effects.News
       Persist.Effects.User
@@ -125,6 +126,7 @@ library
     , monad-logger-aeson
     , mtl
     , openapi3
+    , password
     , persistent
     , persistent-postgresql
     , resource-pool

@@ -25,6 +25,7 @@ import Service.Effects.User (UserService)
 import Service.News
 import Service.User (runUserService)
 import System.IO (BufferMode (..), hSetBuffering, stdout)
+import External.Passwords (runPasswords, Passwords)
 
 main :: IO ()
 main = do
@@ -37,6 +38,7 @@ type AppM =
      , UserController
      , UserService
      , UserRepo
+     , Passwords
      , NewsController
      , ServiceNews
      , NewsRepo
@@ -59,6 +61,7 @@ runAppM appM =
     & runUserController
     & runUserService
     & runUserRepo
+    & runPasswords
     & runNewsController
     & runNewsService
     & runNewsRepo

@@ -6,8 +6,8 @@ module Persist.Model where
 
 import Database.Esqueleto.PostgreSQL.JSON (JSONB)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
-import Persist.Types.News (Images, NewsText, NewsTitle)
-import Persist.Types.User (AuthorName, CategoryId, CreatedAt, ExpiresAt, HashedPassword, Role, TokenId, UserName)
+import Persist.Types.News (Images, NewsText, NewsTitle, CategoryName)
+import Persist.Types.User (AuthorName, CreatedAt, ExpiresAt, HashedPassword, Role, TokenId, UserName)
 
 share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]
@@ -19,20 +19,24 @@ Users
     role Role
     UniqueUserName name
     deriving Eq Show
-News
-    title NewsTitle
-    createdAt CreatedAt
-    authorId UsersId OnDeleteCascade
-    category CategoryId
-    text' NewsText
-    images (JSONB Images)
-    isPublished Bool
-    deriving Ord Eq Show
 Sessions
     tokenId TokenId
     tokenExpiresAt ExpiresAt
     userId UsersId OnDeleteCascade
     UniqueUserId userId
+    deriving Ord Eq Show
+Categories
+    name CategoryName
+    parent CategoriesId Maybe
+    deriving Ord Eq Show
+News
+    title NewsTitle
+    createdAt CreatedAt
+    authorId UsersId OnDeleteCascade
+    category CategoriesId
+    text' NewsText
+    images (JSONB Images)
+    isPublished Bool
     deriving Ord Eq Show
 |]
 

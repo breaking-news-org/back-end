@@ -51,7 +51,7 @@ runUserController = interpret $ \_ -> \case
           , _userLoginForm_password = _userLoginForm_password
           }
     case res of
-      Left UserDoesNotExist -> pure $ Right $ Left UserDoesNotExist
+      Left err -> pure $ Right $ Left err
       Right userId -> do
         fullToken <- getFreshFullToken jwkSettings userId
         pure $ Right $ Right fullToken

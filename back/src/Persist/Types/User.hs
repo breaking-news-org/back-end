@@ -4,32 +4,20 @@
 
 module Persist.Types.User where
 
-import API.Prelude (Generic, PersistField, UTCTime, Value)
-import Common.Prelude (ByteString, FromJSON, Text, ToJSON, (^.))
+import API.Prelude (Generic, PersistField, UTCTime)
+import Common.Prelude (Text)
 import Common.TH (processRecords, processSums)
 import Data.Aeson (encode)
-import Data.Aeson.Types (FromJSON (parseJSON), Parser, ToJSON (toJSON), withText)
 import Data.String (IsString)
 import Data.String.Interpolate (i)
-import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql (sqlType), PersistValue (PersistInt64), SqlType (SqlInt64))
 
 newtype Password = Password Text
   deriving (Show, Eq, Generic)
 
-newtype HashedPassword = HashedPassword ByteString
+newtype HashedPassword = HashedPassword Text
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString)
-
--- Unsafe because doesn't check if password was hashed
-instance FromJSON HashedPassword where
-  parseJSON :: Value -> Parser HashedPassword
-  parseJSON = withText "HashedPassword" $ \t ->
-    pure $ HashedPassword $ encodeUtf8 t
-
-instance ToJSON HashedPassword where
-  toJSON :: HashedPassword -> Value
-  toJSON = toJSON . decodeUtf8 . (^. #_HashedPassword)
 
 newtype UserName = UserName Text
   deriving (Generic)
@@ -106,8 +94,8 @@ data DBUser = DBUser
   deriving (Show, Eq, Generic)
 
 data Session = Session
-  { _session_lastAccessTokenId :: TokenId
-  , _session_lastRefreshTokenExpiresAt :: ExpiresAt
+  { _session_tokenId :: TokenId
+  , _session_tokenExpiresAt :: ExpiresAt
   , _session_id :: SessionId
   }
 
@@ -119,7 +107,7 @@ data Admin = Admin
 
 newtype CategoryId = CategoryId Int
   deriving (Generic)
-  deriving newtype (Num, PersistField, Eq, Ord, Show, PersistFieldSql)
+  deriving newtype (Num, Integral, Enum, Real, PersistField, Eq, Ord, Show, PersistFieldSql)
 
 newtype TokenId = TokenId Int
   deriving (Generic)
@@ -159,6 +147,7 @@ processRecords
   , ''CreatedSince
   , ''InsertUser
   , ''AuthorName
+  , ''HashedPassword
   ]
 
 data RegisterError = UserExists deriving (Generic, Show)

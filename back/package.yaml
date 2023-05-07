@@ -116,6 +116,7 @@ library:
     - transformers
     - warp
     - yaml
+    - password
 
 executables:
   back:

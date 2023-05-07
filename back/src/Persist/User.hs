@@ -5,17 +5,11 @@ where
 
 import Common.Prelude ((<&>))
 import Control.Lens (Bifunctor (bimap))
-import Database.Esqueleto.Experimental (Entity (Entity, entityKey), PersistUniqueWrite (putMany), SqlBackend, SqlExpr, ToBackendKey, delete, fromSqlKey, innerJoin, notIn, on, selectOne, set, toSqlKey, update, valList, (+.), (=.), (==.), type (:&) ((:&)))
+import Database.Esqueleto.Experimental (Entity (Entity, entityKey), PersistUniqueWrite (putMany), delete, fromSqlKey, innerJoin, notIn, on, selectOne, set, update, valList, (+.), (=.), (==.), type (:&) ((:&)))
 import Persist.Effects.User (UserRepo (..))
 import Persist.Model
 import Persist.Prelude
 import Persist.Types.User
-
-mkSqlKey :: forall typ a. (ToBackendKey SqlBackend typ, Integral a) => a -> Key typ
-mkSqlKey = toSqlKey . fromIntegral
-
-mkSqlKeyVal :: forall typ a. (ToBackendKey SqlBackend typ, Integral a) => a -> SqlExpr (Value (Key typ))
-mkSqlKeyVal = val . mkSqlKey
 
 runUserRepo :: (IOE :> es, SqlBackendPool :> es) => Eff (UserRepo : es) a -> Eff es a
 runUserRepo = interpret $ \_ -> \case
@@ -140,7 +134,7 @@ userFromModel Entity{entityKey, entityVal = Users{..}} =
 sessionFromModel :: Entity Sessions -> Session
 sessionFromModel Entity{entityKey, entityVal = Sessions{..}} =
   Session
-    { _session_lastAccessTokenId = sessionsTokenId
-    , _session_lastRefreshTokenExpiresAt = sessionsTokenExpiresAt
+    { _session_tokenId = sessionsTokenId
+    , _session_tokenExpiresAt = sessionsTokenExpiresAt
     , _session_id = fromIntegral $ fromSqlKey entityKey
     }

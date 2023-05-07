@@ -39,9 +39,10 @@ data SelectedNews = SelectedNews
   }
   deriving (Generic, Show)
 
-data SetIsPublished = SetIsPublished
-  { _setIsPublished_news :: ![NewsIdHashed]
-  , _setIsPublished_isPublished :: !Bool
+data SelectedCategory = SelectedCategory
+  { _selectedCategory_id :: CategoryId
+  , _selectedCategory_name :: CategoryName
+  , _selectedCategory_parent :: Maybe CategoryId
   }
   deriving (Generic)
 
@@ -50,6 +51,9 @@ data Filters = Filters
   , _filters_createdSince :: !(Maybe CreatedSince)
   , _filters_createdAt :: !(Maybe CreatedAt)
   , _filters_authorName :: !(Maybe AuthorName)
+  -- ^ get news by author name
+  --
+  -- a user can get her news when querying by her name
   , _filters_category :: !(Maybe CategoryId)
   , _filters_titleLike :: !(Maybe NewsTitle)
   , _filters_textLike :: !(Maybe NewsText)
@@ -58,17 +62,31 @@ data Filters = Filters
   }
   deriving (Generic)
 
-newtype NewsTitle = NewsTitle Text
+newtype CategoryName = CategoryName Text
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)
 
+newtype NewsTitle = NewsTitle Text
+  deriving (Generic)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData, Semigroup)
+
 newtype NewsText = NewsText Text
   deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData, Semigroup)
 
 -- | News id is hashed to prevent brute-forcing all news
 newtype NewsIdHashed = NewsIdHashed Text
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)
 
-processRecords [''Image, ''InsertNews, ''NewsTitle, ''NewsText, ''NewsIdHashed, ''SetIsPublished]
+type UnavailableNews = [NewsIdHashed]
+
+type SelectedCategories = [SelectedCategory]
+
+data SetIsPublished = SetIsPublished
+  { _setIsPublished_news :: ![NewsIdHashed]
+  , _setIsPublished_isPublished :: !Bool
+  }
+  deriving (Generic)
+
+processRecords [''Image, ''InsertNews, ''NewsTitle, ''NewsText, ''NewsIdHashed, ''SetIsPublished, ''SelectedNews, ''SelectedCategory, ''CategoryName]

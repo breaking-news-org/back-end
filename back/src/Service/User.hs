@@ -1,29 +1,32 @@
 module Service.User where
 
 import Control.Lens.Extras (is)
+import Control.Monad (forM)
 import Control.Monad.Logger.Aeson
 import Data.Aeson.Text (encodeToLazyText)
 import Effectful
+import External.Passwords (Passwords, hashPassword)
 import Persist.Effects.User
 import Service.Effects.User
 import Service.Prelude
 import Service.Types.User
 
-runUserService :: (UserRepo :> es, Logger :> es) => Eff (UserService : es) a -> Eff es a
+runUserService :: (Passwords :> es, UserRepo :> es, Logger :> es) => Eff (UserService : es) a -> Eff es a
 runUserService = interpret $ \_ -> \case
   ServiceRegister UserRegisterForm{..} -> do
     user <- getUserByUserName _userRegisterForm_userName
     if is _Just user
-      -- don't need to remove a session here
+      then -- don't need to remove a session here
       -- because a user may have tried to register mistakenly
-      then pure $ Left UserExists
+        pure $ Left UserExists
       else do
+        hashedPassword <- hashPassword _userRegisterForm_password
         newUser <-
           repoInsertUser $
             -- TODO hash usernames
             InsertUser
               { _insertUser_userName = _userRegisterForm_userName
-              , _insertUser_hashedPassword = hashPassword _userRegisterForm_password
+              , _insertUser_hashedPassword = hashedPassword
               , _insertUser_authorName = _userRegisterForm_authorName
               , _insertUser_role = RoleUser
               }
@@ -42,23 +45,25 @@ runUserService = interpret $ \_ -> \case
     case sessionUser of
       Nothing -> pure $ Left SessionDoesNotExist
       Just (session, user) -> do
-        if session._session_lastAccessTokenId > _refreshToken_id
+        if session._session_tokenId > _refreshToken_id
           then pure $ Left SessionHasNewerRefreshTokenId
           else do
             repoSessionUpdateTokenId _refreshToken_sessionId newTokenExpiresAt
             pure $ Right (_refreshToken_id + 1, user)
   ServiceSetAdmins admins -> do
-    repoUpdateAdmins (admins <&> (\Admin{..} -> (_admin_userName, hashPassword _admin_password)))
+    admins' <- forM admins $ \Admin{..} -> (_admin_userName,) <$> hashPassword _admin_password
+    repoUpdateAdmins admins'
   ServiceUnRegister sessionId -> do
     repoRemoveUser sessionId
 
-getRegisteredUser :: (UserRepo :> es, Logger :> es) => UserName -> Password -> Eff es (Either RegisteredUserError DBUser)
+getRegisteredUser :: (Passwords :> es, UserRepo :> es, Logger :> es) => UserName -> Password -> Eff es (Either RegisteredUserError DBUser)
 getRegisteredUser name password = do
+  hashedPassword <- hashPassword password
   user <-
     repoSelectRegisteredUser $
       SelectUser
         { _selectUser_userName = name
-        , _selectUser_hashedPassword = hashPassword password
+        , _selectUser_hashedPassword = hashedPassword
         }
   withLogger $ logDebug $ "Get registered user: " :# ["user" .= encodeToLazyText user]
   pure user
@@ -68,7 +73,3 @@ getUserByUserName userName = do
   user <- repoSelectUserByUserName userName
   withLogger $ logDebug $ "Get registered user: " :# ["user" .= encodeToLazyText user]
   pure user
-
--- TODO generate a salt, and calculate sha512(salt <> password)
-hashPassword :: Password -> HashedPassword
-hashPassword (Password p) = HashedPassword $ encodeUtf8 p

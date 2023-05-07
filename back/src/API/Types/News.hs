@@ -14,7 +14,7 @@ import API.TH (deriveNewtypeInstances', makeRecordToSchemaTypes, makeSumToSchema
 import API.Types.User (AuthorName (..), CategoryId (..))
 import Common.Prelude (Text)
 import Data.Default (Default)
-import Service.Types.News (CreateNews (..), CreatedAt (..), CreatedSince (..), CreatedUntil (..), Image (..), Images, NewsIdHashed (..), NewsText (..), NewsTitle (..), SelectedNews (..), SetIsPublished)
+import Service.Types.News (CreateNews (..), CreatedAt (..), CreatedSince (..), CreatedUntil (..), Image (..), Images, NewsIdHashed (..), NewsText (..), NewsTitle (..), SelectedNews (..), SetIsPublished, SelectedCategory, CategoryName)
 
 data EditNews = EditNews
   { _editNews_id :: Int
@@ -38,9 +38,9 @@ data QueryParams = QueryParams
 
 instance Default QueryParams
 
-makeSumToSchemaTypes [''CreatedAt, ''CreatedSince, ''CreatedUntil, ''NewsText, ''NewsTitle, ''NewsIdHashed, ''CategoryId]
+makeSumToSchemaTypes [''CreatedAt, ''CreatedSince, ''CreatedUntil, ''NewsText, ''NewsTitle, ''NewsIdHashed, ''CategoryId, ''CategoryName]
 
-makeRecordToSchemaTypes [''SelectedNews, ''Image, ''SetIsPublished]
+makeRecordToSchemaTypes [''SelectedNews, ''Image, ''SetIsPublished, ''SelectedCategory]
 
 processRecordApiTypes [''EditNews, ''CreateNews, ''QueryParams]
 

@@ -1,6 +1,6 @@
 module Server.Server (Server, runServerEffect, startServer, getWaiApplication, writeJWK) where
 
-import API.Endpoints.API1.News as ApiNews (API (API, create, get), publish)
+import API.Endpoints.API1.News as ApiNews (API (API, create, get), CategoriesAPI (..), categories, publish)
 import API.Endpoints.API1.Root as API1 (API (API, news, user))
 import API.Endpoints.API1.User as ApiUser (API (..))
 import API.Prelude (NoContent (NoContent), secondsToNominalDiffTime)
@@ -13,6 +13,7 @@ import Controller.Effects.News (NewsController)
 import Controller.Effects.User (UserController)
 import Controller.News qualified as NewsController
 import Controller.Types.User (JWKSettings (..))
+import Controller.User
 import Controller.User qualified as UserController
 import Crypto.JOSE (JWK, KeyMaterialGenParam (..), genJWK)
 import Data.Aeson qualified
@@ -36,7 +37,6 @@ import Servant.Server.Generic (AsServerT, genericServeTWithContext)
 import Servant.Server.Named ()
 import Servant.Server.Record ()
 import Server.Config (App (..), JWTParameters (..), Loader, Web (_web_port), getConfig)
-import Controller.User
 
 -- wire up all controllers here
 
@@ -85,8 +85,6 @@ getJWKSettings = do
   jwk <- getConfig id
   pure JWKSettings{_jwkSettings_jwk = jwk, _jwkSettings_jwtLifetimeSeconds = lifetime_}
 
-
-
 type instance AddSetCookieApi (NamedRoutes api) = AddSetCookieApi (ToServantApi api)
 instance
   {-# OVERLAPS #-}
@@ -123,6 +121,10 @@ getWaiApplication' jwkSettings = do
                         { create = withAccessToken token NewsController.create
                         , get = withAccessToken token NewsController.get
                         , publish = withAccessToken token NewsController.setIsPublished
+                        , categories =
+                            ApiNews.CategoriesAPI
+                              { get = NewsController.getCategories
+                              }
                         }
                   }
             }
