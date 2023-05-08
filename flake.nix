@@ -264,7 +264,9 @@
                 ${mkBin scripts.testWriteDigest}
               '';
             };
-          });
+          }) // {
+            inherit (mkFlakesTools [ "." ]) updateLocks pushToCachix;
+          };
 
         tools = [
           ghcid
@@ -309,7 +311,6 @@
             extensions = { inherit (extensions) nix haskell misc github markdown kubernetes python typescript; };
             runtimeDependencies = tools;
           };
-          inherit (mkFlakesTools [ "." ]) updateLocks pushToCachix;
 
           writeWorkflows = import ./nix-files/workflows.nix {
             inherit (inputs) workflows;

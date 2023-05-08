@@ -2,12 +2,10 @@
 let
   inherit (workflows.functions.${system}) writeWorkflow expr mkAccessors genAttrsId run;
   inherit (workflows.configs.${system}) steps os oss;
-  job1 = "_1_update_flake_locks";
-  job2 = "_2_push_to_cachix";
-  job3 = "_3_push_to_docker_hub";
-  job4 = "_4_gen_openapi3_specification";
-  job5 = "_5_build_deploy_gh_pages";
-  job6 = "_6_write_image_digests";
+  job1 = "_1_push_to_cachix";
+  job2 = "_2_push_to_docker_hub";
+  job3 = "_3_extra_commit";
+  job4 = "_4_build_deploy_gh_pages";
   names = mkAccessors {
     matrix.os = "";
     matrix.scriptName = genAttrsId [
@@ -56,18 +54,7 @@ let
     };
     jobs = {
       "${job1}" = {
-        name = "Update flake locks";
-        runs-on = os.ubuntu-20;
-        steps = [
-          steps.checkout
-          steps.installNix
-          steps.configGitAsGHActions
-          steps.updateLocksAndCommit
-        ];
-      };
-      "${job2}" = {
         name = "Push to cachix";
-        # needs = job1;
         strategy.matrix.os = oss;
         runs-on = expr names.matrix.os;
         steps = [
@@ -77,9 +64,8 @@ let
           steps.pushFlakesToCachix
         ];
       };
-      "${job3}" = {
+      "${job2}" = {
         name = "Push ${expr names.matrix.scriptName} to Docker Hub";
-        # needs = job1;
         runs-on = os.ubuntu-20;
         strategy = {
           matrix = {
@@ -103,23 +89,45 @@ let
           }
         ];
       };
-      "${job4}" = {
-        name = "Generate OpenAPI3 specification for the server";
-        # needs = job1;
+      "${job3}" = {
+        name = "Extra commit";
+        needs = [ job2 ];
         runs-on = os.ubuntu-20;
         steps = [
           steps.checkout
           steps.installNix
           steps.configGitAsGHActions
           {
-            name = "Generate specification";
-            run = run.nixRunAndCommit scripts.genOpenApi3.pname "update OpenAPI3 spec";
+            name = "Update flake locks";
+            run = ''nix run .#${scripts.updateLocks.pname}'';
+          }
+          {
+            name = "Generate OpenAPI3 specification for the server";
+            run = ''nix run .#${scripts.genOpenApi3.pname}'';
+          }
+          {
+            name = "Write Docker image digests";
+            env = {
+              DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
+            };
+            run = ''nix run .#${scripts.writeDigests.pname}'';
+          }
+          {
+            name = "Extra commit";
+            run = ''
+              git commit -a \
+               -m "action: extra" \
+               -m "- Update flake locks"
+               -m "- Generate OpenAPI3 specification for the server" \
+               -m "- Write Docker image digests" \
+               && git push || echo ""
+            '';
           }
         ];
       };
-      "${job5}" = {
+      "${job4}" = {
         name = "Build and deploy GH Pages";
-        needs = job4;
+        needs = job3;
         environment = {
           name = "github-pages";
           url = expr "steps.deployment.outputs.page_url";
@@ -143,23 +151,6 @@ let
             name = "Deploy to GitHub Pages";
             id = "deployment";
             uses = "actions/deploy-pages@v2";
-          }
-        ];
-      };
-      "${job6}" = {
-        name = "Push ${expr names.matrix.scriptName} to Docker Hub";
-        needs = [ job3 ];
-        runs-on = os.ubuntu-20;
-        steps = [
-          steps.checkout
-          steps.installNix
-          steps.configGitAsGHActions
-          {
-            name = "Write digests";
-            env = {
-              DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
-            };
-            run = run.nixRunAndCommit scripts.writeDigests.pname "Write image digests";
           }
         ];
       };
