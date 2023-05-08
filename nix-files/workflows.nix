@@ -42,10 +42,6 @@ let
   workflow = {
     name = "CI";
     inherit on;
-    concurrency = {
-      group = "pages";
-      cancel-in-progress = false;
-    };
     # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
     permissions = {
       contents = "write";
@@ -117,7 +113,7 @@ let
             run = ''
               git commit -a \
                -m "action: extra" \
-               -m "- Update flake locks"
+               -m "- Update flake locks" \
                -m "- Generate OpenAPI3 specification for the server" \
                -m "- Write Docker image digests" \
                && git push || echo ""
