@@ -28,7 +28,7 @@ data DB = DB
 
 data Web = Web
   { _web_port :: Int
-  , _web_pageSize :: Int64
+  , _web_pageSize :: Int
   }
   deriving (Show, Generic)
 

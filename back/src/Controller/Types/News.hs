@@ -3,5 +3,5 @@ module Controller.Types.News (
   module Service.Types.News,
 ) where
 
-import API.Types.News (QueryParams (..))
-import Service.Types.News (Filters (..), SelectedNews (..))
+import API.Types.News
+import Service.Types.News

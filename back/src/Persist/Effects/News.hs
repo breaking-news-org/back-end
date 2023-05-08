@@ -2,13 +2,13 @@ module Persist.Effects.News where
 
 import Effectful (Effect)
 import Effectful.TH (makeEffect)
-import Persist.Types.News (Filters, InsertNews, NewsIdHashed, SelectedNews, SetIsPublished, UnavailableNews, SelectedCategories)
+import Persist.Types.News (CategoryFilters, InsertNewsItem, NewsFilters, NewsItem, SelectedCategories, SetIsPublished, UnavailableNews, InsertNewsError)
 import Persist.Types.User (Role, UserId)
 
 data NewsRepo :: Effect where
-  RepoInsertNews :: InsertNews -> NewsRepo m NewsIdHashed
-  RepoSelectNews :: UserId -> Filters -> NewsRepo m [SelectedNews]
+  RepoInsertNewsItem :: InsertNewsItem -> NewsRepo m (Either InsertNewsError NewsItem)
+  RepoSelectNews :: UserId -> NewsFilters -> NewsRepo m [NewsItem]
   RepoUpdateIsPublished :: UserId -> Role -> SetIsPublished -> NewsRepo m UnavailableNews
-  RepoSelectCategories :: NewsRepo m SelectedCategories
+  RepoSelectCategoryIds :: CategoryFilters -> NewsRepo m SelectedCategories
 
 makeEffect ''NewsRepo

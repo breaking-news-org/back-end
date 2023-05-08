@@ -1,12 +1,13 @@
 module Service.Types.News (
   CreateNews (..),
+  EditNews (..),
   module Persist.Types.News,
   module Persist.Types.User,
 ) where
 
-import Common.Prelude (Generic)
-import Persist.Types.News (CategoryName, Filters (..), Image (..), Images, NewsIdHashed (..), NewsText (..), NewsTitle (..), SelectedCategories, SelectedCategory, SelectedNews (..), SetIsPublished (..), UnavailableNews)
-import Persist.Types.User (AuthorName (..), CategoryId (..), CreatedAt (..), CreatedSince (..), CreatedUntil (..), UserId (..))
+import Common.Prelude (Generic, Text)
+import Persist.Types.News
+import Persist.Types.User
 
 data CreateNews = CreateNews
   { _createNews_title :: !NewsTitle
@@ -14,5 +15,13 @@ data CreateNews = CreateNews
   , _createNews_category :: !CategoryId
   , _createNews_images :: !Images
   , _createNews_isPublished :: Bool
+  }
+  deriving (Generic)
+
+data EditNews = EditNews
+  { _editNews_id :: !Int
+  , _editNews_text :: !Text
+  , _editNews_category :: !Int
+  , _editNews_images :: !Images
   }
   deriving (Generic)

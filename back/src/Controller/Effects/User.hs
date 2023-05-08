@@ -10,6 +10,6 @@ data UserController :: Effect where
   ControllerUnRegister :: RefreshToken -> UserController m (Either ServerError ())
   ControllerLogin :: JWKSettings -> UserLoginForm -> UserController m (Either ServerError (Either RegisteredUserError FullToken))
   ControllerRotateRefreshToken :: JWKSettings -> RefreshToken -> UserController m (Either ServerError (Either RotateError FullToken))
-  ControllerUpdateAdmins :: [Admin] -> UserController m ()
+  ControllerUpdateAdmins :: [Admin] -> UserController m (Either ServerError ())
 
 type instance DispatchOf UserController = 'Dynamic

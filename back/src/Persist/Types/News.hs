@@ -4,19 +4,19 @@
 module Persist.Types.News where
 
 import API.Prelude (Generic)
-import Common.Prelude (Text)
-import Common.TH (processRecords)
+import Common.Prelude (Text, UTCTime)
+import Common.TH (processRecords, processSums)
+import Data.Default
 import Data.String (IsString)
 import Database.Esqueleto.Experimental (PersistField, PersistFieldSql, SqlString)
-import Persist.Types.User (AuthorName, CategoryId, CreatedAt, CreatedSince, CreatedUntil, UserId)
-import Servant.API (FromHttpApiData, ToHttpApiData)
+import Persist.Types.User (AuthorName, CreatedAt, UserId)
 
 newtype Image = Image Text
   deriving (Show, Generic, Eq, Ord)
 
 type Images = [Image]
 
-data InsertNews = InsertNews
+data InsertNewsItem = InsertNewsItem
   { _insertNews_title :: !NewsTitle
   , _insertNews_createdAt :: !CreatedAt
   , _insertNews_authorId :: !UserId
@@ -27,66 +27,108 @@ data InsertNews = InsertNews
   }
   deriving (Generic)
 
-data SelectedNews = SelectedNews
-  { _selectNews_id :: !Int
-  , _selectNews_title :: !NewsTitle
-  , _selectNews_createdAt :: !CreatedAt
-  , _selectNews_authorName :: !AuthorName
-  , _selectNews_category :: !CategoryId
-  , _selectNews_text :: !NewsText
-  , _selectNews_images :: !Images
-  , _selectNews_isPublished :: !Bool
+type CategoryIds = [CategoryId]
+
+data NewsItem = NewsItem
+  { _newsItem_id :: !Int
+  , _newsItem_title :: !NewsTitle
+  , _newsItem_createdAt :: !CreatedAt
+  , _newsItem_authorName :: !AuthorName
+  , _newsItem_category :: !CategoryId
+  , _newsItem_text :: !NewsText
+  , _newsItem_images :: !Images
+  , _newsItem_isPublished :: !Bool
   }
   deriving (Generic, Show)
 
-data SelectedCategory = SelectedCategory
+data SelectedCategoryItem = SelectedCategoryItem
   { _selectedCategory_id :: CategoryId
   , _selectedCategory_name :: CategoryName
   , _selectedCategory_parent :: Maybe CategoryId
   }
   deriving (Generic)
 
-data Filters = Filters
-  { _filters_createdUntil :: !(Maybe CreatedUntil)
-  , _filters_createdSince :: !(Maybe CreatedSince)
-  , _filters_createdAt :: !(Maybe CreatedAt)
-  , _filters_authorName :: !(Maybe AuthorName)
+data NewsFilters = NewsFilters
+  { _newsFilters_createdUntil :: !(Maybe CreatedUntil)
+  , _newsFilters_createdSince :: !(Maybe CreatedSince)
+  , _newsFilters_authorName :: !(Maybe AuthorName)
   -- ^ get news by author name
   --
   -- a user can get her news when querying by her name
-  , _filters_category :: !(Maybe CategoryId)
-  , _filters_titleLike :: !(Maybe NewsTitle)
-  , _filters_textLike :: !(Maybe NewsText)
-  , _filters_block :: !(Maybe Int)
-  , _filters_showUnpublished :: !(Maybe Bool)
+  , _newsFilters_categoriesInclude :: CategoryIds
+  , _newsFilters_categoriesExclude :: CategoryIds
+  , _newsFilters_titleLike :: !(Maybe NewsTitle)
+  , _newsFilters_textLike :: !(Maybe NewsText)
+  , _newsFilters_showUnpublished :: !(Maybe Bool)
+  , _newsFilters_showPublished :: !(Maybe Bool)
   }
-  deriving (Generic)
+  deriving (Generic, Default)
+
+data CategoryFilters = CategoryFilters
+  { _categoryFilters_include :: CategoryIds
+  , _categoryFilters_exclude :: CategoryIds
+  }
+  deriving (Generic, Default)
 
 newtype CategoryName = CategoryName Text
   deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString)
 
 newtype NewsTitle = NewsTitle Text
   deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData, Semigroup)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, Semigroup)
 
 newtype NewsText = NewsText Text
   deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData, Semigroup)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, Semigroup)
 
 -- | News id is hashed to prevent brute-forcing all news
-newtype NewsIdHashed = NewsIdHashed Text
+newtype NewsId = NewsId Int
   deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql, IsString, SqlString, FromHttpApiData, ToHttpApiData)
+  deriving newtype (Num, Integral, Enum, Real, PersistField, Eq, Ord, Show, PersistFieldSql)
 
-type UnavailableNews = [NewsIdHashed]
+newtype CategoryId = CategoryId Int
+  deriving (Generic)
+  deriving newtype (Num, Integral, Enum, Real, PersistField, Eq, Ord, Show, PersistFieldSql)
 
-type SelectedCategories = [SelectedCategory]
+newtype CreatedSince = CreatedSince UTCTime
+  deriving (Generic)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
+
+newtype CreatedUntil = CreatedUntil UTCTime
+  deriving (Generic)
+  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
+
+type UnavailableNews = [NewsId]
+
+type SelectedCategories = [SelectedCategoryItem]
+
+newtype InsertNewsError
+  = -- | An author unregistered, but then decided to create a news by a not-yet-expired access token
+    AuthorDoesNotExist UserId
+  deriving (Generic, Show)
 
 data SetIsPublished = SetIsPublished
-  { _setIsPublished_news :: ![NewsIdHashed]
+  { _setIsPublished_news :: ![NewsId]
   , _setIsPublished_isPublished :: !Bool
   }
   deriving (Generic)
 
-processRecords [''Image, ''InsertNews, ''NewsTitle, ''NewsText, ''NewsIdHashed, ''SetIsPublished, ''SelectedNews, ''SelectedCategory, ''CategoryName]
+processRecords
+  [ ''Image
+  , ''InsertNewsItem
+  , ''NewsTitle
+  , ''NewsText
+  , ''NewsId
+  , ''SetIsPublished
+  , ''NewsItem
+  , ''SelectedCategoryItem
+  , ''CategoryName
+  , ''CategoryId
+  , ''CreatedUntil
+  , ''CreatedSince
+  ]
+
+processSums
+  [ ''InsertNewsError
+  ]

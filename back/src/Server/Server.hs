@@ -74,7 +74,10 @@ runServerEffect = interpret $ \_ -> \case
     waiApp <- getWaiApplication' =<< getJWKSettings
     withLogger . logInfo . fromString $ "listening at port " <> show port
     -- TODO run when database ready
-    updateAdmins admins
+    adminsUpdated <- runExceptT $ updateAdmins admins
+    case adminsUpdated of
+      Left err -> error $ show err
+      Right _ -> pure ()
     liftIO $ Warp.run port waiApp
   GetWaiApplication -> getWaiApplication' =<< getJWKSettings
 
@@ -119,7 +122,7 @@ getWaiApplication' jwkSettings = do
                   , news = \token ->
                       ApiNews.API
                         { create = withAccessToken token NewsController.create
-                        , get = withAccessToken token NewsController.get
+                        , get = withAccessToken token NewsController.getNews
                         , publish = withAccessToken token NewsController.setIsPublished
                         , categories =
                             ApiNews.CategoriesAPI

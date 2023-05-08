@@ -42,7 +42,7 @@ import Servant.Client.Internal.HttpClient qualified as I
 import Servant.Client.Named ()
 import Servant.Client.Record ()
 import Server.Config
-import Service.Prelude (encodeUtf8, (&), (?~))
+import Service.Prelude (encodeUtf8, (&), (?~), (.~))
 import Service.Types.User (Password (..), RegisterError (UserExists))
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -54,7 +54,7 @@ unit_main =
   defaultMain
     ( testGroup
         "Integration Tests"
-        [ authorizeCreateNewsSelectedNews
+        [ authorizeCreateNewsNewsItem
         ]
     )
     `catch` ( \e -> do
@@ -118,14 +118,14 @@ registerUser =
         , _userRegisterForm_authorName = "author"
         }
 
--- admin 
+-- admin
 
 -- TODO admin user removes test user
 -- test and admin are given in a config
 
 -- full workflow
-authorizeCreateNewsSelectedNews :: TestTree
-authorizeCreateNewsSelectedNews = testCase "Authorize, create news, get that news" do
+authorizeCreateNewsNewsItem :: TestTree
+authorizeCreateNewsNewsItem = testCase "Authorize, create news, get that news" do
   -- get config
   testConf <- runEff $ runLoader @TestConf _CONFIG_FILE do
     getConfig @TestConf id
@@ -161,7 +161,7 @@ authorizeCreateNewsSelectedNews = testCase "Authorize, create news, get that new
               , _createNews_category = -1
               , _createNews_isPublished = True
               }
-      ns <- withClientEnv $ get (def & #_queryParams_category ?~ -1)
+      ns <- withClientEnv $ get def
       case ns of
         Left err -> error $ show err
         Right ns_ -> BSC.putStrLn $ encode ns_

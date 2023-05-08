@@ -13,8 +13,8 @@ import Servant.Auth.Server (defaultJWTSettings, makeJWT)
 import Service.Effects.User (UserService, serviceCreateSession, serviceLogin, serviceRegister, serviceRotateRefreshToken, serviceSetAdmins, serviceUnRegister)
 import Service.Types.User
 
-updateAdmins :: UserController :> es => [Admin] -> Eff es ()
-updateAdmins = send . ControllerUpdateAdmins
+updateAdmins :: UserController :> es => [Admin] -> ExceptT ServerError (Eff es) ()
+updateAdmins = ExceptT . send . ControllerUpdateAdmins
 
 unRegister :: UserController :> es => RefreshToken -> ExceptT ServerError (Eff es) ()
 unRegister = ExceptT . send . ControllerUnRegister
@@ -68,7 +68,7 @@ runUserController = interpret $ \_ -> \case
             user
   ControllerUpdateAdmins admins -> do
     -- TODO valid?
-    serviceSetAdmins admins
+    pure <$> serviceSetAdmins admins
   ControllerUnRegister RefreshToken{..} -> do
     pure <$> serviceUnRegister _refreshToken_sessionId
 

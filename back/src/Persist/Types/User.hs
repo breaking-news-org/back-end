@@ -105,10 +105,6 @@ data Admin = Admin
   }
   deriving (Show, Generic)
 
-newtype CategoryId = CategoryId Int
-  deriving (Generic)
-  deriving newtype (Num, Integral, Enum, Real, PersistField, Eq, Ord, Show, PersistFieldSql)
-
 newtype TokenId = TokenId Int
   deriving (Generic)
   deriving newtype (Num, PersistField, Eq, Ord, Show, PersistFieldSql)
@@ -125,14 +121,6 @@ newtype CreatedAt = CreatedAt UTCTime
   deriving (Generic)
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
 
-newtype CreatedSince = CreatedSince UTCTime
-  deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
-
-newtype CreatedUntil = CreatedUntil UTCTime
-  deriving (Generic)
-  deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
-
 processRecords
   [ ''DBUser
   , ''ExpiresAt
@@ -140,11 +128,8 @@ processRecords
   , ''UserId
   , ''UserName
   , ''TokenId
-  , ''CategoryId
   , ''Role
   , ''CreatedAt
-  , ''CreatedUntil
-  , ''CreatedSince
   , ''InsertUser
   , ''AuthorName
   , ''HashedPassword
