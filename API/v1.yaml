@@ -33,6 +33,20 @@ components:
       example: 2016-07-22T00:00:00Z
       format: yyyy-mm-ddThh:MM:ssZ
       type: string
+    Either_InsertNewsError_NewsItem:
+      oneOf:
+      - properties:
+          Left:
+            $ref: '#/components/schemas/InsertNewsError'
+        required:
+        - Left
+        type: object
+      - properties:
+          Right:
+            $ref: '#/components/schemas/NewsItem'
+        required:
+        - Right
+        type: object
     Either_RegisterError_FullToken:
       oneOf:
       - properties:
@@ -87,41 +101,15 @@ components:
       type: object
     Image:
       type: string
-    NewsIdHashed:
-      type: string
-    NewsText:
-      type: string
-    NewsTitle:
-      type: string
-    Password:
-      type: string
-    RegisterError:
-      enum:
-      - UserExists
-      type: string
-    RegisteredUserError:
-      enum:
-      - WrongPassword
-      - UserDoesNotExist
-      type: string
-    RotateError:
-      enum:
-      - SessionDoesNotExist
-      - SessionHasNewerRefreshTokenId
-      type: string
-    SelectedCategory:
-      properties:
-        id:
-          $ref: '#/components/schemas/CategoryId'
-        name:
-          $ref: '#/components/schemas/CategoryName'
-        parent:
-          $ref: '#/components/schemas/CategoryId'
-      required:
-      - id
-      - name
-      type: object
-    SelectedNews:
+    InsertNewsError:
+      maximum: 9223372036854775807
+      minimum: -9223372036854775808
+      type: integer
+    NewsId:
+      maximum: 9223372036854775807
+      minimum: -9223372036854775808
+      type: integer
+    NewsItem:
       properties:
         authorName:
           $ref: '#/components/schemas/AuthorName'
@@ -153,13 +141,45 @@ components:
       - images
       - isPublished
       type: object
+    NewsText:
+      type: string
+    NewsTitle:
+      type: string
+    Password:
+      type: string
+    RegisterError:
+      enum:
+      - UserExists
+      type: string
+    RegisteredUserError:
+      enum:
+      - WrongPassword
+      - UserDoesNotExist
+      type: string
+    RotateError:
+      enum:
+      - SessionDoesNotExist
+      - SessionHasNewerRefreshTokenId
+      type: string
+    SelectedCategoryItem:
+      properties:
+        id:
+          $ref: '#/components/schemas/CategoryId'
+        name:
+          $ref: '#/components/schemas/CategoryName'
+        parent:
+          $ref: '#/components/schemas/CategoryId'
+      required:
+      - id
+      - name
+      type: object
     SetIsPublished:
       properties:
         isPublished:
           type: boolean
         news:
           items:
-            $ref: '#/components/schemas/NewsIdHashed'
+            $ref: '#/components/schemas/NewsId'
           type: array
       required:
       - news
@@ -203,15 +223,34 @@ openapi: 3.0.0
 paths:
   /api1/news/categories/get:
     get:
+      parameters:
+      - in: query
+        name: include
+        schema:
+          items:
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+            type: integer
+          type: array
+      - in: query
+        name: exclude
+        schema:
+          items:
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+            type: integer
+          type: array
       responses:
         '200':
           content:
             application/json;charset=utf-8:
               schema:
                 items:
-                  $ref: '#/components/schemas/SelectedCategory'
+                  $ref: '#/components/schemas/SelectedCategoryItem'
                 type: array
           description: ''
+        '400':
+          description: Invalid `exclude` or `include`
       security:
       - JWT: []
   /api1/news/create:
@@ -226,7 +265,7 @@ paths:
           content:
             application/json;charset=utf-8:
               schema:
-                $ref: '#/components/schemas/NewsIdHashed'
+                $ref: '#/components/schemas/Either_InsertNewsError_NewsItem'
           description: ''
         '400':
           description: Invalid `body`
@@ -248,23 +287,26 @@ paths:
           format: yyyy-mm-ddThh:MM:ssZ
           type: string
       - in: query
-        name: createdAt
-        required: false
-        schema:
-          format: yyyy-mm-ddThh:MM:ssZ
-          type: string
-      - in: query
         name: authorName
         required: false
         schema:
           type: string
       - in: query
-        name: category
-        required: false
+        name: categoriesInclude
         schema:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
+          items:
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+            type: integer
+          type: array
+      - in: query
+        name: categoriesExclude
+        schema:
+          items:
+            maximum: 9223372036854775807
+            minimum: -9223372036854775808
+            type: integer
+          type: array
       - in: query
         name: titleLike
         required: false
@@ -276,24 +318,28 @@ paths:
         schema:
           type: string
       - in: query
-        name: block
+        name: showUnpublished
         required: false
         schema:
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          type: integer
+          type: boolean
+      - in: query
+        name: showPublished
+        required: false
+        schema:
+          type: boolean
       responses:
         '200':
           content:
             application/json;charset=utf-8:
               schema:
                 items:
-                  $ref: '#/components/schemas/SelectedNews'
+                  $ref: '#/components/schemas/NewsItem'
                 type: array
           description: ''
         '400':
-          description: Invalid `block` or `textLike` or `titleLike` or `category`
-            or `authorName` or `createdAt` or `createdSince` or `createdUntil`
+          description: Invalid `showPublished` or `showUnpublished` or `textLike`
+            or `titleLike` or `categoriesExclude` or `categoriesInclude` or `authorName`
+            or `createdSince` or `createdUntil`
       security:
       - JWT: []
   /api1/news/set-published:
@@ -309,7 +355,7 @@ paths:
             application/json;charset=utf-8:
               schema:
                 items:
-                  $ref: '#/components/schemas/NewsIdHashed'
+                  $ref: '#/components/schemas/NewsId'
                 type: array
           description: ''
         '400':
