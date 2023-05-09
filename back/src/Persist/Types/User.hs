@@ -14,6 +14,7 @@ import Database.Esqueleto.Experimental (PersistField (..), PersistFieldSql (sqlT
 
 newtype Password = Password Text
   deriving (Show, Eq, Generic)
+  deriving newtype (IsString)
 
 newtype HashedPassword = HashedPassword Text
   deriving (Generic)
@@ -59,7 +60,7 @@ data InsertUser = InsertUser
 
 data SelectUser = SelectUser
   { _selectUser_userName :: !UserName
-  , _selectUser_hashedPassword :: !HashedPassword
+  , _selectUser_password :: !Password
   }
   deriving (Show, Eq, Generic)
 

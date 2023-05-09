@@ -109,7 +109,7 @@ newtype InsertNewsError
   deriving (Generic, Show)
 
 data SetIsPublished = SetIsPublished
-  { _setIsPublished_news :: ![NewsId]
+  { _setIsPublished_newsIds :: ![NewsId]
   , _setIsPublished_isPublished :: !Bool
   }
   deriving (Generic)

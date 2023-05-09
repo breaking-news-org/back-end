@@ -14,10 +14,12 @@ import API.Prelude (encode)
 import API.Root (API, Routes (..))
 import API.Types.Instances ()
 import API.Types.News
-import API.Types.User (FullToken (..), UserRegisterForm (..))
+import API.Types.User (FullToken (..), UserLoginForm (..), UserRegisterForm (..))
+import Common.Prelude (MonadIO (..))
 import Control.Exception (catch, throwIO)
 import Control.Monad (void)
 import Control.Monad.Free (Free (..))
+import Controller.User (rotateRefreshToken)
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as BSC
 import Data.Data (Proxy (..))
@@ -42,8 +44,8 @@ import Servant.Client.Internal.HttpClient qualified as I
 import Servant.Client.Named ()
 import Servant.Client.Record ()
 import Server.Config
-import Service.Prelude (encodeUtf8, (&), (?~), (.~))
-import Service.Types.User (Password (..), RegisterError (UserExists))
+import Service.Prelude (encodeUtf8, (&), (.~), (?~))
+import Service.Types.User (Password (..), RegisterError (..), RegisteredUserError (..))
 import Test.Tasty
 import Test.Tasty.HUnit
 import Text.Pretty.Simple (pPrint)
@@ -80,7 +82,7 @@ instance (HasJWT auths, HasClient ClientFree api) => HasClient ClientFree (Auth 
   type Client ClientFree (Auth auths a :> api) = Token -> Client ClientFree api
 
   clientWithRoute :: (HasJWT auths, HasClient ClientFree api) => Proxy ClientFree -> Proxy (Auth auths a :> api) -> Request -> Client ClientFree (Auth auths a :> api)
-  clientWithRoute (Proxy :: Proxy ClientFree) _ req (Token token) =
+  clientWithRoute (clientError :: Proxy ClientFree) _ req (Token token) =
     clientWithRoute
       (Proxy :: Proxy ClientFree)
       (Proxy :: Proxy api)
@@ -91,7 +93,7 @@ instance (HasJWT auths, HasClient ClientFree api) => HasClient ClientFree (Auth 
 Routes
   { api1 =
     API.Endpoints.API1.Root.API
-      { user = API.Endpoints.API1.User.API{register}
+      { user = API.Endpoints.API1.User.API{register, login, unregister, rotateRefreshToken}
       , news
       }
   } = client api
@@ -105,23 +107,26 @@ _CONFIG_FILE = "TEST_CONFIG_FILE"
 -- TODO create admin in a database on server start
 -- server ensures only the admins from the config are in a db
 
-registerUser :: ClientFree FullToken
-registerUser =
-  ( \case
-      Left UserExists -> error "user exists"
-      Right fullToken -> fullToken
-  )
-    <$> register
-      UserRegisterForm
-        { _userRegisterForm_userName = "testUser1"
-        , _userRegisterForm_password = Password "abcdef"
-        , _userRegisterForm_authorName = "author"
-        }
+testUserRegisterForm :: UserRegisterForm
+testUserRegisterForm =
+  UserRegisterForm
+    { _userRegisterForm_userName = "testUser1"
+    , _userRegisterForm_password = "testPassword"
+    , _userRegisterForm_authorName = "testAuthor1"
+    }
 
--- admin
+registerUser :: ClientFree (Either RegisterError FullToken)
+registerUser = register testUserRegisterForm
 
--- TODO admin user removes test user
--- test and admin are given in a config
+testUserLoginForm :: UserLoginForm
+testUserLoginForm =
+  UserLoginForm
+    { _userLoginForm_userName = testUserRegisterForm._userRegisterForm_userName
+    , _userLoginForm_password = testUserRegisterForm._userRegisterForm_password
+    }
+
+loginUser :: ClientFree (Either RegisteredUserError FullToken)
+loginUser = login testUserLoginForm
 
 -- full workflow
 authorizeCreateNewsNewsItem :: TestTree
@@ -147,9 +152,25 @@ authorizeCreateNewsNewsItem = testCase "Authorize, create news, get that news" d
               Pure n -> pPrint n >> pure (pure n)
               _ -> error "Error: didn't get a response"
   res <- withClientEnv registerUser
-  case res of
-    Left err -> putStrLn [i|Error: #{err}|]
-    Right token -> do
+  tokenMaybe <-
+    case res of
+      Left clientError -> putStrLn [i|Client error: #{clientError}|] >> pure Nothing
+      Right registerResult -> do
+        case registerResult of
+          Left registerError -> do
+            putStrLn [i|Register error: #{registerError}|]
+            putStrLn [i|Trying ton login|]
+            loginResult <- withClientEnv loginUser
+            case loginResult of
+              Left clientError -> putStrLn [i|Client error: #{clientError}|] >> pure Nothing
+              Right loginResult' ->
+                case loginResult' of
+                  Left loginError -> putStrLn [i|Login error: #{loginError}|] >> pure Nothing
+                  Right fullToken -> pure $ Just fullToken
+          Right fullToken -> pure $ Just fullToken
+  case tokenMaybe of
+    Nothing -> putStrLn [i|Could not obtain a full token|]
+    Just token -> do
       let API.Endpoints.API1.News.API{get, create} = news (Token (encodeUtf8 token._fullToken_accessToken))
       void $
         withClientEnv $

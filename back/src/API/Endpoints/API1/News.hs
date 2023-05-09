@@ -8,7 +8,7 @@ import Servant.Record (RecordParam)
 data API route = API
   { create :: route :- "create" :> ReqBody '[JSON] CreateNews :> Post '[JSON] (Either InsertNewsError NewsItem)
   , get :: route :- "get" :> RecordParam Drop NewsFilters :> Get '[JSON] [NewsItem]
-  , publish :: route :- "set-published" :> ReqBody '[JSON] SetIsPublished :> Post '[JSON] UnavailableNews
+  , setIsPublished :: route :- "set-is-published" :> ReqBody '[JSON] SetIsPublished :> Post '[JSON] UnavailableNews
   , categories :: route :- "categories" :> NamedRoutes CategoriesAPI
   }
   deriving (Generic)

@@ -13,7 +13,7 @@ import Control.Monad (forM)
 import Control.Monad.Logger.Aeson (Message ((:#)), logDebug, (.=))
 import Data.Coerce (coerce)
 import Data.String.Interpolate (i)
-import Database.Esqueleto.Experimental (Entity (..), From, SqlExpr, SqlQuery, Value (..), asc, in_, innerJoin, just, like, limit, notIn, on, orderBy, selectOne, set, unionAll_, updateCount, valList, withRecursive, (=.), (==.), (||.), type (:&) ((:&)))
+import Database.Esqueleto.Experimental (Entity (..), From, SqlExpr, SqlQuery, Value (..), asc, innerJoin, like, limit, on, orderBy, selectOne, set, updateCount, (=.), (==.), (||.), type (:&) ((:&)))
 import Database.Esqueleto.PostgreSQL.JSON (JSONB (JSONB, unJSONB))
 import External.Logger (Logger, withLogger)
 import Persist.Effects.News (NewsRepo (..))
@@ -30,6 +30,7 @@ mkSqlTrue l f = maybe (val True) f l
 runNewsRepo :: (IOE :> es, Logger :> es, Loader App :> es, SqlBackendPool :> es) => Eff (NewsRepo : es) a -> Eff es a
 runNewsRepo = interpret $ \_ -> \case
   RepoInsertNewsItem insertNewsItem@InsertNewsItem{..} -> do
+    -- TODO insert category
     ((unValue <$>) -> authorName) <-
       withConn $
         selectOne do
@@ -40,27 +41,30 @@ runNewsRepo = interpret $ \_ -> \case
       Nothing -> pure . Left $ AuthorDoesNotExist _insertNews_authorId
       Just (UserName authorName') -> do
         let newsModel = newsToModel insertNewsItem
-        key <- withConn do
-          insert newsModel
+        key <- withConn $ insert newsModel
         withLogger $ logDebug $ "Inserted " :# ["news" .= insertNewsItem]
         pure . Right $ newsFromModel (Entity{entityKey = key, entityVal = newsModel}, Value (AuthorName authorName'))
   RepoSelectNews userId filters@NewsFilters{..} -> do
     now <- liftIO getCurrentTime
     app <- getConfig id
     news <- withConn $ select do
-      categoriesAll <-
-        selectCategories
-          ( CategoryFilters
-              { _categoryFilters_include = _newsFilters_categoriesInclude
-              , _categoryFilters_exclude = _newsFilters_categoriesInclude
-              }
-          )
-      (news :& users :& _) <-
+      -- categoriesAll <-
+      --   selectCategories
+      --     ( CategoryFilters
+      --         { _categoryFilters_include = _newsFilters_categoriesInclude
+      --         , _categoryFilters_exclude = _newsFilters_categoriesInclude
+      --         }
+      --     )
+      -- (news :& users :& _) <-
+      --   from
+      --     $ table @News `innerJoin` table @Users
+      --     `on` (\(news :& users) -> news.authorId ==. users.id)
+      --       `innerJoin` categoriesAll
+      --     `on` (\(news :& _ :& categories) -> news.category ==. categories.id)
+      (news :& users) <-
         from
           $ table @News `innerJoin` table @Users
           `on` (\(news :& users) -> news.authorId ==. users.id)
-            `innerJoin` categoriesAll
-          `on` (\(news :& _ :& categories) -> news.category ==. categories.id)
       let
         thisYear = UTCTime{utctDay = fromGregorian 2023 1 1, utctDayTime = 0}
         createdUntil = news.createdAt L.^. coerce <=. val (filters L.^. #_newsFilters_createdUntil . coerce . non now)
@@ -87,7 +91,7 @@ runNewsRepo = interpret $ \_ -> \case
     pure $ newsFromModel <$> news
   RepoUpdateIsPublished userId userRole SetIsPublished{..} -> do
     withConn $ do
-      affected <- forM _setIsPublished_news $ \x ->
+      affected <- forM _setIsPublished_newsIds $ \x ->
         updateCount $ \p -> do
           set p [NewsIsPublished =. val _setIsPublished_isPublished]
           where_
@@ -97,7 +101,7 @@ runNewsRepo = interpret $ \_ -> \case
                   then val True
                   else p.authorId ==. mkSqlKeyVal userId
             )
-      let unaffected = zip _setIsPublished_news affected ^.. traversed . filtered ((> 0) . snd) . _1
+      let unaffected = zip _setIsPublished_newsIds affected ^.. traversed . filtered ((== 0) . snd) . _1
       pure unaffected
   RepoSelectCategoryIds categoryFilters -> do
     categories <- withConn $ select $ from =<< selectCategories categoryFilters
@@ -114,30 +118,30 @@ runNewsRepo = interpret $ \_ -> \case
 -- checkCategoryId ::  SqlExpr (Value (Key Categories)) -> Maybe []
 
 selectCategories :: CategoryFilters -> SqlQuery (From (SqlExpr (Entity Categories)))
-selectCategories CategoryFilters{..} =
-  withRecursive
-    ( do
-        category <- from $ table @Categories
-        where_ $
-          ( case _categoryFilters_include of
-              [] -> val True
-              x -> category.id `in_` valList (mkSqlKey <$> x)
-          )
-            &&. ( case _categoryFilters_exclude of
-                    [] -> val True
-                    x -> category.id `notIn` valList (mkSqlKey <$> x)
-                )
-        pure category
-    )
-    unionAll_
-    ( \self -> do
-        (categories :& _) <-
-          from
-            $ table @Categories
-              `innerJoin` self
-            `on` (\(categories :& categoriesOld) -> categories.parent ==. just categoriesOld.id)
-        pure categories
-    )
+selectCategories CategoryFilters{..} = pure $ table @Categories
+  -- withRecursive
+  --   ( do
+  --       category <- from $ table @Categories
+  --       where_ $
+  --         ( case _categoryFilters_include of
+  --             [] -> val True
+  --             x -> category.id `in_` valList (mkSqlKey <$> x)
+  --         )
+  --           &&. ( case _categoryFilters_exclude of
+  --                   [] -> val True
+  --                   x -> category.id `notIn` valList (mkSqlKey <$> x)
+  --               )
+  --       pure category
+  --   )
+  --   unionAll_
+  --   ( \self -> do
+  --       (categories :& _) <-
+  --         from
+  --           $ table @Categories
+  --             `innerJoin` self
+  --           `on` (\(categories :& categoriesOld) -> categories.parent ==. just categoriesOld.id)
+  --       pure categories
+  --   )
 
 newsToModel :: InsertNewsItem -> News
 newsToModel InsertNewsItem{..} =

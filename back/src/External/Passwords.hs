@@ -3,8 +3,8 @@
 module External.Passwords where
 
 import Common.Prelude
-import Data.Password.Argon2 qualified as Argon2(checkPassword, hashPassword)
-import Data.Password.Argon2 (PasswordCheck(..), PasswordHash(..), mkPassword)
+import Data.Password.Argon2 (PasswordCheck (..), PasswordHash (..), mkPassword)
+import Data.Password.Argon2 qualified as Argon2 (checkPassword, hashPassword)
 import Effectful.Dispatch.Static (SideEffects (WithSideEffects), StaticRep, evalStaticRep, unsafeEff, unsafeEff_)
 import Persist.Types.User (HashedPassword (..), Password (..))
 
@@ -25,6 +25,12 @@ hashPassword :: Passwords :> es => Password -> Eff es HashedPassword
 hashPassword a = unsafeEff_ $ hashPasswordM a
 
 -- check a password
+
+checkPassword :: Password -> HashedPassword -> Bool
+checkPassword (Password p) (HashedPassword h) =
+  case Argon2.checkPassword (mkPassword p) (PasswordHash h) of
+    PasswordCheckSuccess -> True
+    _ -> False
 
 runPasswords :: IOE :> es => Eff (Passwords : es) a -> Eff es a
 runPasswords = evalStaticRep Passwords

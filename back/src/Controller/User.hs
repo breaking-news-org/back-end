@@ -16,8 +16,8 @@ import Service.Types.User
 updateAdmins :: UserController :> es => [Admin] -> ExceptT ServerError (Eff es) ()
 updateAdmins = ExceptT . send . ControllerUpdateAdmins
 
-unRegister :: UserController :> es => RefreshToken -> ExceptT ServerError (Eff es) ()
-unRegister = ExceptT . send . ControllerUnRegister
+unregister :: UserController :> es => RefreshToken -> ExceptT ServerError (Eff es) ()
+unregister = ExceptT . send . ControllerUnRegister
 
 register :: UserController :> es => JWKSettings -> UserRegisterForm -> ExceptT ServerError (Eff es) (Either RegisterError FullToken)
 register jwkSettings = ExceptT . send . ControllerRegister jwkSettings

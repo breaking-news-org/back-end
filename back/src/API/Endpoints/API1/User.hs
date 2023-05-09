@@ -7,7 +7,7 @@ import Servant.Auth
 data API route = API
   { register :: route :- "register" :> ReqBody '[JSON] UserRegisterForm :> Post '[JSON] (Either RegisterError FullToken)
   , login :: route :- "login" :> ReqBody '[JSON] UserLoginForm :> Post '[JSON] (Either RegisteredUserError FullToken)
-  , unRegister :: route :- "unregister" :> Auth '[JWT] RefreshToken :> Get '[JSON] NoContent
+  , unregister :: route :- "unregister" :> Auth '[JWT] RefreshToken :> Get '[JSON] NoContent
   , rotateRefreshToken :: route :- "rotate-refresh-token" :> Auth '[JWT] RefreshToken :> Get '[JSON] (Either RotateError FullToken)
   }
   deriving (Generic)

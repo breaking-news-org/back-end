@@ -1,6 +1,6 @@
 module Server.Server (Server, runServerEffect, startServer, getWaiApplication, writeJWK) where
 
-import API.Endpoints.API1.News as ApiNews (API (API, create, get), CategoriesAPI (..), categories, publish)
+import API.Endpoints.API1.News as ApiNews (API (API, create, get), CategoriesAPI (..), categories, setIsPublished)
 import API.Endpoints.API1.Root as API1 (API (API, news, user))
 import API.Endpoints.API1.User as ApiUser (API (..))
 import API.Prelude (NoContent (NoContent), secondsToNominalDiffTime)
@@ -115,7 +115,7 @@ getWaiApplication' jwkSettings = do
                   { user =
                       ApiUser.API
                         { register = UserController.register jwkSettings
-                        , unRegister = \token -> withRefreshToken token UserController.unRegister $> NoContent
+                        , unregister = \token -> withRefreshToken token UserController.unregister $> NoContent
                         , login = UserController.login jwkSettings
                         , rotateRefreshToken = \token -> withRefreshToken token (UserController.rotateRefreshToken jwkSettings)
                         }
@@ -123,7 +123,7 @@ getWaiApplication' jwkSettings = do
                       ApiNews.API
                         { create = withAccessToken token NewsController.create
                         , get = withAccessToken token NewsController.getNews
-                        , publish = withAccessToken token NewsController.setIsPublished
+                        , setIsPublished = withAccessToken token NewsController.setIsPublished
                         , categories =
                             ApiNews.CategoriesAPI
                               { get = NewsController.getCategories

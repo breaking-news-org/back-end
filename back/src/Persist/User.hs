@@ -10,6 +10,7 @@ import Persist.Effects.User (UserRepo (..))
 import Persist.Model
 import Persist.Prelude
 import Persist.Types.User
+import External.Passwords (checkPassword)
 
 runUserRepo :: (IOE :> es, SqlBackendPool :> es) => Eff (UserRepo : es) a -> Eff es a
 runUserRepo = interpret $ \_ -> \case
@@ -29,7 +30,7 @@ runUserRepo = interpret $ \_ -> \case
       case user of
         Nothing -> Left UserDoesNotExist
         Just x ->
-          if x._user_hashedPassword == _selectUser_hashedPassword
+          if checkPassword _selectUser_password x._user_hashedPassword
             then Right x
             else Left WrongPassword
   RepoSelectUserByUserName userName -> selectUser userName
@@ -65,7 +66,7 @@ runUserRepo = interpret $ \_ -> \case
         [ SessionsTokenId =. n +. val 1
         , SessionsTokenExpiresAt =. val expiresAt
         ]
-      where_ (p.id ==. val (toSqlKey (fromIntegral sessionId)))
+      where_ (p.id ==. mkSqlKeyVal sessionId)
   RepoUpdateAdmins admins -> do
     let adminUsers =
           admins
@@ -87,7 +88,7 @@ runUserRepo = interpret $ \_ -> \case
     withConn $ do
       userId <- selectOne do
         session <- from $ table @Sessions
-        where_ (session.id ==. val (toSqlKey (fromIntegral sessionId)))
+        where_ (session.id ==. mkSqlKeyVal sessionId)
         pure session.userId
       maybe
         (pure ())

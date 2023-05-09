@@ -56,14 +56,13 @@ runUserService = interpret $ \_ -> \case
   ServiceUnRegister sessionId -> do
     repoRemoveUser sessionId
 
-getRegisteredUser :: (Passwords :> es, UserRepo :> es, Logger :> es) => UserName -> Password -> Eff es (Either RegisteredUserError DBUser)
+getRegisteredUser :: ( UserRepo :> es, Logger :> es) =>UserName -> Password -> Eff es (Either RegisteredUserError DBUser)
 getRegisteredUser name password = do
-  hashedPassword <- hashPassword password
   user <-
     repoSelectRegisteredUser $
       SelectUser
         { _selectUser_userName = name
-        , _selectUser_hashedPassword = hashedPassword
+        , _selectUser_password = password
         }
   withLogger $ logDebug $ "Get registered user: " :# ["user" .= encodeToLazyText user]
   pure user
