@@ -1,7 +1,7 @@
 module Server.Server (Server, runServerEffect, startServer, getWaiApplication, writeJWK) where
 
 import API.Endpoints.API1.News as ApiNews (API (API, create, get), CategoriesAPI (..), categories, setIsPublished)
-import API.Endpoints.API1.Root as API1 (API (API, news, user))
+import API.Endpoints.API1.Root as API1 (API (..))
 import API.Endpoints.API1.User as ApiUser (API (..))
 import API.Prelude (NoContent (NoContent), secondsToNominalDiffTime)
 import API.Root (Routes (..))
@@ -28,7 +28,7 @@ import External.Logger (Logger, logInfo, withLogger)
 import GHC.Generics (Generic (..))
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
-import Servant (Context (..), HasServer (ServerT))
+import Servant (Context (..), HasServer (ServerT), serveDirectoryWebApp)
 import Servant.API (GServantProduct, NamedRoutes, ToServant, ToServantApi, toServant)
 import Servant.Auth.Server (AuthResult (..), defaultCookieSettings, defaultJWTSettings)
 import Servant.Auth.Server.Internal.AddSetCookie (AddSetCookieApi, AddSetCookies (..), Nat (S))
@@ -129,6 +129,7 @@ getWaiApplication' jwkSettings = do
                               { get = NewsController.getCategories
                               }
                         }
+                  , docs = serveDirectoryWebApp "."
                   }
             }
           (defaultJWTSettings jwkSettings._jwkSettings_jwk :. defaultCookieSettings :. EmptyContext)

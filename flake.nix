@@ -40,22 +40,9 @@
         # Next, set the desired GHC version
         ghcVersion_ = "927";
 
-        # and the name of the package
-        backPackageName = "back";
-        back = backPackageName;
-
-        # and the name of the package
-        testPackageName = "test";
-        test = testPackageName;
-
-        # Then, we list separately the libraries that our package needs
-        backPackageDepsLib = [ pkgs.zlib pkgs.libpqxx ];
-        testPackageDepsLib = backPackageDepsLib;
-
-        # And the binaries. 
-        # In our case, the Haskell app will call the `hello` command
-        backPackageDepsBin = [ ];
-        testPackageDepsBin = [ ];
+        # And the names of packages
+        back = "back";
+        test = "test";
 
         # --- shells ---
 
@@ -82,7 +69,7 @@
 
         # Here's our override
         # We should use `cabal v1-*` commands with it - https://github.com/NixOS/nixpkgs/issues/130556#issuecomment-1114239002
-        override = {
+        override = pkgs_: {
           overrides = self: super:
             let modify = drv: pkgs.lib.pipe drv [ dontBenchmark dontCheck ]; in
             {
@@ -98,25 +85,25 @@
               });
             } //
             (
-              let mkPackage = name: path: deps: depsLib: depsBin: overrideCabal
-                (dontCheck (dontHaddock (dontBenchmark (super.callCabal2nix backPackageName path deps))))
-                (x: {
-                  # we can combine the existing deps and new deps
-                  # we should write the new deps before the existing deps to override them
-                  # these deps will be in haskellPackages.myPackage.getCabalDeps.librarySystemDepends
-                  librarySystemDepends = depsLib ++ (x.librarySystemDepends or [ ]);
-                  executableSystemDepends = depsBin ++ (x.executableSystemDepends or [ ]);
+              let
+                mkPackage = name: path: deps: depsLib: overrideCabal
+                  (dontCheck (dontHaddock (dontBenchmark (super.callCabal2nix back path deps))))
+                  (x: {
+                    # we can combine the existing deps and new deps
+                    # we should write the new deps before the existing deps to override them
+                    # these deps will be in haskellPackages.myPackage.getCabalDeps.librarySystemDepends
+                    librarySystemDepends = depsLib ++ (x.librarySystemDepends or [ ]);
 
-                  libraryHaskellDepends = [
-                  ] ++ (x.libraryHaskellDepends or [ ]);
-
-                  testHaskellDepends = [
-                    super.tasty-discover
-                  ] ++ (x.testHaskellDepends or [ ]);
-                }); in
+                    testHaskellDepends = [
+                      super.tasty-discover
+                    ] ++ (x.testHaskellDepends or [ ]);
+                  });
+                backDepsLib = (__attrValues { inherit (pkgs_) zlib libpqxx; });
+                testDepsLib = backDepsLib;
+              in
               {
-                "${backPackageName}" = mkPackage backPackageName ./back { } backPackageDepsLib backPackageDepsBin;
-                "${testPackageName}" = mkPackage testPackageName ./test { "${backPackageName}" = self."${backPackageName}"; } testPackageDepsLib testPackageDepsBin;
+                "${back}" = mkPackage back ./back { } backDepsLib;
+                "${test}" = mkPackage test ./test { "${back}" = self."${back}"; } testDepsLib;
               }
             );
         };
@@ -132,14 +119,13 @@
 
         inherit (toolsGHC {
           version = ghcVersion_;
-          inherit override;
+          override = override pkgs;
           packages = (ps: [
-            ps.${backPackageName}
-            ps.${testPackageName}
+            ps.${back}
+            ps.${test}
           ]);
-          runtimeDependencies = backPackageDepsBin ++ testPackageDepsBin;
         })
-          hls cabal implicit-hie justStaticExecutable
+          hls cabal justStaticExecutable
           ghcid callCabal2nix haskellPackages hpack;
 
         # --- build an executable ---
@@ -154,10 +140,11 @@
           };
 
         backExeName = back;
-        backExe = mkExe backPackageName backExeName;
+        backExe = mkExe back backExeName;
 
         testExeName = test;
-        testExe = mkExe testPackageName testExeName;
+        testExe = mkExe test testExeName;
+
 
         # A disadvantage of this approach is that the package and all its local dependencies
         # will be rebuilt even if only that package changes
@@ -170,19 +157,19 @@
         # At this moment, we can set a name and a tag of our image
 
 
-        mkImage = { imageName, imageTag, exeName, exe }:
+        mkImage = { imageName, imageTag ? "latest", package, executableName }:
           pkgs.dockerTools.buildLayeredImage {
             name = imageName;
             tag = imageTag;
-            config.Cmd = [ exeName ];
+            config.Cmd = [ executableName ];
             contents = [
-              exe
+              package
             ];
           };
 
-        mkScripts = { name, imageName, imageTag, exeName, exe }:
+        mkScripts = { name, imageName, imageTag ? "latest", package, executableName }:
           let
-            image = mkImage { inherit imageName imageTag exeName exe; };
+            image = mkImage { inherit imageName imageTag package executableName; };
             env =
               mapGenAttrs
                 (name_: { "${name_}" = "\$${name_}"; })
@@ -250,12 +237,12 @@
 
         scripts =
           let scripts1 =
-            (mkScripts { name = back; imageName = backDockerHubImageName; imageTag = "latest"; exeName = "back"; exe = backExe; })
-            // (mkScripts { name = test; imageName = testDockerHubImageName; imageTag = "latest"; exeName = "test"; exe = testExe; });
+            (mkScripts { name = back; imageName = backDockerHubImageName; package = backExe; executableName = "back"; })
+            // (mkScripts { name = test; imageName = testDockerHubImageName; package = testExe; executableName = "test"; });
           in
           scripts1 // (mkShellApps {
             genOpenApi3 = {
-              text = ''${mkExe backPackageName genOpenApi3}/bin/${genOpenApi3}'';
+              text = ''${mkExe back genOpenApi3}/bin/${genOpenApi3}'';
               description = ''Generate OpenAPI3 specification for the server'';
             };
             writeDigests = {
@@ -271,7 +258,6 @@
         tools = [
           ghcid
           hpack
-          implicit-hie
           cabal
           hls
 
@@ -290,11 +276,34 @@
           pkgs.nodejs-16_x
 
           pkgs.deno
+
+          # hosting
+          pkgs.nodePackages.localtunnel
         ];
 
         extraTools = [
           pkgs.bashInteractive
         ];
+
+        images =
+          let
+            cabalImage = pkgs.dockerTools.streamLayeredImage {
+              name = "breaking-news-back-dev";
+              tag = "latest";
+              contents = [ cabal ];
+              maxLayers = 90;
+            };
+            baseImage = pkgs.dockerTools.buildLayeredImage {
+              name = "breaking-news-back-base";
+              tag = "latest";
+              fromImage = cabalImage;
+              contents = [ pkgs.musl pkgs.coreutils pkgs.bash pkgs.which pkgs.findutils pkgs.binutils ];
+            };
+          in
+          {
+            base = baseImage;
+            cabal = cabalImage;
+          };
 
         packages = {
           writeSettings = writeSettingsJSON {
@@ -320,17 +329,20 @@
             inherit scripts;
             inherit back test;
           };
+
+          inherit images;
         } // scripts;
+
+
 
         devShells = {
           default = mkShell {
             packages = tools ++ extraTools;
             bash.extra = ''
               export LANG="C.utf8"
-
-              export CONFIG_FILE="$PWD/local/config.yaml"
-              export TEST_CONFIG_FILE="$PWD/local/test.yaml"
-
+              
+              export CONFIG_FILE="$PWD/local/.yaml"
+              export TEST_CONFIG_FILE="$PWD/local/test.dev.yaml"
               export JWK_FILE="$PWD/local/jwk.json"
             '';
             commands =
@@ -376,3 +388,6 @@
     ];
   };
 }
+
+# https://d7b4-188-130-155-160.ngrok-free.app
+

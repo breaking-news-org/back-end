@@ -33,17 +33,39 @@
 
 ## Development
 
-Set up the cluster and make test requests.
+1. Install:
+   - `minikube`
+   - `pulumi`
+   - `kubernetes`
+   - `Postman`
+   - `psql`
+   - `docker`
+   - `microk8s`
+   - `nodejs 16`
+   - `localtunnel`
 
-1. Install `minikube`, `pulumi`, `kubernetes`, `Postman`, `psql`, `docker`, `microk8s`, `nodejs` (16).
+1. Push image to Docker Hub
 
-1. Run a cluster
+    ```console
+    nix build .#images.cabal && ./result | \
+        docker load \
+        && docker tag breaking-news-back-dev:latest deemp/breaking-news-back-dev:latest \
+        && docker push deemp/breaking-news-back-dev:latest
+    ```
+
+1.
+
+1. Create a cluster
 
     ```console
     # start a minikube vm
     minikube start
+    ```
 
-    # go to pulumi config
+1. Create pods in the cluster
+
+    ```console
+    # go to pulumi directory
     cd pulumi
 
     # install node package
@@ -66,15 +88,28 @@ Set up the cluster and make test requests.
 
 1. Get the IP address of the cluster (let's call it `<IP>`).
 
-    ```console  
+    ```console
     minikube ip
     ```
 
-1. Get the port of the server `dev:back.service.nodePort` (let's call it `<port>`).
+1. Get the port of the server - see `dev:back.service.nodePort` (let's call it `<port>`) in `pulumi/Pulumi.dev.yaml`.
+
+1. Expose your service to the world via `localtunnel`
+
+    ```console
+    lt -l <IP> -p <port> -s <subdomain>
+    
+    # or, in our case
+
+    lt -l $(minikube ip) -p 30003 -s breaking-news-fun
+    ```
+
+1. Take the address `<address>` obtained from `localtunnel`
 
 1. Import the [API](./API/v1.yaml) into `Postman` as a `Postman Collection`.
 
-1. In that collection, set the variable `baseUrl` to `http://<IP>:<port>`.
+1. In that collection, set the variable `baseUrl` to `<address>`.
+
    1. Click on the collection -> `Variables` -> `Current Value`
    1. Save
 
@@ -108,17 +143,29 @@ Set up the cluster and make test requests.
    1. Remove all query parameters
    1. You'll get a list of news in the response body.
 
-1. Check database
+1. Check the database
 
     ```console
     # connect to the database
-    psql postgresql://admin:psltest@localhost:30002/postgresdb
+    psql postgresql://admin:psltest@$(minikube ip):30002/postgresdb
 
     # check records
     select * from users;
     ```
 
-1. If you delete a resource, refresh `pulumi`.
+1. Get urns
+
+    ```console
+    pulumi stack --show-urns
+    ```
+
+1. Try deleting a resource
+
+    ```concole
+    pulumi state delete <urn>
+    ```
+
+1. If you delete a resource via `kubectl`, refresh `pulumi`. Sometimes, `pulumi` will notice the changes.
 
     ```console
     # delete some pod
@@ -128,15 +175,6 @@ Set up the cluster and make test requests.
     pulumi refresh
 
     pulumi up
-    ```
-
-## Production
-
-- On a server, we user `microk8s`.
-  - Run the script to set up environment in a current shell.
-
-    ```console
-    source microk8s.sh
     ```
 
 ## Nix
