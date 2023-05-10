@@ -79,7 +79,6 @@ let
               DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
               DOCKER_HUB_PASSWORD = expr names.secrets.DOCKER_HUB_PASSWORD;
             };
-            working-directory = backDir;
             run = ''
               nix run .#${expr names.matrix.scriptName}PushToDockerHub
             '';
