@@ -58,6 +58,7 @@ let
           steps.installNix
           steps.logInToCachix
           steps.pushFlakesToCachix
+          steps.cacheNix
         ];
       };
       "${job2}" = {
