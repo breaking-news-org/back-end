@@ -222,7 +222,7 @@ function mkPostgres(
   return { host: host, port: port }
 }
 
-interface AppConfig {
+interface AppConfigFile {
   env: string
   db: {
     db: string
@@ -235,6 +235,10 @@ interface AppConfig {
     port: number
     pageSize: number
   }
+  jwtParameters: {
+    expirationTime: number
+  }
+  admins: [{ userName: string; password: string }]
 }
 
 interface JWKConfig {
@@ -261,7 +265,6 @@ interface BackConfig {
         app: {
           varName: string
           filePath: string
-          fileContent: AppConfig
         }
         jwk: {
           varName: string
@@ -306,28 +309,15 @@ function mkBack(
   const appConfig = containerConfig.config.app
   const jwkConfig = containerConfig.config.jwk
 
-  interface AppConfigFileContent {
-    env: string
-    db: {
-      db: string
-      user: string
-      password: string
-      dbName: string
-      host: Output<string>
-      port: number
-      numConns: number
-    }
-    web: {
-      port: number
-      pageSize: number
-    }
-  }
+  const appConfigFile_ = parse(
+    readFileSync(`${appName}.${environment}.yaml`, "utf8")
+  ) as AppConfigFile
 
-  const appFile: AppConfigFileContent = {
-    ...appConfig.fileContent,
+  const appConfigFile: AppConfigFile = {
+    ...appConfigFile_,
     ...{
       db: {
-        ...appConfig.fileContent.db,
+        ...appConfigFile_.db,
         ...{ host: postgresHost, port: postgresPort },
       },
     },
@@ -335,7 +325,7 @@ function mkBack(
 
   var data: { [k: string]: Output<string> } = {}
 
-  data[appConfig.filePath] = pulumi.jsonStringify(appFile)
+  data[appConfig.filePath] = pulumi.jsonStringify(appConfigFile)
   data[jwkConfig.filePath] = pulumi.jsonStringify(jwkConfig.fileContent)
 
   const configMap = ((name = `${fullName}-configmap`) =>
@@ -351,7 +341,7 @@ function mkBack(
       opts
     ))()
 
-  const containerPort = appConfig.fileContent.web.port
+  const containerPort = appConfigFile.web.port
   const containerPortName = `${fullName}-port`
 
   const deployment = ((name = `${fullName}-deployment`) =>
@@ -663,9 +653,7 @@ function mkSetup(
 // })
 const provider = new k8s.Provider("kubernetes-provider")
 
-
 const digests = parse(readFileSync("digests.yaml", "utf8")) as Digests
-// console.log(digests)
 
 if (pulumi.getStack() == "dev") {
   mkSetup("dev", digests, provider)

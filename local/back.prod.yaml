@@ -1,0 +1,17 @@
+env: prod
+db:
+  db: postgresql
+  user: admin
+  password: psltest
+  host: 192.168.49.2
+  port: 30005
+  dbName: postgresdb
+  numConns: 10
+web:
+  port: 30016
+  pageSize: 10
+jwtParameters:
+  expirationTime: 600
+admins:
+- userName: admin
+  password: admin

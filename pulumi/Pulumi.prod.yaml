@@ -33,22 +33,6 @@ config:
           app:
             varName: CONFIG_FILE
             filePath: config.yaml
-            fileContent:
-              env: prod
-              db:
-                db: postgresql
-                user: admin
-                password: psltest
-                dbName: postgresdb
-                numConns: 10
-              web:
-                port: 8080
-                pageSize: 10
-              jwtParameters:
-                expirationTime: 3600
-              admins:
-              - userName: admin
-                password: admin
           jwk:
             varName: JWK_FILE
             filePath: jwk.yaml
