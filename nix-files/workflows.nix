@@ -1,13 +1,14 @@
 { workflows, backDir, name, system, back, test, scripts }:
 let
-  inherit (workflows.functions.${system}) writeWorkflow expr mkAccessors genAttrsId run;
-  inherit (workflows.configs.${system}) steps os oss;
+  inherit (workflows.functions.${system}) writeWorkflow expr mkAccessors genAttrsId run cacheNixDirs installNix;
+  inherit (workflows.configs.${system}) steps os oss strategies;
   job1 = "_1_push_to_cachix";
   job2 = "_2_push_to_docker_hub";
   job3 = "_3_extra_commit";
   job4 = "_4_build_deploy_gh_pages";
   names = mkAccessors {
     matrix.os = "";
+    matrix.store = "";
     matrix.scriptName = genAttrsId [
       "scriptName"
     ];
@@ -51,14 +52,14 @@ let
     jobs = {
       "${job1}" = {
         name = "Push to cachix";
-        strategy.matrix.os = oss;
+        strategy = strategies.nixCache;
         runs-on = expr names.matrix.os;
         steps = [
           steps.checkout
-          steps.installNix
+          (installNix { store = expr names.matrix.store; })
+          (cacheNixDirs { store = expr names.matrix.store; keySuffix = "cachix"; checkIsRunnerLinux = true; })
           steps.logInToCachix
           steps.pushFlakesToCachix
-          steps.cacheNix
         ];
       };
       "${job2}" = {
@@ -71,7 +72,8 @@ let
         };
         steps = [
           steps.checkout
-          steps.installNix
+          (installNix { })
+          (cacheNixDirs { keySuffix = expr names.matrix.scriptName; })
           steps_.dockerHubLogin
           {
             name = "Push to Docker Hub";
@@ -91,7 +93,8 @@ let
         runs-on = os.ubuntu-20;
         steps = [
           steps.checkout
-          steps.installNix
+          (installNix { })
+          (cacheNixDirs { keySuffix = "extra"; })
           steps.configGitAsGHActions
           {
             name = "Update flake locks";
