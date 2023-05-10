@@ -177,12 +177,12 @@ components:
       properties:
         isPublished:
           type: boolean
-        news:
+        newsIds:
           items:
             $ref: '#/components/schemas/NewsId'
           type: array
       required:
-      - news
+      - newsIds
       - isPublished
       type: object
     UserLoginForm:
@@ -342,7 +342,7 @@ paths:
             or `createdSince` or `createdUntil`
       security:
       - JWT: []
-  /api1/news/set-published:
+  /api1/news/set-is-published:
     post:
       requestBody:
         content:
