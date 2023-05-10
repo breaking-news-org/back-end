@@ -252,7 +252,7 @@
               '';
             };
           }) // {
-            inherit (mkFlakesTools [ "." ]) updateLocks pushToCachix;
+            inherit (mkFlakesTools [ "." ]) updateLocks pushToCachix logInToCachix;
           };
 
         tools = [
