@@ -285,26 +285,6 @@
           pkgs.bashInteractive
         ];
 
-        images =
-          let
-            cabalImage = pkgs.dockerTools.streamLayeredImage {
-              name = "breaking-news-back-dev";
-              tag = "latest";
-              contents = [ cabal ];
-              maxLayers = 90;
-            };
-            baseImage = pkgs.dockerTools.buildLayeredImage {
-              name = "breaking-news-back-base";
-              tag = "latest";
-              fromImage = cabalImage;
-              contents = [ pkgs.musl pkgs.coreutils pkgs.bash pkgs.which pkgs.findutils pkgs.binutils ];
-            };
-          in
-          {
-            base = baseImage;
-            cabal = cabalImage;
-          };
-
         packages = {
           writeSettings = writeSettingsJSON {
             inherit (settingsNix)
@@ -329,8 +309,6 @@
             inherit scripts;
             inherit back test;
           };
-
-          inherit images;
         } // scripts;
 
 
