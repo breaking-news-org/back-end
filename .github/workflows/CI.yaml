@@ -18,12 +18,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nix-${{ hashfiles('./flake.nix', './flake.lock') }}
             ${{ runner.os }}-nix-
-      # - name: Push to Cachix
-      #   run: nix run nixpkgs#cachix -- authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
-      # - env:
-      #     CACHIX_CACHE: ${{ secrets.CACHIX_CACHE }}
-      #   name: Push flakes to Cachix
-      #   run: nix run .#pushToCachix
+      - name: Push to Cachix
+        run: nix run nixpkgs#cachix -- authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - env:
+          CACHIX_CACHE: ${{ secrets.CACHIX_CACHE }}
+        name: Push flakes to Cachix
+        run: nix run .#pushToCachix
     strategy:
       matrix:
         os:
