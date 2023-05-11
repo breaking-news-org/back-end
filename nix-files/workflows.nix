@@ -40,6 +40,7 @@ let
     workflow_dispatch = { };
   };
 
+  commonKeySuffix = "common";
   workflow = {
     name = "CI";
     inherit on;
@@ -57,7 +58,7 @@ let
         steps = [
           steps.checkout
           (installNix { store = expr names.matrix.store; })
-          (cacheNixDirs { store = expr names.matrix.store; keySuffix = "cachix"; checkIsRunnerLinux = true; })
+          (cacheNixDirs { store = expr names.matrix.store; keySuffix = commonKeySuffix; checkIsRunnerLinux = true; restoreOnly = false; })
           steps.logInToCachix
           steps.pushFlakesToCachix
         ];
@@ -73,7 +74,7 @@ let
         steps = [
           steps.checkout
           (installNix { })
-          (cacheNixDirs { keySuffix = expr names.matrix.scriptName; })
+          (cacheNixDirs { keySuffix = commonKeySuffix; })
           steps_.dockerHubLogin
           {
             name = "Push to Docker Hub";
@@ -94,7 +95,7 @@ let
         steps = [
           steps.checkout
           (installNix { })
-          (cacheNixDirs { keySuffix = "extra"; })
+          (cacheNixDirs { keySuffix = commonKeySuffix; })
           steps.configGitAsGHActions
           {
             name = "Update flake locks";
