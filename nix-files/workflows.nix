@@ -58,7 +58,6 @@ let
         steps = [
           steps.checkout
           (installNix { store = expr names.matrix.store; })
-          (cacheNixDirs { store = expr names.matrix.store; keySuffix = commonKeySuffix; checkIsRunnerLinux = true; restoreOnly = false; })
           steps.logInToCachix
           steps.pushFlakesToCachix
         ];
@@ -74,7 +73,7 @@ let
         steps = [
           steps.checkout
           (installNix { })
-          (cacheNixDirs { keySuffix = commonKeySuffix; })
+          (cacheNixDirs { keySuffix = expr names.matrix.scriptName; restoreOnly = false; })
           steps_.dockerHubLogin
           {
             name = "Push to Docker Hub";
@@ -95,7 +94,7 @@ let
         steps = [
           steps.checkout
           (installNix { })
-          (cacheNixDirs { keySuffix = commonKeySuffix; })
+          (cacheNixDirs { keySuffix = "extra"; restoreOnly = false; })
           steps.configGitAsGHActions
           {
             name = "Update flake locks";
