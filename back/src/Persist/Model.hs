@@ -4,10 +4,10 @@
 
 module Persist.Model where
 
+import Common.Types.News (CategoryName, CreatedAt, Images, NewsText, NewsTitle)
+import Common.Types.User
 import Database.Esqueleto.PostgreSQL.JSON (JSONB)
 import Database.Persist.TH (mkMigrate, mkPersist, persistLowerCase, share, sqlSettings)
-import Persist.Types.News (Images, NewsText, NewsTitle, CategoryName)
-import Persist.Types.User (AuthorName, CreatedAt, ExpiresAt, HashedPassword, Role, TokenId, UserName)
 
 share
   [mkPersist sqlSettings, mkMigrate "migrateAll"]
@@ -40,11 +40,6 @@ News
     deriving Ord Eq Show
 |]
 
-
 -- A session has tokens whose ids are incremented when refreshing
 -- Tokens may expire.
 -- These tokens should be removed from time to time
-
--- TODO add to News
--- titles may be not unique
--- urls are constructed from news ids

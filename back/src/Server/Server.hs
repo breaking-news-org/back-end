@@ -1,14 +1,14 @@
 module Server.Server (Server, runServerEffect, startServer, getWaiApplication, writeJWK) where
 
-import API.Endpoints.API1.News as ApiNews (API (API, create, get), CategoriesAPI (..), categories, setIsPublished)
+import API.Endpoints.API1.News as ApiNews
 import API.Endpoints.API1.Root as API1 (API (..))
 import API.Endpoints.API1.User as ApiUser (API (..))
 import API.Prelude (NoContent (NoContent), secondsToNominalDiffTime)
-import API.Root (Routes (..))
-import API.Types.Instances ()
-import API.Types.News ()
-import API.Types.User (AccessToken, RefreshToken)
+import API.Root
+import API.Types.QueryParam ()
+import Common.Types.User
 import Control.Monad.Except (ExceptT (..), runExceptT)
+import Control.Monad.Logger.Aeson
 import Controller.Effects.News (NewsController)
 import Controller.Effects.User (UserController)
 import Controller.News qualified as NewsController
@@ -20,25 +20,25 @@ import Data.Aeson qualified
 import Data.ByteString.Lazy qualified as BSL
 import Data.Fixed (Fixed (MkFixed))
 import Data.Functor (($>))
-import Data.String (fromString)
 import Effectful (Eff, Effect, IOE, Limit (..), MonadIO (liftIO), Persistence (Ephemeral), UnliftStrategy (ConcUnlift), withEffToIO, withUnliftStrategy, type (:>))
 import Effectful.Dispatch.Dynamic (interpret)
 import Effectful.TH (makeEffect)
-import External.Logger (Logger, logInfo, withLogger)
+import External.Logger (Logger, withLogger)
 import GHC.Generics (Generic (..))
 import Network.Wai (Application)
+import Network.Wai.Handler.Warp (defaultSettings)
 import Network.Wai.Handler.Warp qualified as Warp
+import Network.Wai.Handler.Warp.Internal (Settings (..))
 import Servant (Context (..), HasServer (ServerT), serveDirectoryWebApp)
 import Servant.API (GServantProduct, NamedRoutes, ToServant, ToServantApi, toServant)
 import Servant.Auth.Server (AuthResult (..), defaultCookieSettings, defaultJWTSettings)
 import Servant.Auth.Server.Internal.AddSetCookie (AddSetCookieApi, AddSetCookies (..), Nat (S))
 import Servant.Server qualified as Servant
 import Servant.Server.Generic (AsServerT, genericServeTWithContext)
-import Servant.Server.Named ()
 import Servant.Server.Record ()
 import Server.Config (App (..), JWTParameters (..), Loader, Web (_web_port), getConfig)
-
--- wire up all controllers here
+import System.Directory (getCurrentDirectory)
+import API.Types.News()
 
 data Server :: Effect where
   GetWaiApplication :: Server m Application
@@ -65,6 +65,9 @@ type Constraints es =
   , UserController :> es
   )
 
+directoryToServe :: FilePath
+directoryToServe = "static"
+
 runServerEffect :: forall es a. Constraints es => Eff (Server : es) a -> Eff es a
 runServerEffect = interpret $ \_ -> \case
   StartServer -> do
@@ -72,13 +75,13 @@ runServerEffect = interpret $ \_ -> \case
     let port = app._app_web._web_port
         admins = app._app_admins
     waiApp <- getWaiApplication' =<< getJWKSettings
-    withLogger . logInfo . fromString $ "listening at port " <> show port
-    -- TODO run when database ready
+    dir <- liftIO getCurrentDirectory
+    withLogger $ logDebug $ "Server started" :# ["port" .= port, "directory" .= dir, "serves directory" .= directoryToServe]
     adminsUpdated <- runExceptT $ updateAdmins admins
     case adminsUpdated of
       Left err -> error $ show err
       Right _ -> pure ()
-    liftIO $ Warp.run port waiApp
+    liftIO $ Warp.runSettings (defaultSettings{settingsPort = port, settingsHost = "127.0.0.1"}) waiApp
   GetWaiApplication -> getWaiApplication' =<< getJWKSettings
 
 getJWKSettings :: forall es. Constraints es => Eff es JWKSettings
@@ -129,7 +132,7 @@ getWaiApplication' jwkSettings = do
                               { get = NewsController.getCategories
                               }
                         }
-                  , docs = serveDirectoryWebApp "."
+                  , docs = serveDirectoryWebApp "static/"
                   }
             }
           (defaultJWTSettings jwkSettings._jwkSettings_jwk :. defaultCookieSettings :. EmptyContext)

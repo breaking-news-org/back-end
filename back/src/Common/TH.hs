@@ -30,6 +30,7 @@ aesonOptionsRecord :: Options
 aesonOptionsRecord =
   defaultOptions
     { fieldLabelModifier = dropWhile (== '_') . dropWhile (/= '_') . dropWhile (== '_')
+    , rejectUnknownFields = True
     }
 
 makeRecordFromToJSON' :: Type -> Q [Dec]
@@ -71,8 +72,7 @@ processRecords' = processTypes' makeRecordFromToJSON'
 aesonOptionsSum :: Options
 aesonOptionsSum =
   defaultOptions
-    { allNullaryToStringTag = True
-    , tagSingleConstructors = True
+    { tagSingleConstructors = True
     }
 
 makeSumFromToJSON' :: Type -> Q [Dec]

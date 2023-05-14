@@ -28,12 +28,14 @@ library
       API.Prelude
       API.Root
       API.TH
-      API.Types.Instances
       API.Types.News
+      API.Types.QueryParam
       API.Types.User
       App
       Common.Prelude
       Common.TH
+      Common.Types.News
+      Common.Types.User
       Controller.Effects.News
       Controller.Effects.User
       Controller.News
@@ -49,8 +51,6 @@ library
       Persist.Model
       Persist.News
       Persist.Prelude
-      Persist.Types.News
-      Persist.Types.User
       Persist.User
       Server.Config
       Server.Server
@@ -69,8 +69,6 @@ library
       BlockArguments
       ConstraintKinds
       DataKinds
-      DeriveAnyClass
-      DeriveGeneric
       DeriveGeneric
       DerivingStrategies
       DuplicateRecordFields
@@ -80,6 +78,7 @@ library
       GeneralizedNewtypeDeriving
       ImplicitParams
       ImportQualifiedPost
+      InstanceSigs
       KindSignatures
       LambdaCase
       MultiParamTypeClasses
@@ -105,9 +104,11 @@ library
       aeson
     , async
     , base >=4.7 && <5
+    , breakpoint
     , bytestring
     , containers
     , data-default
+    , directory
     , effectful
     , effectful-core
     , effectful-plugin
@@ -161,8 +162,6 @@ executable back
       BlockArguments
       ConstraintKinds
       DataKinds
-      DeriveAnyClass
-      DeriveGeneric
       DeriveGeneric
       DerivingStrategies
       DuplicateRecordFields
@@ -172,6 +171,7 @@ executable back
       GeneralizedNewtypeDeriving
       ImplicitParams
       ImportQualifiedPost
+      InstanceSigs
       KindSignatures
       LambdaCase
       MultiParamTypeClasses
@@ -212,8 +212,6 @@ executable gen-openapi3
       BlockArguments
       ConstraintKinds
       DataKinds
-      DeriveAnyClass
-      DeriveGeneric
       DeriveGeneric
       DerivingStrategies
       DuplicateRecordFields
@@ -223,6 +221,7 @@ executable gen-openapi3
       GeneralizedNewtypeDeriving
       ImplicitParams
       ImportQualifiedPost
+      InstanceSigs
       KindSignatures
       LambdaCase
       MultiParamTypeClasses

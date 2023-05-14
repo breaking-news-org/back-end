@@ -4,13 +4,13 @@ module Persist.User (
 where
 
 import Common.Prelude ((<&>))
+import Common.Types.User
 import Control.Lens (Bifunctor (bimap))
 import Database.Esqueleto.Experimental (Entity (Entity, entityKey), PersistUniqueWrite (putMany), delete, fromSqlKey, innerJoin, notIn, on, selectOne, set, update, valList, (+.), (=.), (==.), type (:&) ((:&)))
+import External.Passwords (checkPassword)
 import Persist.Effects.User (UserRepo (..))
 import Persist.Model
 import Persist.Prelude
-import Persist.Types.User
-import External.Passwords (checkPassword)
 
 runUserRepo :: (IOE :> es, SqlBackendPool :> es) => Eff (UserRepo : es) a -> Eff es a
 runUserRepo = interpret $ \_ -> \case

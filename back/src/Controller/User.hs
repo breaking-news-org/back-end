@@ -12,6 +12,8 @@ import Effectful.Dispatch.Dynamic (interpret, send)
 import Servant.Auth.Server (defaultJWTSettings, makeJWT)
 import Service.Effects.User (UserService, serviceCreateSession, serviceLogin, serviceRegister, serviceRotateRefreshToken, serviceSetAdmins, serviceUnRegister)
 import Service.Types.User
+import API.Types.User
+import Common.Types.User
 
 updateAdmins :: UserController :> es => [Admin] -> ExceptT ServerError (Eff es) ()
 updateAdmins = ExceptT . send . ControllerUpdateAdmins

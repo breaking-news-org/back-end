@@ -1,1 +1,1 @@
-packages: back test
+packages: back test servant-queryparam/*

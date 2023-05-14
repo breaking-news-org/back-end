@@ -1,9 +1,11 @@
+{-# LANGUAGE InstanceSigs #-}
+
 module Server.Config where
 
+import Common.Prelude (typeMismatch)
 import Common.TH
 import Control.Exception (SomeException, catch)
 import Data.Aeson
-import Data.Int (Int64)
 import Data.String.Interpolate (i)
 import Data.Text (Text)
 import Data.Yaml.Aeson (decodeFileThrow)
@@ -12,8 +14,8 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Static
 import Effectful.TH (makeEffect)
 import GHC.Generics (Generic)
-import Service.Types.User
 import System.Environment (lookupEnv)
+import Common.Types.User
 
 data DB = DB
   { _db_db :: Text
@@ -37,15 +39,31 @@ newtype JWTParameters = JWTParameters
   }
   deriving (Show, Generic)
 
+data AppEnvironment = EnvDev | EnvProd deriving (Show, Generic)
+
+instance FromJSON AppEnvironment where
+  parseJSON (String s)
+    | s == "dev" = pure EnvDev
+    | s == "prod" = pure EnvProd
+    | otherwise = fail "Could not parse the app environment"
+  parseJSON v = typeMismatch "Object" v
+
+instance ToJSON AppEnvironment where
+  toJSON :: AppEnvironment -> Value
+  toJSON = \case
+    EnvDev -> "dev"
+    EnvProd -> "prod"
+
 data App = App
-  { _app_db :: DB
+  { _app_env :: AppEnvironment
+  , _app_db :: DB
   , _app_web :: Web
   , _app_jwtParameters :: JWTParameters
   , _app_admins :: [Admin]
   }
   deriving (Show, Generic)
 
-processRecords [''DB, ''Web, ''JWTParameters, ''App, ''Admin]
+processRecords [''DB, ''Web, ''JWTParameters, ''App]
 
 data Loader conf :: Effect where
   GetConfig :: (FromJSON conf) => (conf -> a) -> Loader conf m a

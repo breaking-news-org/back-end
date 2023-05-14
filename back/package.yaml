@@ -21,8 +21,6 @@ default-extensions:
   - BlockArguments
   - ConstraintKinds
   - DataKinds
-  - DeriveAnyClass
-  - DeriveGeneric
   - DeriveGeneric
   - DerivingStrategies
   - DuplicateRecordFields
@@ -32,6 +30,7 @@ default-extensions:
   - GeneralizedNewtypeDeriving
   - ImplicitParams
   - ImportQualifiedPost
+  - InstanceSigs
   - KindSignatures
   - LambdaCase
   - MultiParamTypeClasses
@@ -80,6 +79,7 @@ library:
     - bytestring
     - containers
     - data-default
+    - directory
     - effectful
     - effectful-th
     - esqueleto
@@ -116,6 +116,7 @@ library:
     - transformers
     - warp
     - yaml
+    - breakpoint
     - password
 
 executables:

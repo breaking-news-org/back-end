@@ -8,7 +8,7 @@ db:
   dbName: postgresdb
   numConns: 10
 web:
-  port: 30013
+  port: 30023
   pageSize: 10
 jwtParameters:
   expirationTime: 600

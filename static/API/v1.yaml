@@ -88,7 +88,7 @@ components:
             $ref: '#/components/schemas/FullToken'
         required:
         - Right
-        type: object
+        type: object  
     FullToken:
       properties:
         accessToken:

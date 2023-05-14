@@ -12,18 +12,18 @@ import API.Endpoints.API1.Root qualified
 import API.Endpoints.API1.User qualified
 import API.Prelude (encode)
 import API.Root (API, Routes (..))
-import API.Types.Instances ()
-import API.Types.News
-import API.Types.User (FullToken (..), UserLoginForm (..), UserRegisterForm (..))
-import Common.Prelude (MonadIO (..))
+import API.Types.News ()
+import API.Types.User
+import Common.Types.News
+import Common.Types.User
 import Control.Exception (catch, throwIO)
-import Control.Monad (void)
+import Control.Monad
 import Control.Monad.Free (Free (..))
-import Controller.User (rotateRefreshToken)
+import Controller.Types.News (CreateNews (..))
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as BSC
 import Data.Data (Proxy (..))
-import Data.Default (def)
+import Data.Default
 import Data.Kind (Constraint)
 import Data.Sequence (Seq ((:<|)))
 import Data.String (IsString)
@@ -44,8 +44,8 @@ import Servant.Client.Internal.HttpClient qualified as I
 import Servant.Client.Named ()
 import Servant.Client.Record ()
 import Server.Config
-import Service.Prelude (encodeUtf8, (&), (.~), (?~))
-import Service.Types.User (Password (..), RegisterError (..), RegisteredUserError (..))
+import Service.Prelude (encodeUtf8)
+import Service.Types.User
 import Test.Tasty
 import Test.Tasty.HUnit
 import Text.Pretty.Simple (pPrint)
@@ -93,7 +93,7 @@ instance (HasJWT auths, HasClient ClientFree api) => HasClient ClientFree (Auth 
 Routes
   { api1 =
     API.Endpoints.API1.Root.API
-      { user = API.Endpoints.API1.User.API{register, login, unregister, rotateRefreshToken}
+      { user = API.Endpoints.API1.User.API{register, login}
       , news
       }
   } = client api
@@ -128,61 +128,87 @@ testUserLoginForm =
 loginUser :: ClientFree (Either RegisteredUserError FullToken)
 loginUser = login testUserLoginForm
 
+-- register
+-- withClientEnv :: Show a => ClientFree a -> IO (Either ClientError a)
+withClientEnv' :: (Show a) => HTTP.Manager -> AppConf -> Free ClientF a -> IO (Either ClientError a)
+withClientEnv' manager' AppConf{..} f = do
+  let env = mkClientEnv manager' (BaseUrl Http _appConf_host _appConf_port "")
+  case f of
+    Pure a -> do
+      -- pPrint a
+      pure (pure a)
+    Free (Throw err) -> error $ "ERROR: got error right away: " ++ show err
+    Free (RunRequest req k) -> do
+      let req' = I.defaultMakeClientRequest (baseUrl env) req
+      resp <- HTTP.httpLbs req' (manager env)
+      putStrLn $ "Got response:\n" <> show resp
+      let res = I.clientResponseToResponse id resp
+      case k res of
+        Pure n -> do
+          -- pPrint n
+          pure (pure n)
+        _ -> error "Error: didn't get a response"
+
+getFullToken :: (forall a. (Show a) => Free ClientF a -> IO (Either ClientError a)) -> IO FullToken
+getFullToken withClientEnv = do
+  res <- withClientEnv registerUser
+  case res of
+    Left (clientError :: ClientError) -> error [i|Client error: #{clientError}|]
+    Right registerResult -> do
+      case registerResult of
+        Left registerError -> do
+          putStrLn [i|Register error: #{registerError}|]
+          putStrLn [i|Trying to log in|]
+          loginResult <- withClientEnv loginUser
+          case loginResult of
+            Left clientError -> error [i|Client error: #{clientError}|]
+            Right loginResult' ->
+              case loginResult' of
+                Left loginError -> error [i|Login error: #{loginError}|]
+                Right fullToken -> pure fullToken
+        Right fullToken -> pure fullToken
+
 -- full workflow
 authorizeCreateNewsNewsItem :: TestTree
 authorizeCreateNewsNewsItem = testCase "Authorize, create news, get that news" do
   -- get config
-  testConf <- runEff $ runLoader @TestConf _CONFIG_FILE do
-    getConfig @TestConf id
+  testConf <- runEff $ runLoader @TestConf _CONFIG_FILE $ getConfig @TestConf id
   manager' <- newManager defaultManagerSettings
-  -- run request and be able to show it
-  let AppConf{..} = testConf._testConf_app
-      withClientEnv :: Show a => ClientFree a -> IO (Either ClientError a)
-      withClientEnv f = do
-        let env = mkClientEnv manager' (BaseUrl Http _appConf_host _appConf_port "")
-        case f of
-          Pure a -> pure (pure a)
-          Free (Throw err) -> error $ "ERROR: got error right away: " ++ show err
-          Free (RunRequest req k) -> do
-            let req' = I.defaultMakeClientRequest (baseUrl env) req
-            resp <- HTTP.httpLbs req' (manager env)
-            putStrLn $ "Got response:\n" <> show resp
-            let res = I.clientResponseToResponse id resp
-            case k res of
-              Pure n -> pPrint n >> pure (pure n)
-              _ -> error "Error: didn't get a response"
-  res <- withClientEnv registerUser
-  tokenMaybe <-
-    case res of
-      Left clientError -> putStrLn [i|Client error: #{clientError}|] >> pure Nothing
-      Right registerResult -> do
-        case registerResult of
-          Left registerError -> do
-            putStrLn [i|Register error: #{registerError}|]
-            putStrLn [i|Trying ton login|]
-            loginResult <- withClientEnv loginUser
-            case loginResult of
-              Left clientError -> putStrLn [i|Client error: #{clientError}|] >> pure Nothing
-              Right loginResult' ->
-                case loginResult' of
-                  Left loginError -> putStrLn [i|Login error: #{loginError}|] >> pure Nothing
-                  Right fullToken -> pure $ Just fullToken
-          Right fullToken -> pure $ Just fullToken
-  case tokenMaybe of
-    Nothing -> putStrLn [i|Could not obtain a full token|]
-    Just token -> do
-      let API.Endpoints.API1.News.API{get, create} = news (Token (encodeUtf8 token._fullToken_accessToken))
-      void $
-        withClientEnv $
-          create
-            CreateNews
-              { _createNews_title = "test_title"
-              , _createNews_text = "test_text"
-              , _createNews_images = [Image "test_value"]
-              , _createNews_category = -1
-              , _createNews_isPublished = True
-              }
-      ns <- withClientEnv $ get def
-      case ns of
-        Left err -> error $ show err
-        Right ns_ -> BSC.putStrLn $ encode ns_
+  let withClientEnv :: (Show a) => Free ClientF a -> IO (Either ClientError a)
+      withClientEnv = withClientEnv' manager' testConf._testConf_app
+  token <- getFullToken withClientEnv
+  let API.Endpoints.API1.News.API{get, create, categories} = news (Token (encodeUtf8 token._fullToken_accessToken))
+  void $
+    withClientEnv $
+      create
+        CreateNews
+          { _createNews_title = "test_title"
+          , _createNews_text = "test_text"
+          , _createNews_images = [Image "test_value"]
+          , _createNews_category = 1
+          , _createNews_isPublished = True
+          }
+  ns <-
+    withClientEnv $
+      get
+        def
+          { _newsFilters_categoriesInclude = [1, 2]
+          , _newsFilters_categoriesExclude = [3]
+          , _newsFilters_showUnpublished = Just False
+          , _newsFilters_showPublished = Just True
+          }
+  case ns of
+    Left err -> error $ show err
+    Right ns_ -> BSC.putStrLn $ encode ns_
+
+  let API.Endpoints.API1.News.CategoriesAPI{get = getCategories} = categories
+  items <-
+    withClientEnv $
+      getCategories
+        CategoryFilters
+          { _categoryFilters_include = [1, 2]
+          , _categoryFilters_exclude = [3]
+          }
+  case items of
+    Left err -> error $ show err
+    Right items_ -> BSC.putStrLn $ encode items_

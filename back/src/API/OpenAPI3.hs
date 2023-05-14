@@ -1,10 +1,8 @@
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE KindSignatures #-}
-
 module API.OpenAPI3 where
 
 import API.Prelude (HasOpenApi (..), OpenApi, Proxy (..), encodeFile, type (:>))
 import API.Root (API)
+import API.Types.News ()
 import Common.Prelude ((%~))
 import Data.HashMap.Strict.InsOrd qualified as HM
 import Data.OpenApi (Components (..), HasSecurity (..), HttpSchemeType (..), OpenApi (..), SecurityDefinitions (..), SecurityRequirement (..), SecurityScheme (..), SecuritySchemeType (..), allOperations)

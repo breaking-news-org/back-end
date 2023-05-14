@@ -83,11 +83,14 @@
               servant-queryparam-client = (super.callCabal2nix "servant-queryparam-client" "${inputs.servant.outPath}/servant-queryparam/servant-queryparam-client" {
                 inherit (self) servant-queryparam-core;
               });
+              servant-queryparam-openapi3 = (super.callCabal2nix "servant-queryparam-openapi3" "${inputs.servant.outPath}/servant-queryparam-openapi3" {
+                inherit (self) servant-queryparam-core;
+              });
             } //
             (
               let
                 mkPackage = name: path: deps: depsLib: overrideCabal
-                  (dontCheck (dontHaddock (dontBenchmark (super.callCabal2nix back path deps))))
+                  (dontCheck (dontHaddock (dontBenchmark (super.callCabal2nix name path deps))))
                   (x: {
                     # we can combine the existing deps and new deps
                     # we should write the new deps before the existing deps to override them
@@ -102,8 +105,8 @@
                 testDepsLib = backDepsLib;
               in
               {
-                "${back}" = mkPackage back ./back { } backDepsLib;
-                "${test}" = mkPackage test ./test { "${back}" = self."${back}"; } testDepsLib;
+                "${back}" = mkPackage back ./${back} { inherit (self) servant-queryparam-server; } backDepsLib;
+                "${test}" = mkPackage test ./${test} { "${back}" = self."${back}"; } testDepsLib;
               }
             );
         };
@@ -123,6 +126,10 @@
           packages = (ps: [
             ps.${back}
             ps.${test}
+            ps.servant-queryparam-core
+            ps.servant-queryparam-client
+            ps.servant-queryparam-server
+            ps.servant-queryparam-openapi3
           ]);
         })
           hls cabal justStaticExecutable
@@ -319,7 +326,7 @@
             bash.extra = ''
               export LANG="C.utf8"
               
-              export CONFIG_FILE="$PWD/local/.yaml"
+              export CONFIG_FILE="$PWD/local/back.dev.yaml"
               export TEST_CONFIG_FILE="$PWD/local/test.dev.yaml"
               export JWK_FILE="$PWD/local/jwk.json"
             '';

@@ -21,6 +21,9 @@
 ## Infra
 
 - [Pulumi](https://www.pulumi.com/)
+- [Kubernetes](https://kubernetes.io/)
+- [PostgreSQL](https://www.postgresql.org/)
+  - SQL injections are [prevented](https://github.com/bitemyapp/esqueleto/blob/9a4f7d7c3e56357abb1dd2afe822139882577464/README.md?plain=1#L426) by [esqueleto](https://hackage.haskell.org/package/esqueleto)
 
 ## Architecture
 
@@ -52,8 +55,6 @@
         && docker tag breaking-news-back-dev:latest deemp/breaking-news-back-dev:latest \
         && docker push deemp/breaking-news-back-dev:latest
     ```
-
-1.
 
 1. Create a cluster
 
@@ -219,6 +220,8 @@ See these for additional info:
 
 ## References
 
+- `DeriveAnyClass` leads to infinite loops -<https://hackage.haskell.org/package/servant-0.19.1/docs/Servant-API.html#t:ToHttpApiData>
+  - It's safer to derive `Default` instances by hand
 - Running server in a `VM`
   - Host shouldn't be Windows
   - Forward port to internal server - [src](https://www.cyberciti.biz/faq/how-to-configure-ufw-to-forward-port-80443-to-internal-server-hosted-on-lan/)

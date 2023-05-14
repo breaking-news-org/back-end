@@ -1,8 +1,8 @@
 module Integration.Config where
 
-import Common.TH (processRecord)
 import Common.Prelude
-import Service.Types.User (DBUser (..))
+import Common.TH (processRecord)
+import Common.Types.User (DBUser (..))
 
 data AppConf = AppConf
   { _appConf_host :: String

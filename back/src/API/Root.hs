@@ -1,8 +1,7 @@
 module API.Root where
 
 import API.Endpoints.API1.Root qualified as API1
-import API.Prelude (GenericMode (type (:-)), NamedRoutes, type (:>))
-import Common.Prelude (Generic)
+import API.Prelude (Generic, GenericMode (type (:-)), NamedRoutes, type (:>))
 import Data.Data (Proxy)
 
 newtype Routes route = Routes

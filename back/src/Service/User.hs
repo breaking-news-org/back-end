@@ -10,6 +10,7 @@ import Persist.Effects.User
 import Service.Effects.User
 import Service.Prelude
 import Service.Types.User
+import Common.Types.User
 
 runUserService :: (Passwords :> es, UserRepo :> es, Logger :> es) => Eff (UserService : es) a -> Eff es a
 runUserService = interpret $ \_ -> \case

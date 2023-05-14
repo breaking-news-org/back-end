@@ -3,7 +3,7 @@ module API.Endpoints.API1.Root where
 import API.Endpoints.API1.News qualified as News
 import API.Endpoints.API1.User qualified as User
 import API.Prelude (Generic, GenericMode (type (:-)), NamedRoutes, type (:>))
-import API.Types.User (AccessToken)
+import Common.Types.User (AccessToken)
 import Servant (Raw)
 import Servant.Auth (Auth, JWT)
 

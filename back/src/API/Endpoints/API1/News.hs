@@ -1,8 +1,9 @@
 module API.Endpoints.API1.News where
 
 import API.Prelude (Generic, GenericMode (type (:-)), Get, JSON, NamedRoutes, Post, ReqBody, type (:>))
-import API.Types.Instances (Drop)
-import API.Types.News
+import API.Types.QueryParam (Drop)
+import Common.Types.News
+import Controller.Types.News
 import Servant.Record (RecordParam)
 
 data API route = API
@@ -12,6 +13,9 @@ data API route = API
   , categories :: route :- "categories" :> NamedRoutes CategoriesAPI
   }
   deriving (Generic)
+
+data QueryRecord = QueryRecord {_queryRecord_include :: [Int], _queryRecord_exclude :: [Int]} 
+  deriving (Generic) 
 
 newtype CategoriesAPI route = CategoriesAPI
   { get :: route :- "get" :> RecordParam Drop CategoryFilters :> Get '[JSON] SelectedCategories

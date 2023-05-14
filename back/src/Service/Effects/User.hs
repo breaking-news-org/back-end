@@ -3,6 +3,7 @@ module Service.Effects.User where
 import Effectful
 import Effectful.TH
 import Service.Types.User
+import Common.Types.User
 
 data UserService :: Effect where
   ServiceRegister :: UserRegisterForm -> UserService m (Either RegisterError DBUser)

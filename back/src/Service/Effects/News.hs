@@ -1,9 +1,10 @@
 module Service.Effects.News where
 
-import Effectful (Effect)
-import Effectful.TH (makeEffect)
-import Service.Types.News as ServiceNews (CategoryFilters, CreateNews (..), NewsFilters (..), NewsItem (..), SelectedCategories, SetIsPublished, UnavailableNews, UserId, InsertNewsError)
-import Service.Types.User (Role)
+import Effectful
+import Effectful.TH
+import Service.Types.News
+import Common.Types.User
+import Common.Types.News
 
 data ServiceNews :: Effect where
   ServiceCreateNews :: UserId -> CreateNews -> ServiceNews m (Either InsertNewsError NewsItem)

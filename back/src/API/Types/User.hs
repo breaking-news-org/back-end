@@ -1,10 +1,12 @@
 module API.Types.User (
   FullToken (..),
-  module Service.Types.User,
 ) where
 
+import API.Prelude
 import API.TH
-import Common.Prelude (Generic, Text)
+import Common.Prelude (Text)
+import Common.TH (processRecords)
+import Common.Types.User
 import Servant.Auth.JWT (FromJWT, ToJWT)
 import Service.Types.User
 
@@ -14,9 +16,25 @@ data FullToken = FullToken
   }
   deriving (Generic, Show)
 
-makeSumToSchemaTypes [''UserName, ''AuthorName, ''Password, ''UserId, ''TokenId, ''SessionId, ''ExpiresAt, ''Role]
-processRecordApiTypes [''UserLoginForm, ''UserRegisterForm, ''AccessToken, ''RefreshToken, ''FullToken]
+processRecords [''FullToken]
+instance ToJWT FullToken
+instance FromJWT FullToken
 
-deriveNewtypeInstances' [''FromJWT, ''ToJWT] [''AccessToken, ''RefreshToken]
+makeRecordToSchemaTypes
+  [ ''UserId
+  , ''AuthorName
+  , ''UserName
+  , ''Password
+  , ''UserLoginForm
+  , ''UserRegisterForm
+  , ''FullToken
+  ]
+
+makeRecordToParamSchemaTypes
+  [ ''UserId
+  , ''AuthorName
+  , ''UserName
+  , ''Password
+  ]
 
 makeSumToSchemaTypes [''RegisterError, ''RegisteredUserError, ''RotateError]

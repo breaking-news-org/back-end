@@ -1,8 +1,10 @@
 module Controller.Effects.News where
 
-import API.Types.News
-import Common.Prelude (Dispatch (Dynamic), DispatchOf, Effect)
-import Controller.Prelude (ServerError)
+import Common.Prelude
+import Common.Types.News
+import Common.Types.User
+import Controller.Prelude
+import Service.Types.News
 
 data NewsController :: Effect where
   ControllerCreateNews :: AccessToken -> CreateNews -> NewsController m (Either ServerError (Either InsertNewsError NewsItem))

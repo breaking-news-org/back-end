@@ -3,10 +3,10 @@
 module External.Passwords where
 
 import Common.Prelude
+import Common.Types.User (HashedPassword (..), Password (..))
 import Data.Password.Argon2 (PasswordCheck (..), PasswordHash (..), mkPassword)
 import Data.Password.Argon2 qualified as Argon2 (checkPassword, hashPassword)
 import Effectful.Dispatch.Static (SideEffects (WithSideEffects), StaticRep, evalStaticRep, unsafeEff, unsafeEff_)
-import Persist.Types.User (HashedPassword (..), Password (..))
 
 -- A wrapper for working with passwords
 -- https://github.com/haskell-effectful/effectful/blob/6e8d89048a6704f9c2128ffdca4ea8e01be6e91c/effectful-core/src/Effectful.hs#L160

@@ -1,9 +1,11 @@
 module Controller.Effects.User where
 
-import Controller.Prelude (ServerError)
-import Controller.Types.User (FullToken, JWKSettings)
-import Effectful (Dispatch (Dynamic), DispatchOf, Effect)
+import Controller.Prelude
+import Controller.Types.User
+import Effectful
 import Service.Types.User
+import API.Types.User
+import Common.Types.User
 
 data UserController :: Effect where
   ControllerRegister :: JWKSettings -> UserRegisterForm -> UserController m (Either ServerError (Either RegisterError FullToken))
