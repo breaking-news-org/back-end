@@ -1527,11 +1527,11 @@
     "servant": {
       "flake": false,
       "locked": {
-        "lastModified": 1681942557,
-        "narHash": "sha256-eIyS///k7+KS4ca5Z6SoRSMhStCCAMAdEgUWbcswx7U=",
+        "lastModified": 1684091821,
+        "narHash": "sha256-0jlUNOyNYsDQdYc3Pm8uHDdGqBPys47IDjISKHx+MK8=",
         "owner": "deemp",
         "repo": "servant",
-        "rev": "351ae1541b776d5040572a90a9be87fc330b129e",
+        "rev": "30cf13c50c6b1915bdf9b228de3865c57c01f804",
         "type": "github"
       },
       "original": {
