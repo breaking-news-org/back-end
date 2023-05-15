@@ -1,2 +1,2 @@
-back: deemp/breaking-news-back-app@sha256:adc8e3b9e63162c55cb6a4d61005f1d558b9f444aa59ade050224cc807792310
-test: deemp/breaking-news-back-test@sha256:19041d968388843429488d8eaeec2b18adaffa56fd9f29737bf00c7a73a20aa3
+back: deemp/breaking-news-back-app@sha256:3cac6d0800fc7644b23dfa80cb96fc437cdcfc410c9a9194ec3e7c79ec09cff0
+test: deemp/breaking-news-back-test@sha256:bb057d3dfec16a99d567b51d8ed5961fea82417e13fc81198c526a0d0f83d99d
