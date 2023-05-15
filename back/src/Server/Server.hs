@@ -36,7 +36,7 @@ import Servant.Auth.Server.Internal.AddSetCookie (AddSetCookieApi, AddSetCookies
 import Servant.Server qualified as Servant
 import Servant.Server.Generic (AsServerT, genericServeTWithContext)
 import Servant.Server.Record ()
-import Server.Config (App (..), JWTParameters (..), Loader, Web (_web_port), getConfig)
+import Server.Config (App (..), JWTParameters (..), Loader, Web (..), getConfig)
 import System.Directory (getCurrentDirectory)
 import API.Types.News()
 
@@ -65,24 +65,27 @@ type Constraints es =
   , UserController :> es
   )
 
-directoryToServe :: FilePath
-directoryToServe = "static"
-
 runServerEffect :: forall es a. Constraints es => Eff (Server : es) a -> Eff es a
 runServerEffect = interpret $ \_ -> \case
   StartServer -> do
     app <- getConfig @App id
     let port = app._app_web._web_port
+        staticContent = app._app_web._web_staticContent
         admins = app._app_admins
-    waiApp <- getWaiApplication' =<< getJWKSettings
+    jwkSettings <- getJWKSettings
+    waiApp <- getWaiApplication' jwkSettings staticContent
     dir <- liftIO getCurrentDirectory
-    withLogger $ logDebug $ "Server started" :# ["port" .= port, "directory" .= dir, "serves directory" .= directoryToServe]
+    withLogger $ logDebug $ "Server started" :# ["port" .= port, "directory" .= dir, "serves directory" .= staticContent]
     adminsUpdated <- runExceptT $ updateAdmins admins
     case adminsUpdated of
       Left err -> error $ show err
       Right _ -> pure ()
-    liftIO $ Warp.runSettings (defaultSettings{settingsPort = port, settingsHost = "127.0.0.1"}) waiApp
-  GetWaiApplication -> getWaiApplication' =<< getJWKSettings
+    liftIO $ Warp.run port waiApp
+  GetWaiApplication -> do
+    app <- getConfig @App id
+    let staticContent = app._app_web._web_staticContent
+    jwkSettings <- getJWKSettings
+    getWaiApplication' jwkSettings staticContent
 
 getJWKSettings :: forall es. Constraints es => Eff es JWKSettings
 getJWKSettings = do
@@ -103,8 +106,8 @@ instance
   where
   addSetCookies cookies = addSetCookies cookies . toServant
 
-getWaiApplication' :: forall es. Constraints es => JWKSettings -> Eff es Application
-getWaiApplication' jwkSettings = do
+getWaiApplication' :: forall es. Constraints es => JWKSettings -> FilePath -> Eff es Application
+getWaiApplication' jwkSettings staticContent = do
   withUnliftStrategy (ConcUnlift Ephemeral Unlimited) $ withEffToIO $ \unlift -> do
     let
       serverToHandler :: ExceptT Servant.ServerError (Eff es) x -> Servant.Handler x
@@ -132,7 +135,7 @@ getWaiApplication' jwkSettings = do
                               { get = NewsController.getCategories
                               }
                         }
-                  , docs = serveDirectoryWebApp "static/"
+                  , docs = serveDirectoryWebApp staticContent
                   }
             }
           (defaultJWTSettings jwkSettings._jwkSettings_jwk :. defaultCookieSettings :. EmptyContext)

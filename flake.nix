@@ -83,7 +83,7 @@
               servant-queryparam-client = (super.callCabal2nix "servant-queryparam-client" "${inputs.servant.outPath}/servant-queryparam/servant-queryparam-client" {
                 inherit (self) servant-queryparam-core;
               });
-              servant-queryparam-openapi3 = (super.callCabal2nix "servant-queryparam-openapi3" "${inputs.servant.outPath}/servant-queryparam-openapi3" {
+              servant-queryparam-openapi3 = (super.callCabal2nix "servant-queryparam-openapi3" "${inputs.servant.outPath}/servant-queryparam/servant-queryparam-openapi3" {
                 inherit (self) servant-queryparam-core;
               });
             } //
@@ -126,10 +126,6 @@
           packages = (ps: [
             ps.${back}
             ps.${test}
-            ps.servant-queryparam-core
-            ps.servant-queryparam-client
-            ps.servant-queryparam-server
-            ps.servant-queryparam-openapi3
           ]);
         })
           hls cabal justStaticExecutable
@@ -171,6 +167,10 @@
             config.Cmd = [ executableName ];
             contents = [
               package
+              # pkgs.coreutils
+              # pkgs.bashInteractive
+              # pkgs.htop
+              # pkgs.curl
             ];
           };
 

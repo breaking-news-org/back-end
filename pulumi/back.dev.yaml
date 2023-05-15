@@ -8,6 +8,7 @@ db:
 web:
   port: 8080
   pageSize: 10
+  staticContent: /etc/static
 jwtParameters:
   expirationTime: 3600
 admins:

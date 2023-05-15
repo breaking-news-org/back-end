@@ -31,6 +31,7 @@ data DB = DB
 data Web = Web
   { _web_port :: Int
   , _web_pageSize :: Int
+  , _web_staticContent :: FilePath
   }
   deriving (Show, Generic)
 

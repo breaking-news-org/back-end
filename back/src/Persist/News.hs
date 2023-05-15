@@ -16,13 +16,14 @@ import Control.Monad.Logger.Aeson (Message ((:#)), logDebug, (.=))
 import Data.Coerce (coerce)
 import Data.Int
 import Data.String.Interpolate (i)
-import Database.Esqueleto.Experimental (Entity (..), From, SqlExpr, SqlQuery, Value (..), asc, desc, distinct, in_, innerJoin, just, like, limit, notIn, on, orderBy, selectOne, set, unionAll_, updateCount, valList, withRecursive, (=.), (==.), (||.), type (:&) ((:&)))
+import Database.Esqueleto.Experimental (Entity (..), From, SqlExpr, SqlQuery, Value (..), asc, desc, distinct, in_, innerJoin, just, like, limit, notIn, on, orderBy, selectOne, set, unionAll_, updateCount, valList, withRecursive, (=.), (==.), (||.), type (:&) ((:&)), leftJoin, except_, ToSqlSetOperation (toSqlSetOperation))
 import Database.Esqueleto.PostgreSQL.JSON (JSONB (JSONB, unJSONB))
 import External.Logger (Logger, withLogger)
 import Persist.Effects.News (NewsRepo (..))
 import Persist.Model (Categories (..), EntityField (..), News (..), Users (..))
 import Persist.Prelude (Eff, IOE, MonadIO (liftIO), SqlBackendPool, from, insert, interpret, mkFromSqlKey, mkSqlKey, mkSqlKeyVal, select, table, val, where_, withConn, (&&.), (<=.), (>=.), type (:>))
 import Server.Config (App (..), Loader, Web (..), getConfig)
+import Database.Esqueleto.Experimental.From
 
 mkSqlTrue :: (a -> SqlExpr (Value Bool)) -> Maybe a -> SqlExpr (Value Bool)
 mkSqlTrue = maybe (val True)
@@ -121,29 +122,39 @@ runNewsRepo = interpret $ \_ -> \case
 
 selectCategories :: CategoryFilters -> SqlQuery (From (SqlExpr (Entity Categories)))
 selectCategories CategoryFilters{..} = do
-  distinct $
-    withRecursive
-      ( do
-          category <- from $ table @Categories
-          where_ $
-            let check list_ op =
-                  ( case list_ of
-                      [] -> val True
-                      x -> category.id `op` valList (mkSqlKey <$> x)
-                  )
-             in check _categoryFilters_include in_
-                  &&. check _categoryFilters_exclude notIn
-          pure category
-      )
-      unionAll_
-      ( \prev -> do
-          (categories :& _) <-
-            from
-              $ table @Categories
-                `innerJoin` prev
-              `on` (\(categories :& categoriesPrev) -> categories.parent ==. just categoriesPrev.id)
-          pure categories
-      )
+  -- TODO remove excluded categories and their children from the final result
+
+  let cats list_ =
+        distinct $
+          withRecursive
+            ( do
+                category <- from $ table @Categories
+                where_ $
+                  case list_ of
+                    [] -> val True
+                    x -> category.id `in_` valList (mkSqlKey <$> x)
+                pure category
+            )
+            unionAll_
+            ( \prev -> do
+                (categories :& _) <-
+                  from
+                    $ table @Categories
+                      `innerJoin` prev
+                    `on` (\(categories :& categoriesPrev) -> categories.parent ==. just categoriesPrev.id)
+                pure categories
+            )
+  cats _categoryFilters_include
+  -- cats1 <- from =<< cats _categoryFilters_include
+  -- cats2 <- from =<< cats _categoryFilters_exclude
+
+  -- n2 <- from cats2
+  -- let k = 
+    -- pure cats1 `except_`  pure cats2
+  -- pure _
+  -- pure $ toFrom (cats1 `except_` cats2)
+
+-- check _categoryFilters_exclude notIn
 
 newsToModel :: InsertNewsItem -> News
 newsToModel InsertNewsItem{..} =

@@ -10,6 +10,7 @@ db:
 web:
   port: 30023
   pageSize: 10
+  staticContent: static
 jwtParameters:
   expirationTime: 600
 admins:

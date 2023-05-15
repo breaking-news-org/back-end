@@ -7,6 +7,7 @@ import * as k8s from "@pulumi/kubernetes"
 import { Output, Input } from "@pulumi/pulumi"
 import { parse } from "yaml"
 import { readFileSync } from "node:fs"
+import path = require("node:path")
 
 function mkFullName(environment: string, name: string): string {
   return `${environment}-${name}`
@@ -234,6 +235,7 @@ interface AppConfigFile {
   web: {
     port: number
     pageSize: number
+    staticContent: string
   }
   jwtParameters: {
     expirationTime: number
@@ -308,6 +310,8 @@ function mkBack(
 
   const appConfig = containerConfig.config.app
   const jwkConfig = containerConfig.config.jwk
+  const staticContentHostPath = `${path.dirname(process.cwd())}/static`
+  console.log(staticContentHostPath)
 
   const appConfigFile_ = parse(
     readFileSync(`${appName}.${environment}.yaml`, "utf8")
@@ -363,6 +367,7 @@ function mkBack(
             },
             spec: ((
               appVolume = `${name}-app-config-volume`,
+              staticVolume = `${name}-app-static-volume`,
               configMountPath = containerConfig.config.mountPath
             ) => {
               return {
@@ -381,6 +386,10 @@ function mkBack(
                       {
                         name: appVolume,
                         mountPath: configMountPath,
+                      },
+                      {
+                        name: staticVolume,
+                        mountPath: appConfigFile.web.staticContent,
                       },
                     ],
                     env: [
@@ -411,6 +420,13 @@ function mkBack(
                     configMap: {
                       // TODO
                       name: configMap.metadata.name,
+                    },
+                  },
+                  {
+                    name: staticVolume,
+                    hostPath: {
+                      path: staticContentHostPath,
+                      type: `DirectoryOrCreate`,
                     },
                   },
                 ],
