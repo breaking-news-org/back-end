@@ -2,13 +2,11 @@
 
 module API.Types.QueryParam where
 
+import Fcf.Data.List (DropWhile)
 import GHC.Base (Symbol)
-import Servant.Symbols (Exp, DropPrefix, Eval)
+import Servant.TypeLevel (FromList, ToList, Eval, Exp, TyEq)
 
-type family Modifier (sym :: Symbol) :: Symbol where
-  Modifier sym = DropPrefix sym
-
+type DropPrefix (s :: Symbol) = FromList (Eval (DropWhile (TyEq '_') (ToList s)))
 data Drop :: a -> Exp a
 
-type instance Eval (Drop sym) = Modifier sym
-
+type instance Eval (Drop sym) = DropPrefix sym
