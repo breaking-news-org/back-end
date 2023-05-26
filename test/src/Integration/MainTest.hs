@@ -41,14 +41,12 @@ import Servant.Client qualified as I
 import Servant.Client.Core (Request, RequestF (..))
 import Servant.Client.Free (ClientF (RunRequest, Throw), client)
 import Servant.Client.Internal.HttpClient qualified as I
-import Servant.Client.Named ()
 import Servant.Client.Record ()
 import Server.Config
 import Service.Prelude (encodeUtf8)
 import Service.Types.User
 import Test.Tasty
 import Test.Tasty.HUnit
-import Text.Pretty.Simple (pPrint)
 
 -- https://hackage.haskell.org/package/tasty-1.4.3/docs/Test-Tasty.html#v:defaultMain
 unit_main :: IO ()
@@ -110,9 +108,9 @@ _CONFIG_FILE = "TEST_CONFIG_FILE"
 testUserRegisterForm :: UserRegisterForm
 testUserRegisterForm =
   UserRegisterForm
-    { _userRegisterForm_userName = "testUser1"
-    , _userRegisterForm_password = "testPassword"
-    , _userRegisterForm_authorName = "testAuthor1"
+    { _userName = "testUser1"
+    , _password = "testPassword"
+    , _authorName = "testAuthor1"
     }
 
 registerUser :: ClientFree (Either RegisterError FullToken)
@@ -121,8 +119,8 @@ registerUser = register testUserRegisterForm
 testUserLoginForm :: UserLoginForm
 testUserLoginForm =
   UserLoginForm
-    { _userLoginForm_userName = testUserRegisterForm._userRegisterForm_userName
-    , _userLoginForm_password = testUserRegisterForm._userRegisterForm_password
+    { _userName = testUserRegisterForm._userName
+    , _password = testUserRegisterForm._password
     }
 
 loginUser :: ClientFree (Either RegisteredUserError FullToken)
@@ -182,20 +180,20 @@ authorizeCreateNewsNewsItem = testCase "Authorize, create news, get that news" d
     withClientEnv $
       create
         CreateNews
-          { _createNews_title = "test_title"
-          , _createNews_text = "test_text"
-          , _createNews_images = [Image "test_value"]
-          , _createNews_category = 1
-          , _createNews_isPublished = True
+          { _title = "test_title"
+          , _text = "test_text"
+          , _images = [Image "test_value"]
+          , _category = 1
+          , _isPublished = True
           }
   ns <-
     withClientEnv $
       get
         def
-          { _newsFilters_categoriesInclude = [1, 2]
-          , _newsFilters_categoriesExclude = [3]
-          , _newsFilters_showUnpublished = Just False
-          , _newsFilters_showPublished = Just True
+          { _categoriesInclude = [1, 2]
+          , _categoriesExclude = [3]
+          , _showUnpublished = Just False
+          , _showPublished = Just True
           }
   case ns of
     Left err -> error $ show err
@@ -206,8 +204,8 @@ authorizeCreateNewsNewsItem = testCase "Authorize, create news, get that news" d
     withClientEnv $
       getCategories
         CategoryFilters
-          { _categoryFilters_include = [1, 2]
-          , _categoryFilters_exclude = [3]
+          { _include = [1, 2]
+          , _exclude = [3]
           }
   case items of
     Left err -> error $ show err

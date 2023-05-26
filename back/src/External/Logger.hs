@@ -1,5 +1,5 @@
-{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE InstanceSigs #-}
 
 module External.Logger (
   Logger,
@@ -18,9 +18,6 @@ import Effectful.Dispatch.Dynamic
 import Effectful.Reader.Static
 import Effectful.TH
 import System.IO (stdout)
-
-data Logger :: Effect where
-  WithLogger :: PureLoggingT m a -> Logger m a
 
 type LogFunc m = Loc -> LogSource -> LogLevel -> LogStr -> m ()
 
@@ -51,6 +48,9 @@ instance IOE :> es => MonadLoggerIO (PureLoggingT (Eff es)) where
 instance MonadTrans PureLoggingT where
   lift :: Monad m => m a -> PureLoggingT m a
   lift = PureLoggingT . lift
+
+data Logger :: Effect where
+  WithLogger :: PureLoggingT m a -> Logger m a
 
 makeEffect ''Logger
 

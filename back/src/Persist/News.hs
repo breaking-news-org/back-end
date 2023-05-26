@@ -37,10 +37,10 @@ runNewsRepo = interpret $ \_ -> \case
       withConn $
         selectOne do
           users <- from $ table @Users
-          where_ (users.id ==. mkSqlKeyVal _insertNews_authorId)
+          where_ (users.id ==. mkSqlKeyVal _authorId)
           pure users.name
     case authorName of
-      Nothing -> pure . Left $ AuthorDoesNotExist _insertNews_authorId
+      Nothing -> pure . Left $ AuthorDoesNotExist _authorId
       Just (UserName authorName') -> do
         let newsModel = newsToModel insertNewsItem
         key <- withConn $ insert newsModel
@@ -54,8 +54,8 @@ runNewsRepo = interpret $ \_ -> \case
       categoriesAll <-
         selectCategories
           ( CategoryFilters
-              { _categoryFilters_include = _newsFilters_categoriesInclude
-              , _categoryFilters_exclude = _newsFilters_categoriesExclude
+              { _include = _categoriesInclude
+              , _exclude = _categoriesExclude
               }
           )
       (news :& users :& _) <-
@@ -66,19 +66,19 @@ runNewsRepo = interpret $ \_ -> \case
           `on` (\(news :& _ :& categories) -> news.category ==. categories.id)
       let
         thisYear = UTCTime{utctDay = fromGregorian 2023 1 1, utctDayTime = 0}
-        createdUntil = news.createdAt L.^. coerce <=. val (filters L.^. #_newsFilters_createdUntil . coerce . non now)
-        createdSince = news.createdAt L.^. coerce >=. val (filters L.^. #_newsFilters_createdSince . coerce . non thisYear)
-        authorName = mkSqlTrue (\x -> users.authorName ==. val x) _newsFilters_authorName
+        createdUntil = news.createdAt L.^. coerce <=. val (filters L.^. #_createdUntil . coerce . non now)
+        createdSince = news.createdAt L.^. coerce >=. val (filters L.^. #_createdSince . coerce . non thisYear)
+        authorName = mkSqlTrue (\x -> users.authorName ==. val x) _authorName
         -- TODO FULLTEXT search
-        titleLike = mkSqlTrue (\x -> news.title `like` val [i|%#{x}%|]) _newsFilters_titleLike
-        textLike = mkSqlTrue (\x -> news.text' `like` val [i|%#{x}%|]) _newsFilters_textLike
+        titleLike = mkSqlTrue (\x -> news.title `like` val [i|%#{x}%|]) _titleLike
+        textLike = mkSqlTrue (\x -> news.text' `like` val [i|%#{x}%|]) _textLike
         showUnpublished =
           (news.isPublished ==. val False)
             &&. maybe
               (val False)
               (\x -> val x &&. (news.authorId ==. mkSqlKeyVal userId ||. val (has #_RoleAdmin userRole)))
-              _newsFilters_showUnpublished
-        showPublished = (news.isPublished ==. val True) &&. mkSqlTrue val _newsFilters_showPublished
+              _showUnpublished
+        showPublished = (news.isPublished ==. val True) &&. mkSqlTrue val _showPublished
       where_
         ( (createdUntil &&. createdSince &&. authorName)
             &&. (textLike &&. titleLike &&. (showPublished ||. showUnpublished))
@@ -92,9 +92,9 @@ runNewsRepo = interpret $ \_ -> \case
     pure $ newsFromModel <$> news
   RepoUpdateIsPublished userId userRole SetIsPublished{..} -> do
     withConn do
-      (affected :: [Int64]) <- forM _setIsPublished_newsIds $ \x ->
+      (affected :: [Int64]) <- forM _newsIds $ \x ->
         updateCount $ \p -> do
-          set p [NewsIsPublished =. val _setIsPublished_isPublished]
+          set p [NewsIsPublished =. val _isPublished]
           where_
             ( p.id
                 ==. mkSqlKeyVal x
@@ -102,7 +102,7 @@ runNewsRepo = interpret $ \_ -> \case
                   then val True
                   else p.authorId ==. mkSqlKeyVal userId
             )
-      let unaffected = zip _setIsPublished_newsIds affected ^.. traversed . filtered ((== 0) . snd) . _1
+      let unaffected = zip _newsIds affected ^.. traversed . filtered ((== 0) . snd) . _1
       pure unaffected
   RepoSelectCategoryIds categoryFilters -> do
     withLogger $ logDebug $ "select categories recursively" :# ["filters" .= categoryFilters]
@@ -114,9 +114,9 @@ runNewsRepo = interpret $ \_ -> \case
     pure $
       ( \Entity{entityVal = Categories{..}, ..} ->
           SelectedCategoryItem
-            { _selectedCategory_id = mkFromSqlKey entityKey
-            , _selectedCategory_name = categoriesName
-            , _selectedCategory_parent = mkFromSqlKey <$> categoriesParent
+            { _id = mkFromSqlKey entityKey
+            , _name = categoriesName
+            , _parent = mkFromSqlKey <$> categoriesParent
             }
       )
         <$> categories
@@ -144,31 +144,31 @@ selectCategories CategoryFilters{..} = do
                     `on` (\(categories :& categoriesPrev) -> categories.parent ==. just categoriesPrev.id)
                 pure categories
             )
-  cats1 <- cats _categoryFilters_include True
-  cats2 <- cats _categoryFilters_exclude False
+  cats1 <- cats _include True
+  cats2 <- cats _exclude False
   pure $ from cats1 `except_` from cats2
 
 newsToModel :: InsertNewsItem -> News
 newsToModel InsertNewsItem{..} =
   News
-    { newsTitle = _insertNews_title
-    , newsCreatedAt = _insertNews_createdAt
-    , newsAuthorId = mkSqlKey _insertNews_authorId
-    , newsCategory = mkSqlKey _insertNews_category
-    , newsImages = JSONB _insertNews_images
-    , newsIsPublished = _insertNews_isPublished
-    , newsText' = _insertNews_text
+    { newsTitle = _title
+    , newsCreatedAt = _createdAt
+    , newsAuthorId = mkSqlKey _authorId
+    , newsCategory = mkSqlKey _category
+    , newsImages = JSONB _images
+    , newsIsPublished = _isPublished
+    , newsText' = _text
     }
 
 newsFromModel :: (Entity News, Value AuthorName) -> NewsItem
 newsFromModel (Entity{entityKey, entityVal = News{..}}, authorName) =
   NewsItem
-    { _newsItem_title = newsTitle
-    , _newsItem_createdAt = newsCreatedAt
-    , _newsItem_authorName = authorName.unValue
-    , _newsItem_category = mkFromSqlKey newsCategory
-    , _newsItem_images = unJSONB newsImages
-    , _newsItem_isPublished = newsIsPublished
-    , _newsItem_text = newsText'
-    , _newsItem_id = mkFromSqlKey entityKey
+    { _title = newsTitle
+    , _createdAt = newsCreatedAt
+    , _authorName = authorName.unValue
+    , _category = mkFromSqlKey newsCategory
+    , _images = unJSONB newsImages
+    , _isPublished = newsIsPublished
+    , _text = newsText'
+    , _id = mkFromSqlKey entityKey
     }

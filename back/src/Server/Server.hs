@@ -5,6 +5,7 @@ import API.Endpoints.API1.Root as API1 (API (..))
 import API.Endpoints.API1.User as ApiUser (API (..))
 import API.Prelude (NoContent (NoContent), secondsToNominalDiffTime)
 import API.Root
+import API.Types.News ()
 import API.Types.QueryParam ()
 import Common.Types.User
 import Control.Monad.Except (ExceptT (..), runExceptT)
@@ -38,7 +39,6 @@ import Servant.Server.Generic (AsServerT, genericServeTWithContext)
 import Servant.Server.Record ()
 import Server.Config (App (..), JWTParameters (..), Loader, Web (..), getConfig)
 import System.Directory (getCurrentDirectory)
-import API.Types.News()
 
 data Server :: Effect where
   GetWaiApplication :: Server m Application
@@ -92,7 +92,7 @@ getJWKSettings = do
   lifeTime <- getConfig @App (._app_jwtParameters._jwtParameters_expirationTime)
   let lifetime_ = secondsToNominalDiffTime (MkFixed (lifeTime * (10 ^ 12)))
   jwk <- getConfig id
-  pure JWKSettings{_jwkSettings_jwk = jwk, _jwkSettings_jwtLifetimeSeconds = lifetime_}
+  pure JWKSettings{_jwk = jwk, _jwtLifetimeSeconds = lifetime_}
 
 type instance AddSetCookieApi (NamedRoutes api) = AddSetCookieApi (ToServantApi api)
 instance
@@ -138,7 +138,7 @@ getWaiApplication' jwkSettings staticContent = do
                   , docs = serveDirectoryWebApp staticContent
                   }
             }
-          (defaultJWTSettings jwkSettings._jwkSettings_jwk :. defaultCookieSettings :. EmptyContext)
+          (defaultJWTSettings jwkSettings._jwk :. defaultCookieSettings :. EmptyContext)
     pure waiApp
 
 writeJWK :: IO ()

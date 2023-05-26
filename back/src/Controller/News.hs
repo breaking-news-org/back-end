@@ -24,10 +24,10 @@ getCategories = ExceptT . send . ControllerGetCategories
 runNewsController :: (ServiceNews :> es) => Eff (NewsController : es) a -> Eff es a
 runNewsController = interpret $ \_ -> \case
   ControllerCreateNews AccessToken{..} createNews -> do
-    pure <$> serviceCreateNews _accessToken_userId createNews
+    pure <$> serviceCreateNews _userId createNews
   ControllerSelectNews AccessToken{..} newsFilters ->
-    pure <$> serviceSelectNews _accessToken_userId _accessToken_role newsFilters
+    pure <$> serviceSelectNews _userId _role newsFilters
   ControllerSetIsPublishedNews AccessToken{..} setIsPublishedNews -> do
-    pure <$> serviceSetIsPublished _accessToken_userId _accessToken_role setIsPublishedNews
+    pure <$> serviceSetIsPublished _userId _role setIsPublishedNews
   ControllerGetCategories categoriesFilters ->
     pure <$> serviceGetCategories categoriesFilters

@@ -16,21 +16,14 @@ runUserRepo :: (IOE :> es, SqlBackendPool :> es) => Eff (UserRepo : es) a -> Eff
 runUserRepo = interpret $ \_ -> \case
   RepoInsertUser user@InsertUser{..} -> do
     key <- withConn $ insert $ userToModel user
-    pure $
-      DBUser
-        { _user_authorName = _insertUser_authorName
-        , _user_hashedPassword = _insertUser_hashedPassword
-        , _user_userName = _insertUser_userName
-        , _user_id = fromIntegral $ fromSqlKey key
-        , _user_role = _insertUser_role
-        }
+    pure $ DBUser{_id = fromIntegral $ fromSqlKey key, ..}
   RepoSelectRegisteredUser SelectUser{..} -> do
-    user <- selectUser _selectUser_userName
+    user <- selectUser _userName
     pure $
       case user of
         Nothing -> Left UserDoesNotExist
         Just x ->
-          if checkPassword _selectUser_password x._user_hashedPassword
+          if checkPassword _password x._hashedPassword
             then Right x
             else Left WrongPassword
   RepoSelectUserByUserName userName -> selectUser userName
@@ -73,10 +66,10 @@ runUserRepo = interpret $ \_ -> \case
             <&> ( \(name, password) ->
                     userToModel
                       InsertUser
-                        { _insertUser_authorName = "admin"
-                        , _insertUser_hashedPassword = password
-                        , _insertUser_role = RoleAdmin
-                        , _insertUser_userName = name
+                        { _authorName = "admin"
+                        , _hashedPassword = password
+                        , _role = RoleAdmin
+                        , _userName = name
                         }
                 )
     withConn $ do
@@ -116,26 +109,26 @@ selectUser userName =
 userToModel :: InsertUser -> Users
 userToModel InsertUser{..} =
   Users -- this might be more complex in production code
-    { usersName = _insertUser_userName
-    , usersPassword = _insertUser_hashedPassword
-    , usersAuthorName = _insertUser_authorName
-    , usersRole = _insertUser_role
+    { usersName = _userName
+    , usersPassword = _hashedPassword
+    , usersAuthorName = _authorName
+    , usersRole = _role
     }
 
 userFromModel :: Entity Users -> DBUser
 userFromModel Entity{entityKey, entityVal = Users{..}} =
   DBUser
-    { _user_userName = usersName
-    , _user_hashedPassword = usersPassword
-    , _user_authorName = usersAuthorName
-    , _user_id = fromIntegral $ fromSqlKey entityKey
-    , _user_role = usersRole
+    { _userName = usersName
+    , _hashedPassword = usersPassword
+    , _authorName = usersAuthorName
+    , _id = fromIntegral $ fromSqlKey entityKey
+    , _role = usersRole
     }
 
 sessionFromModel :: Entity Sessions -> Session
 sessionFromModel Entity{entityKey, entityVal = Sessions{..}} =
   Session
-    { _session_tokenId = sessionsTokenId
-    , _session_tokenExpiresAt = sessionsTokenExpiresAt
-    , _session_id = fromIntegral $ fromSqlKey entityKey
+    { _tokenId = sessionsTokenId
+    , _tokenExpiresAt = sessionsTokenExpiresAt
+    , _id = fromIntegral $ fromSqlKey entityKey
     }

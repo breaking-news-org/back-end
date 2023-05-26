@@ -4,23 +4,23 @@ module Service.Types.News (
 ) where
 
 import Common.Prelude (Generic, Text)
-import Common.Types.News
 import Common.TH (processRecords)
+import Common.Types.News
 
 data CreateNews = CreateNews
-  { _createNews_title :: NewsTitle
-  , _createNews_text :: NewsText
-  , _createNews_category :: CategoryId
-  , _createNews_images :: Images
-  , _createNews_isPublished :: Bool
+  { _title :: NewsTitle
+  , _text :: NewsText
+  , _category :: CategoryId
+  , _images :: Images
+  , _isPublished :: Bool
   }
   deriving (Generic)
 
 data EditNews = EditNews
-  { _editNews_id :: Int
-  , _editNews_text :: Text
-  , _editNews_category :: Int
-  , _editNews_images :: Images
+  { _id :: Int
+  , _text :: Text
+  , _category :: Int
+  , _images :: Images
   }
   deriving (Generic)
 

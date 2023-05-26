@@ -1,6 +1,6 @@
 module Common.Types.User where
 
-import API.Prelude (Generic, PersistField, UTCTime, ToHttpApiData, FromHttpApiData)
+import API.Prelude (FromHttpApiData, Generic, PersistField, ToHttpApiData, UTCTime)
 import Common.Prelude (Text)
 import Common.TH (processRecords, processSums)
 import Data.Aeson (encode)
@@ -48,34 +48,34 @@ newtype ExpiresAt = ExpiresAt UTCTime
   deriving newtype (PersistField, Eq, Ord, Show, PersistFieldSql)
 
 data AccessToken = AccessToken
-  { _accessToken_role :: Role
-  , _accessToken_userId :: UserId
-  , _accessToken_id :: TokenId
+  { _role :: Role
+  , _userId :: UserId
+  , _id :: TokenId
   -- ^ index within a session
-  , _accessToken_sessionId :: SessionId
+  , _sessionId :: SessionId
   -- ^ coincides with the id of the corresponding refresh token
   }
   deriving (Generic)
 
 data RefreshToken = RefreshToken
-  { _refreshToken_sessionId :: SessionId
+  { _sessionId :: SessionId
   -- ^ id of a session starting from registration or login
-  , _refreshToken_id :: TokenId
+  , _id :: TokenId
   -- ^ index within that session
   }
   deriving (Generic)
 
 data InsertUser = InsertUser
-  { _insertUser_userName :: UserName
-  , _insertUser_hashedPassword :: HashedPassword
-  , _insertUser_authorName :: AuthorName
-  , _insertUser_role :: Role
+  { _userName :: UserName
+  , _hashedPassword :: HashedPassword
+  , _authorName :: AuthorName
+  , _role :: Role
   }
   deriving (Show, Eq, Generic)
 
 data SelectUser = SelectUser
-  { _selectUser_userName :: UserName
-  , _selectUser_password :: Password
+  { _userName :: UserName
+  , _password :: Password
   }
   deriving (Show, Eq, Generic)
 
@@ -95,24 +95,24 @@ instance PersistFieldSql Role where
   sqlType _ = SqlInt64
 
 data DBUser = DBUser
-  { _user_userName :: UserName
-  , _user_hashedPassword :: HashedPassword
-  , _user_authorName :: AuthorName
-  , _user_role :: Role
-  , _user_id :: UserId
+  { _userName :: UserName
+  , _hashedPassword :: HashedPassword
+  , _authorName :: AuthorName
+  , _role :: Role
+  , _id :: UserId
   }
   deriving (Show, Eq, Generic)
 
 data Session = Session
-  { _session_tokenId :: TokenId
-  , _session_tokenExpiresAt :: ExpiresAt
-  , _session_id :: SessionId
+  { _tokenId :: TokenId
+  , _tokenExpiresAt :: ExpiresAt
+  , _id :: SessionId
   }
   deriving (Generic)
 
 data Admin = Admin
-  { _admin_userName :: UserName
-  , _admin_password :: Password
+  { _userName :: UserName
+  , _password :: Password
   }
   deriving (Show, Generic)
 

@@ -1,6 +1,8 @@
 module Controller.User where
 
+import API.Types.User
 import Common.Prelude (NominalDiffTime, addUTCTime, getCurrentTime, (^?))
+import Common.Types.User
 import Controller.Effects.User (UserController (..))
 import Controller.Prelude
 import Controller.Types.User
@@ -12,8 +14,6 @@ import Effectful.Dispatch.Dynamic (interpret, send)
 import Servant.Auth.Server (defaultJWTSettings, makeJWT)
 import Service.Effects.User (UserService, serviceCreateSession, serviceLogin, serviceRegister, serviceRotateRefreshToken, serviceSetAdmins, serviceUnRegister)
 import Service.Types.User
-import API.Types.User
-import Common.Types.User
 
 updateAdmins :: UserController :> es => [Admin] -> ExceptT ServerError (Eff es) ()
 updateAdmins = ExceptT . send . ControllerUpdateAdmins
@@ -32,54 +32,43 @@ rotateRefreshToken jwkSettings = ExceptT . send . ControllerRotateRefreshToken j
 
 runUserController :: (UserService :> es, IOE :> es) => Eff (UserController : es) a -> Eff es a
 runUserController = interpret $ \_ -> \case
-  ControllerRegister jwkSettings UserRegisterForm{..} -> do
-    res <-
-      serviceRegister
-        UserRegisterForm
-          { _userRegisterForm_userName = _userRegisterForm_userName
-          , _userRegisterForm_password = _userRegisterForm_password
-          , _userRegisterForm_authorName = _userRegisterForm_authorName
-          }
+  ControllerRegister jwkSettings form -> do
+    res <- serviceRegister form
     case res of
       Left UserExists -> pure $ Right (Left UserExists)
       Right user -> do
         fullToken <- getFreshFullToken jwkSettings user
         pure $ Right $ Right fullToken
-  ControllerLogin jwkSettings UserLoginForm{..} -> do
-    res <-
-      serviceLogin
-        UserLoginForm
-          { _userLoginForm_userName = _userLoginForm_userName
-          , _userLoginForm_password = _userLoginForm_password
-          }
+  ControllerLogin jwkSettings form -> do
+    res <- serviceLogin form
     case res of
       Left err -> pure $ Right $ Left err
       Right userId -> do
         fullToken <- getFreshFullToken jwkSettings userId
         pure $ Right $ Right fullToken
   ControllerRotateRefreshToken JWKSettings{..} refreshToken -> do
-    newTokenExpiresAt <- getExpiresAt _jwkSettings_jwtLifetimeSeconds
+    newTokenExpiresAt <- getExpiresAt _jwtLifetimeSeconds
     tokenIdUser <- serviceRotateRefreshToken refreshToken newTokenExpiresAt
     case tokenIdUser of
       Left x -> pure $ Right $ Left x
       Right (tokenId, user) ->
         Right . Right
           <$> makeFullToken
-            _jwkSettings_jwk
-            (refreshToken._refreshToken_sessionId, tokenId, newTokenExpiresAt)
+            _jwk
+            (refreshToken._sessionId, tokenId, newTokenExpiresAt)
             user
   ControllerUpdateAdmins admins -> do
     -- TODO valid?
     pure <$> serviceSetAdmins admins
   ControllerUnRegister RefreshToken{..} -> do
-    pure <$> serviceUnRegister _refreshToken_sessionId
+    pure <$> serviceUnRegister _sessionId
 
 getFreshFullToken :: (UserService :> es, IOE :> es) => JWKSettings -> DBUser -> Eff es FullToken
 getFreshFullToken settings user = do
-  expiresAt <- getExpiresAt settings._jwkSettings_jwtLifetimeSeconds
-  sessionId <- serviceCreateSession expiresAt user._user_id
+  expiresAt <- getExpiresAt settings._jwtLifetimeSeconds
+  sessionId <- serviceCreateSession expiresAt user._id
   makeFullToken
-    settings._jwkSettings_jwk
+    settings._jwk
     (sessionId, 0, expiresAt)
     user
 
@@ -91,16 +80,17 @@ makeFullToken :: (IOE :> es) => JWK -> (SessionId, TokenId, ExpiresAt) -> DBUser
 makeFullToken jwkSettings (sessionId, tokenId, expiresAt) user = do
   let accessToken =
         AccessToken
-          { _accessToken_role = user._user_role
-          , _accessToken_userId = user._user_id
-          , _accessToken_sessionId = sessionId
-          , _accessToken_id = tokenId
+          { _role = user._role
+          , _userId = user._id
+          , _sessionId = sessionId
+          , _id = tokenId
           }
+      -- TODO use lens, fix instances
       expiresAt' = expiresAt ^? #_ExpiresAt
       refreshToken =
         RefreshToken
-          { _refreshToken_id = tokenId
-          , _refreshToken_sessionId = sessionId
+          { _id = tokenId
+          , _sessionId = sessionId
           }
   accessTokenJWT <-
     liftIO $
