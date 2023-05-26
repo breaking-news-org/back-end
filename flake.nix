@@ -15,8 +15,8 @@
       url = "github:frasertweedale/hs-jose";
       flake = false;
     };
-    servant = {
-      url = "github:deemp/servant";
+    servant-queryparam = {
+      url = "github:deemp/servant-queryparam";
       flake = false;
     };
   };
@@ -76,14 +76,14 @@
               lzma = modify super.lzma;
               openapi3 = modify (unmarkBroken super.openapi3);
 
-              servant-queryparam-core = (super.callCabal2nix "servant-queryparam-core" "${inputs.servant.outPath}/servant-queryparam/servant-queryparam-core" { });
-              servant-queryparam-server = (super.callCabal2nix "servant-queryparam-server" "${inputs.servant.outPath}/servant-queryparam/servant-queryparam-server" {
+              servant-queryparam-core = (super.callCabal2nix "servant-queryparam-core" "${inputs.servant-queryparam.outPath}/servant-queryparam-core" { });
+              servant-queryparam-server = (super.callCabal2nix "servant-queryparam-server" "${inputs.servant-queryparam.outPath}/servant-queryparam-server" {
                 inherit (self) servant-queryparam-core;
               });
-              servant-queryparam-client = (super.callCabal2nix "servant-queryparam-client" "${inputs.servant.outPath}/servant-queryparam/servant-queryparam-client" {
+              servant-queryparam-client = (super.callCabal2nix "servant-queryparam-client" "${inputs.servant-queryparam.outPath}/servant-queryparam-client" {
                 inherit (self) servant-queryparam-core;
               });
-              servant-queryparam-openapi3 = (super.callCabal2nix "servant-queryparam-openapi3" "${inputs.servant.outPath}/servant-queryparam/servant-queryparam-openapi3" {
+              servant-queryparam-openapi3 = (super.callCabal2nix "servant-queryparam-openapi3" "${inputs.servant-queryparam.outPath}/servant-queryparam-openapi3" {
                 inherit (self) servant-queryparam-core;
               });
             } //
@@ -275,6 +275,8 @@
           pkgs.kubectl
 
           pkgs.minikube
+
+          pkgs.kubernetes-helm
 
           # tests
           pkgs.postman

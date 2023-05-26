@@ -1520,23 +1520,23 @@
           "nixpkgs"
         ],
         "nixpkgs_": "nixpkgs__8",
-        "servant": "servant",
+        "servant-queryparam": "servant-queryparam",
         "workflows": "workflows"
       }
     },
-    "servant": {
+    "servant-queryparam": {
       "flake": false,
       "locked": {
-        "lastModified": 1684091821,
-        "narHash": "sha256-0jlUNOyNYsDQdYc3Pm8uHDdGqBPys47IDjISKHx+MK8=",
+        "lastModified": 1684997805,
+        "narHash": "sha256-nyPGYAAOhTeURpJgHmBn2bzPtEWSEGNpbmKUT3LpTPc=",
         "owner": "deemp",
-        "repo": "servant",
-        "rev": "30cf13c50c6b1915bdf9b228de3865c57c01f804",
+        "repo": "servant-queryparam",
+        "rev": "4f63d61ed8734efba2a09ebc12b044e39c65ba6c",
         "type": "github"
       },
       "original": {
         "owner": "deemp",
-        "repo": "servant",
+        "repo": "servant-queryparam",
         "type": "github"
       }
     },
