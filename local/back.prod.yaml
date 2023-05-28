@@ -1,8 +1,8 @@
 env: prod
-db:
+dataBase:
   db: postgresql
   user: admin
-  password: psltest
+  password: password
   host: 192.168.49.2
   port: 30005
   dbName: postgresdb

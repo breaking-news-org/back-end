@@ -1,8 +1,8 @@
 env: dev
-db:
+dataBase:
   db: postgresql
   user: admin
-  password: psltest
+  password: password
   dbName: postgresdb
   numConns: 10
 web:

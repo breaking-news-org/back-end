@@ -1,16 +1,16 @@
 env: dev
-db:
+dataBase:
   db: postgresql
   user: admin
-  password: psltest
-  host: 192.168.49.2
+  password: password
+  host: localhost
   port: 30002
   dbName: postgresdb
   numConns: 10
 web:
   port: 30023
   pageSize: 10
-  staticContent: static
+  staticContent: ../static
 jwtParameters:
   expirationTime: 600
 admins:

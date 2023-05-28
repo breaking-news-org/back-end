@@ -5,7 +5,7 @@ config:
       data:
         POSTGRES_DB: postgresdb
         POSTGRES_USER: admin
-        POSTGRES_PASSWORD: psltest
+        POSTGRES_PASSWORD: password
     persistentVolume:
       hostPath: /mnt/data
     container:
@@ -15,7 +15,7 @@ config:
       volumeMounts:
         name: postgredb
         mountPath: /var/lib/postgresql/data
-    db:
+    dataBase:
       port: 5432
     service:
       type: NodePort

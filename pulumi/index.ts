@@ -34,7 +34,7 @@ interface PostgresConfig {
       mountPath: string
     }
   }
-  db: {
+  dataBase: {
     port: number
   }
   service: {
@@ -51,7 +51,7 @@ function mkPostgres(
 ) {
   const appName = config.name
   const fullName = mkFullName(environment, appName)
-  const dbConfig = config.db
+  const dbConfig = config.dataBase
   const containerConfig = config.container
   const persistentVolumeConfig = config.persistentVolume
   const serviceConfig = config.service
@@ -225,7 +225,7 @@ function mkPostgres(
 
 interface AppConfigFile {
   env: string
-  db: {
+  dataBase: {
     db: string
     user: string
     password: string
@@ -320,8 +320,8 @@ function mkBack(
   const appConfigFile: AppConfigFile = {
     ...appConfigFile_,
     ...{
-      db: {
-        ...appConfigFile_.db,
+      dataBase: {
+        ...appConfigFile_.dataBase,
         ...{ host: postgresHost, port: postgresPort },
       },
     },
