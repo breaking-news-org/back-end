@@ -102,7 +102,7 @@ let
           }
           {
             name = "Generate OpenAPI3 specification for the server";
-            run = ''nix run .#${scripts.genOpenApi3.pname}'';
+            run = ''nix run .#${scripts.genOpenAPI3.pname}'';
           }
           {
             name = "Write Docker image digests";

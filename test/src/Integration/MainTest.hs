@@ -37,16 +37,15 @@ import Network.HTTP.Client qualified as HTTP
 import Servant.API ((:>))
 import Servant.Auth (Auth, JWT)
 import Servant.Client (BaseUrl (BaseUrl), ClientEnv (..), ClientError, HasClient (..), Scheme (Http), mkClientEnv)
-import Servant.Client qualified as I
 import Servant.Client.Core (Request, RequestF (..))
 import Servant.Client.Free (ClientF (RunRequest, Throw), client)
-import Servant.Client.Internal.HttpClient qualified as I
-import Servant.Client.Record ()
+import Servant.QueryParam.Client.Record ()
 import Server.Config
 import Service.Prelude (encodeUtf8)
 import Service.Types.User
 import Test.Tasty
 import Test.Tasty.HUnit
+import qualified Servant.Client.Internal.HttpClient as HC
 
 -- https://hackage.haskell.org/package/tasty-1.4.3/docs/Test-Tasty.html#v:defaultMain
 unit_main :: IO ()
@@ -137,10 +136,10 @@ withClientEnv' manager' AppConf{..} f = do
       pure (pure a)
     Free (Throw err) -> error $ "ERROR: got error right away: " ++ show err
     Free (RunRequest req k) -> do
-      let req' = I.defaultMakeClientRequest (baseUrl env) req
+      let req' = HC.defaultMakeClientRequest (baseUrl env) req
       resp <- HTTP.httpLbs req' (manager env)
       putStrLn $ "Got response:\n" <> show resp
-      let res = I.clientResponseToResponse id resp
+      let res = HC.clientResponseToResponse id resp
       case k res of
         Pure n -> do
           -- pPrint n

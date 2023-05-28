@@ -4,7 +4,7 @@ import API.Prelude (Generic, GenericMode (type (:-)), Get, JSON, NamedRoutes, Po
 import API.Types.QueryParam (Drop)
 import Common.Types.News
 import Controller.Types.News
-import Servant.Record (RecordParam)
+import Servant.QueryParam.Record (RecordParam)
 
 data API route = API
   { create :: route :- "create" :> ReqBody '[JSON] CreateNews :> Post '[JSON] (Either InsertNewsError NewsItem)

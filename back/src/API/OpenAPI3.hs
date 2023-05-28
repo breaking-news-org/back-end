@@ -8,7 +8,7 @@ import Data.HashMap.Strict.InsOrd qualified as HM
 import Data.OpenApi (Components (..), HasSecurity (..), HttpSchemeType (..), OpenApi (..), SecurityDefinitions (..), SecurityRequirement (..), SecurityScheme (..), SecuritySchemeType (..), allOperations)
 import Data.Text qualified as T
 import Servant.Auth (Auth, JWT)
-import Servant.Record (RecordParam, UnRecordParam)
+import Servant.QueryParam.Record (RecordParam, UnRecordParam)
 
 spec :: OpenApi
 spec = toOpenApi (Proxy :: Proxy API)

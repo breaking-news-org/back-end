@@ -240,7 +240,7 @@
         testLocalImageName = testImageName;
         testImageTag = "latest";
 
-        genOpenApi3 = "gen-openapi3";
+        genOpenAPI3 = "gen-openapi3";
 
         scripts =
           let scripts1 =
@@ -248,8 +248,8 @@
             // (mkScripts { name = test; imageName = testDockerHubImageName; package = testExe; executableName = "test"; });
           in
           scripts1 // (mkShellApps {
-            genOpenApi3 = {
-              text = ''${mkExe back genOpenApi3}/bin/${genOpenApi3}'';
+            genOpenAPI3 = {
+              text = ''${mkExe back genOpenAPI3}/bin/${genOpenAPI3}'';
               description = ''Generate OpenAPI3 specification for the server'';
             };
             writeDigests = {
@@ -272,7 +272,7 @@
           pkgs.postgresql_15
 
           # kubernetes
-          
+
           # pkgs.kubectl
           # pkgs.minikube
           # pkgs.kubernetes-helm

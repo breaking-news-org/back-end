@@ -34,7 +34,7 @@ import Servant.Auth.Server (AuthResult (..), defaultCookieSettings, defaultJWTSe
 import Servant.Auth.Server.Internal.AddSetCookie (AddSetCookieApi, AddSetCookies (..), Nat (S))
 import Servant.Server qualified as Servant
 import Servant.Server.Generic (AsServerT, genericServeTWithContext)
-import Servant.Server.Record ()
+import Servant.QueryParam.Server.Record ()
 import Server.Config (App (..), JWTParameters (..), Loader, Web (..), getConfig)
 import System.Directory (getCurrentDirectory)
 

@@ -1527,11 +1527,11 @@
     "servant-queryparam": {
       "flake": false,
       "locked": {
-        "lastModified": 1684997805,
-        "narHash": "sha256-nyPGYAAOhTeURpJgHmBn2bzPtEWSEGNpbmKUT3LpTPc=",
+        "lastModified": 1685133208,
+        "narHash": "sha256-wzJ1fv/Muh5x1Gq4prGbsmSNIgYpxiFAAJhsHZ1hsW4=",
         "owner": "deemp",
         "repo": "servant-queryparam",
-        "rev": "4f63d61ed8734efba2a09ebc12b044e39c65ba6c",
+        "rev": "884d510fe6a6334282b0b4fa248f5d93429061bd",
         "type": "github"
       },
       "original": {
