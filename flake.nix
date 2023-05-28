@@ -272,11 +272,10 @@
           pkgs.postgresql_15
 
           # kubernetes
-          pkgs.kubectl
-
-          pkgs.minikube
-
-          pkgs.kubernetes-helm
+          
+          # pkgs.kubectl
+          # pkgs.minikube
+          # pkgs.kubernetes-helm
 
           # tests
           pkgs.postman
@@ -320,18 +319,9 @@
           };
         } // scripts;
 
-
-
         devShells = {
           default = mkShell {
             packages = tools ++ extraTools;
-            bash.extra = ''
-              export LANG="C.utf8"
-              
-              export CONFIG_FILE="$PWD/local/back.dev.yaml"
-              export TEST_CONFIG_FILE="$PWD/local/test.dev.yaml"
-              export JWK_FILE="$PWD/local/jwk.json"
-            '';
             commands =
               (mkCommands "tools" tools)
               # ++ [
