@@ -5,16 +5,16 @@ import Common.TH (processRecord)
 import Common.Types.User (DBUser (..))
 
 data AppConf = AppConf
-  { _appConf_host :: String
-  , _appConf_port :: Int
+  { _host :: String
+  , _port :: Int
   }
   deriving (Generic)
 
 processRecord ''AppConf
 
 data TestConf = TestConf
-  { _testConf_app :: AppConf
-  , _testConf_users :: [DBUser]
+  { _app :: AppConf
+  , _users :: [DBUser]
   }
   deriving (Generic)
 

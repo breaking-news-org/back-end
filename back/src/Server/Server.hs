@@ -27,9 +27,7 @@ import Effectful.TH (makeEffect)
 import External.Logger (Logger, withLogger)
 import GHC.Generics (Generic (..))
 import Network.Wai (Application)
-import Network.Wai.Handler.Warp (defaultSettings)
 import Network.Wai.Handler.Warp qualified as Warp
-import Network.Wai.Handler.Warp.Internal (Settings (..))
 import Servant (Context (..), HasServer (ServerT), serveDirectoryWebApp)
 import Servant.API (GServantProduct, NamedRoutes, ToServant, ToServantApi, toServant)
 import Servant.Auth.Server (AuthResult (..), defaultCookieSettings, defaultJWTSettings)
@@ -69,9 +67,9 @@ runServerEffect :: forall es a. Constraints es => Eff (Server : es) a -> Eff es 
 runServerEffect = interpret $ \_ -> \case
   StartServer -> do
     app <- getConfig @App id
-    let port = app._app_web._web_port
-        staticContent = app._app_web._web_staticContent
-        admins = app._app_admins
+    let port = app._web._port
+        staticContent = app._web._staticContent
+        admins = app._admins
     jwkSettings <- getJWKSettings
     waiApp <- getWaiApplication' jwkSettings staticContent
     dir <- liftIO getCurrentDirectory
@@ -83,13 +81,13 @@ runServerEffect = interpret $ \_ -> \case
     liftIO $ Warp.run port waiApp
   GetWaiApplication -> do
     app <- getConfig @App id
-    let staticContent = app._app_web._web_staticContent
+    let staticContent = app._web._staticContent
     jwkSettings <- getJWKSettings
     getWaiApplication' jwkSettings staticContent
 
 getJWKSettings :: forall es. Constraints es => Eff es JWKSettings
 getJWKSettings = do
-  lifeTime <- getConfig @App (._app_jwtParameters._jwtParameters_expirationTime)
+  lifeTime <- getConfig @App (._jwtParameters._expirationTime)
   let lifetime_ = secondsToNominalDiffTime (MkFixed (lifeTime * (10 ^ 12)))
   jwk <- getConfig id
   pure JWKSettings{_jwk = jwk, _jwtLifetimeSeconds = lifetime_}

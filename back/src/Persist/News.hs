@@ -84,7 +84,7 @@ runNewsRepo = interpret $ \_ -> \case
             &&. (textLike &&. titleLike &&. (showPublished ||. showUnpublished))
             -- &&. showUnpublished
         )
-      let pageSize = fromIntegral app._app_web._web_pageSize
+      let pageSize = fromIntegral app._web._pageSize
       -- pagination
       limit pageSize
       orderBy [desc news.createdAt]

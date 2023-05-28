@@ -13,6 +13,7 @@ import Crypto.JOSE (JWK)
 import Data.Function ((&))
 import Effectful
 import External.Logger (Logger, runLogger)
+import External.Passwords (Passwords, runPasswords)
 import Persist.Effects.News (NewsRepo)
 import Persist.Effects.User (UserRepo)
 import Persist.News (runNewsRepo)
@@ -25,7 +26,6 @@ import Service.Effects.User (UserService)
 import Service.News
 import Service.User (runUserService)
 import System.IO (BufferMode (..), hSetBuffering, stdout)
-import External.Passwords (runPasswords, Passwords)
 
 main :: IO ()
 main = do

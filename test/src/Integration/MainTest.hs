@@ -130,7 +130,7 @@ loginUser = login testUserLoginForm
 -- withClientEnv :: Show a => ClientFree a -> IO (Either ClientError a)
 withClientEnv' :: (Show a) => HTTP.Manager -> AppConf -> Free ClientF a -> IO (Either ClientError a)
 withClientEnv' manager' AppConf{..} f = do
-  let env = mkClientEnv manager' (BaseUrl Http _appConf_host _appConf_port "")
+  let env = mkClientEnv manager' (BaseUrl Http _host _port "")
   case f of
     Pure a -> do
       -- pPrint a
@@ -173,7 +173,7 @@ authorizeCreateNewsNewsItem = testCase "Authorize, create news, get that news" d
   testConf <- runEff $ runLoader @TestConf _CONFIG_FILE $ getConfig @TestConf id
   manager' <- newManager defaultManagerSettings
   let withClientEnv :: (Show a) => Free ClientF a -> IO (Either ClientError a)
-      withClientEnv = withClientEnv' manager' testConf._testConf_app
+      withClientEnv = withClientEnv' manager' testConf._app
   token <- getFullToken withClientEnv
   let API.Endpoints.API1.News.API{get, create, categories} = news (Token (encodeUtf8 token._fullToken_accessToken))
   void $

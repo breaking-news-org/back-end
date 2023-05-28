@@ -156,8 +156,8 @@ processSums
   [ ''InsertNewsError
   ]
 
--- t :: Maybe Images
--- t = decode $ encode $ [Image "ha"]
+t :: Maybe Images
+t = decode $ encode [Image "ha"]
 
 -- >>> t
 -- Just [Image "ha"]

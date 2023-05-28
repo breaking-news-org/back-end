@@ -29,7 +29,7 @@ import Language.Haskell.TH
 aesonOptionsRecord :: Options
 aesonOptionsRecord =
   defaultOptions
-    { fieldLabelModifier = dropWhile (== '_') . dropWhile (/= '_') . dropWhile (== '_')
+    { fieldLabelModifier = dropWhile (== '_')
     , rejectUnknownFields = True
     }
 

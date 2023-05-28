@@ -4,6 +4,7 @@ module Server.Config where
 
 import Common.Prelude (typeMismatch)
 import Common.TH
+import Common.Types.User
 import Control.Exception (SomeException, catch)
 import Data.Aeson
 import Data.String.Interpolate (i)
@@ -15,28 +16,27 @@ import Effectful.Reader.Static
 import Effectful.TH (makeEffect)
 import GHC.Generics (Generic)
 import System.Environment (lookupEnv)
-import Common.Types.User
 
 data DB = DB
-  { _db_db :: Text
-  , _db_user :: Text
-  , _db_password :: Text
-  , _db_host :: Text
-  , _db_port :: Int
-  , _db_dbName :: Text
-  , _db_numConns :: Int
+  { _db :: Text
+  , _user :: Text
+  , _password :: Text
+  , _host :: Text
+  , _port :: Int
+  , _dbName :: Text
+  , _numConns :: Int
   }
   deriving (Show, Generic)
 
 data Web = Web
-  { _web_port :: Int
-  , _web_pageSize :: Int
-  , _web_staticContent :: FilePath
+  { _port :: Int
+  , _pageSize :: Int
+  , _staticContent :: FilePath
   }
   deriving (Show, Generic)
 
 newtype JWTParameters = JWTParameters
-  { _jwtParameters_expirationTime :: Integer
+  { _expirationTime :: Integer
   }
   deriving (Show, Generic)
 
@@ -56,11 +56,11 @@ instance ToJSON AppEnvironment where
     EnvProd -> "prod"
 
 data App = App
-  { _app_env :: AppEnvironment
-  , _app_db :: DB
-  , _app_web :: Web
-  , _app_jwtParameters :: JWTParameters
-  , _app_admins :: [Admin]
+  { _env :: AppEnvironment
+  , _dataBase :: DB
+  , _web :: Web
+  , _jwtParameters :: JWTParameters
+  , _admins :: [Admin]
   }
   deriving (Show, Generic)
 
@@ -72,7 +72,7 @@ data Loader conf :: Effect where
 makeEffect ''Loader
 
 mkConnStr :: DB -> Text
-mkConnStr DB{..} = [i|#{_db_db}://#{_db_user}:#{_db_password}@#{_db_host}:#{_db_port}/#{_db_dbName}|]
+mkConnStr DB{..} = [i|#{_db}://#{_user}:#{_password}@#{_host}:#{_port}/#{_dbName}|]
 
 runLoader :: forall conf es a. (FromJSON conf, IOE :> es) => String -> Eff (Loader conf : es) a -> Eff es a
 runLoader var = reinterpret (loadConfigToReader @conf var) $ \_ -> \case
