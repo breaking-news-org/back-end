@@ -9,17 +9,26 @@ components:
     CategoryName:
       type: string
     CreateNews:
-      items:
-      - $ref: '#/components/schemas/NewsTitle'
-      - $ref: '#/components/schemas/NewsText'
-      - $ref: '#/components/schemas/CategoryId'
-      - items:
-          $ref: '#/components/schemas/Image'
-        type: array
-      - type: boolean
-      maxItems: 5
-      minItems: 5
-      type: array
+      properties:
+        category:
+          $ref: '#/components/schemas/CategoryId'
+        images:
+          items:
+            $ref: '#/components/schemas/Image'
+          type: array
+        isPublished:
+          type: boolean
+        text:
+          $ref: '#/components/schemas/NewsText'
+        title:
+          $ref: '#/components/schemas/NewsTitle'
+      required:
+      - title
+      - text
+      - category
+      - images
+      - isPublished
+      type: object
     CreatedAt:
       example: 2016-07-22T00:00:00Z
       format: yyyy-mm-ddThh:MM:ssZ
@@ -82,13 +91,13 @@ components:
         type: object
     FullToken:
       properties:
-        accessToken:
+        fullToken_accessToken:
           type: string
-        refreshToken:
+        fullToken_refreshToken:
           type: string
       required:
-      - refreshToken
-      - accessToken
+      - fullToken_refreshToken
+      - fullToken_accessToken
       type: object
     Image:
       type: string
@@ -101,22 +110,37 @@ components:
       minimum: -9223372036854775808
       type: integer
     NewsItem:
-      items:
-      - maximum: 9223372036854775807
-        minimum: -9223372036854775808
-        type: integer
-      - $ref: '#/components/schemas/NewsTitle'
-      - $ref: '#/components/schemas/CreatedAt'
-      - $ref: '#/components/schemas/AuthorName'
-      - $ref: '#/components/schemas/CategoryId'
-      - $ref: '#/components/schemas/NewsText'
-      - items:
-          $ref: '#/components/schemas/Image'
-        type: array
-      - type: boolean
-      maxItems: 8
-      minItems: 8
-      type: array
+      properties:
+        authorName:
+          $ref: '#/components/schemas/AuthorName'
+        category:
+          $ref: '#/components/schemas/CategoryId'
+        createdAt:
+          $ref: '#/components/schemas/CreatedAt'
+        id:
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          type: integer
+        images:
+          items:
+            $ref: '#/components/schemas/Image'
+          type: array
+        isPublished:
+          type: boolean
+        text:
+          $ref: '#/components/schemas/NewsText'
+        title:
+          $ref: '#/components/schemas/NewsTitle'
+      required:
+      - id
+      - title
+      - createdAt
+      - authorName
+      - category
+      - text
+      - images
+      - isPublished
+      type: object
     NewsText:
       type: string
     NewsTitle:
@@ -138,39 +162,54 @@ components:
       - SessionHasNewerRefreshTokenId
       type: string
     SelectedCategoryItem:
-      items:
-      - $ref: '#/components/schemas/CategoryId'
-      - $ref: '#/components/schemas/CategoryName'
-      - $ref: '#/components/schemas/CategoryId'
-      maxItems: 3
-      minItems: 3
-      type: array
+      properties:
+        id:
+          $ref: '#/components/schemas/CategoryId'
+        name:
+          $ref: '#/components/schemas/CategoryName'
+        parent:
+          $ref: '#/components/schemas/CategoryId'
+      required:
+      - id
+      - name
+      type: object
     SetIsPublished:
-      items:
-      - items:
-          $ref: '#/components/schemas/NewsId'
-        type: array
-      - type: boolean
-      maxItems: 2
-      minItems: 2
-      type: array
+      properties:
+        isPublished:
+          type: boolean
+        newsIds:
+          items:
+            $ref: '#/components/schemas/NewsId'
+          type: array
+      required:
+      - newsIds
+      - isPublished
+      type: object
     UserLoginForm:
-      items:
-      - $ref: '#/components/schemas/UserName'
-      - $ref: '#/components/schemas/Password'
-      maxItems: 2
-      minItems: 2
-      type: array
+      properties:
+        password:
+          $ref: '#/components/schemas/Password'
+        userName:
+          $ref: '#/components/schemas/UserName'
+      required:
+      - userName
+      - password
+      type: object
     UserName:
       type: string
     UserRegisterForm:
-      items:
-      - $ref: '#/components/schemas/UserName'
-      - $ref: '#/components/schemas/Password'
-      - $ref: '#/components/schemas/AuthorName'
-      maxItems: 3
-      minItems: 3
-      type: array
+      properties:
+        authorName:
+          $ref: '#/components/schemas/AuthorName'
+        password:
+          $ref: '#/components/schemas/Password'
+        userName:
+          $ref: '#/components/schemas/UserName'
+      required:
+      - userName
+      - password
+      - authorName
+      type: object
   securitySchemes:
     JWT:
       bearerFormat: JWT
