@@ -5,7 +5,7 @@ config:
       data:
         POSTGRES_DB: postgresdb
         POSTGRES_USER: admin
-        POSTGRES_PASSWORD: password
+        POSTGRES_PASSWORD: admin_password
     persistentVolume:
       hostPath: /mnt/postgresql/data
     container:

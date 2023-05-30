@@ -255,7 +255,7 @@ View the API, make requests to it.
 
     ```console
     # connect to the database
-    psql postgresql://admin:password@localhost:30002/postgresdb
+    psql postgresql://admin:admin_password@localhost:30002/postgresdb
 
     # check records
     select * from users;

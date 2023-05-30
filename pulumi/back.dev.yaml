@@ -2,7 +2,7 @@ env: dev
 dataBase:
   db: postgresql
   user: admin
-  password: password
+  password: admin_password
   dbName: postgresdb
   numConns: 10
 web:

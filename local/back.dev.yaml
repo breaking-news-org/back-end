@@ -2,7 +2,7 @@ env: dev
 dataBase:
   db: postgresql
   user: admin
-  password: password
+  password: admin_password
   host: localhost
   port: 30002
   dbName: postgresdb
