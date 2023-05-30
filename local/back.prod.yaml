@@ -10,7 +10,7 @@ dataBase:
 web:
   port: 30303
   pageSize: 10
-  staticContent: static
+  staticContent: ../static
 jwtParameters:
   expirationTime: 600
 initDB:
