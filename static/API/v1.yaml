@@ -10,8 +10,10 @@ components:
       type: string
     CreateNews:
       properties:
-        category:
-          $ref: '#/components/schemas/CategoryId'
+        categories:
+          items:
+            $ref: '#/components/schemas/CategoryName'
+          type: array
         images:
           items:
             $ref: '#/components/schemas/Image'
@@ -25,7 +27,7 @@ components:
       required:
       - title
       - text
-      - category
+      - categories
       - images
       - isPublished
       type: object
@@ -33,7 +35,7 @@ components:
       example: 2016-07-22T00:00:00Z
       format: yyyy-mm-ddThh:MM:ssZ
       type: string
-    Either_InsertNewsError_NewsItem:
+    Either_InsertNewsError_():
       oneOf:
       - properties:
           Left:
@@ -43,7 +45,10 @@ components:
         type: object
       - properties:
           Right:
-            $ref: '#/components/schemas/NewsItem'
+            example: []
+            items: {}
+            maxItems: 0
+            type: array
         required:
         - Right
         type: object
@@ -102,9 +107,31 @@ components:
     Image:
       type: string
     InsertNewsError:
-      maximum: 9223372036854775807
-      minimum: -9223372036854775808
-      type: integer
+      oneOf:
+      - properties:
+          contents:
+            $ref: '#/components/schemas/UserId'
+          tag:
+            enum:
+            - AuthorDoesNotExist
+            type: string
+        required:
+        - tag
+        - contents
+        type: object
+      - properties:
+          contents:
+            items:
+              $ref: '#/components/schemas/CategoryName'
+            type: array
+          tag:
+            enum:
+            - InvalidCategories
+            type: string
+        required:
+        - tag
+        - contents
+        type: object
     NewsId:
       maximum: 9223372036854775807
       minimum: -9223372036854775808
@@ -113,8 +140,10 @@ components:
       properties:
         authorName:
           $ref: '#/components/schemas/AuthorName'
-        category:
-          $ref: '#/components/schemas/CategoryId'
+        categories:
+          items:
+            $ref: '#/components/schemas/CategoryName'
+          type: array
         createdAt:
           $ref: '#/components/schemas/CreatedAt'
         id:
@@ -136,7 +165,7 @@ components:
       - title
       - createdAt
       - authorName
-      - category
+      - categories
       - text
       - images
       - isPublished
@@ -185,6 +214,10 @@ components:
       - newsIds
       - isPublished
       type: object
+    UserId:
+      maximum: 9223372036854775807
+      minimum: -9223372036854775808
+      type: integer
     UserLoginForm:
       properties:
         password:
@@ -266,7 +299,7 @@ paths:
           content:
             application/json;charset=utf-8:
               schema:
-                $ref: '#/components/schemas/Either_InsertNewsError_NewsItem'
+                $ref: '#/components/schemas/Either_InsertNewsError_()'
           description: ''
         '400':
           description: Invalid `body`
