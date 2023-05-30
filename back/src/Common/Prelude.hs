@@ -16,7 +16,7 @@ where
 import Control.Lens hiding ((.=), (<.>))
 import Data.Aeson (
   FromJSON (..),
-  Options(..),
+  Options (..),
   ToJSON (..),
   Value,
   defaultOptions,

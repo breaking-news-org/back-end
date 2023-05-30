@@ -14,6 +14,7 @@ runNewsService =
   interpret $ \_ -> \case
     ServiceCreateNews _authorId CreateNews{..} -> do
       now <- liftIO getCurrentTime
+      -- TODO check categories are ASCII lowercase
       repoInsertNewsItem InsertNewsItem{_createdAt = CreatedAt now, ..}
     ServiceSelectNews userId userRole fs -> do
       news <- repoSelectNews userId userRole fs
@@ -23,3 +24,6 @@ runNewsService =
       repoUpdateIsPublished userId userRole setIsPublishedNews
     ServiceGetCategories categoryIds ->
       repoSelectCategoryIds categoryIds
+    ServiceUpdateCategories categories ->
+      -- TODO check categories are ASCII lowercase
+      pure <$> repoUpdateCategories categories

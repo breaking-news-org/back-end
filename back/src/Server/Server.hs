@@ -12,9 +12,10 @@ import Control.Monad.Except (ExceptT (..), runExceptT)
 import Control.Monad.Logger.Aeson
 import Controller.Effects.News (NewsController)
 import Controller.Effects.User (UserController)
+import Controller.News (updateCategories)
 import Controller.News qualified as NewsController
 import Controller.Types.User (JWKSettings (..))
-import Controller.User
+import Controller.User (updateAdmins)
 import Controller.User qualified as UserController
 import Crypto.JOSE (JWK, KeyMaterialGenParam (..), genJWK)
 import Data.Aeson qualified
@@ -32,10 +33,10 @@ import Servant (Context (..), HasServer (ServerT), serveDirectoryWebApp)
 import Servant.API (GServantProduct, NamedRoutes, ToServant, ToServantApi, toServant)
 import Servant.Auth.Server (AuthResult (..), defaultCookieSettings, defaultJWTSettings)
 import Servant.Auth.Server.Internal.AddSetCookie (AddSetCookieApi, AddSetCookies (..), Nat (S))
+import Servant.QueryParam.Server.Record ()
 import Servant.Server qualified as Servant
 import Servant.Server.Generic (AsServerT, genericServeTWithContext)
-import Servant.QueryParam.Server.Record ()
-import Server.Config (App (..), JWTParameters (..), Loader, Web (..), getConfig)
+import Server.Config
 import System.Directory (getCurrentDirectory)
 
 data Server :: Effect where
@@ -69,13 +70,13 @@ runServerEffect = interpret $ \_ -> \case
     app <- getConfig @App id
     let port = app._web._port
         staticContent = app._web._staticContent
-        admins = app._admins
     jwkSettings <- getJWKSettings
     waiApp <- getWaiApplication' jwkSettings staticContent
     dir <- liftIO getCurrentDirectory
     withLogger $ logDebug $ "Server started" :# ["port" .= port, "directory" .= dir, "serves directory" .= staticContent]
-    adminsUpdated <- runExceptT $ updateAdmins admins
-    case adminsUpdated of
+    updatedAdmins <- runExceptT $ updateAdmins app._initDB._admins
+    updatedCategories <- runExceptT $ updateCategories app._initDB._categories
+    case updatedAdmins >> updatedCategories of
       Left err -> error $ show err
       Right _ -> pure ()
     liftIO $ Warp.run port waiApp
@@ -143,3 +144,10 @@ writeJWK :: IO ()
 writeJWK = do
   jwk <- genJWK (RSAGenParam 1000)
   BSL.writeFile "jwk.json" (Data.Aeson.encode jwk)
+
+-- TODO
+-- A session has tokens whose ids are incremented when refreshing
+-- Tokens may expire.
+-- These tokens should be removed from time to time
+
+-- TODO a category may have several parent categories

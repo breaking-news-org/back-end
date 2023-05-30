@@ -28,18 +28,19 @@ Sessions
 Categories
     name CategoryName
     parent CategoriesId Maybe
+    UniqueName name
     deriving Ord Eq Show
 News
     title NewsTitle
     createdAt CreatedAt
     authorId UsersId OnDeleteCascade
-    category CategoriesId
     text' NewsText
     images (JSONB Images)
     isPublished Bool
     deriving Ord Eq Show
+NewsCategories
+    newsId NewsId OnDeleteCascade
+    categoryId CategoriesId OnDeleteCascade
+    UniqueNewsCategory newsId categoryId
+    deriving Ord Eq Show
 |]
-
--- A session has tokens whose ids are incremented when refreshing
--- Tokens may expire.
--- These tokens should be removed from time to time

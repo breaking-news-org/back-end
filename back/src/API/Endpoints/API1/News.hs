@@ -7,7 +7,7 @@ import Controller.Types.News
 import Servant.QueryParam.Record (RecordParam)
 
 data API route = API
-  { create :: route :- "create" :> ReqBody '[JSON] CreateNews :> Post '[JSON] (Either InsertNewsError NewsItem)
+  { create :: route :- "create" :> ReqBody '[JSON] CreateNews :> Post '[JSON] (Either InsertNewsError ())
   , get :: route :- "get" :> RecordParam Drop NewsFilters :> Get '[JSON] [NewsItem]
   , setIsPublished :: route :- "set-is-published" :> ReqBody '[JSON] SetIsPublished :> Post '[JSON] UnavailableNews
   , categories :: route :- "categories" :> NamedRoutes CategoriesAPI

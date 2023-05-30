@@ -12,7 +12,7 @@ import Data.Text.Lazy.Encoding qualified as LT
 import Effectful (Eff, IOE, type (:>))
 import Effectful.Dispatch.Dynamic (interpret, send)
 import Servant.Auth.Server (defaultJWTSettings, makeJWT)
-import Service.Effects.User (UserService, serviceCreateSession, serviceLogin, serviceRegister, serviceRotateRefreshToken, serviceSetAdmins, serviceUnRegister)
+import Service.Effects.User
 import Service.Types.User
 
 updateAdmins :: UserController :> es => [Admin] -> ExceptT ServerError (Eff es) ()
@@ -59,7 +59,7 @@ runUserController = interpret $ \_ -> \case
             user
   ControllerUpdateAdmins admins -> do
     -- TODO valid?
-    pure <$> serviceSetAdmins admins
+    pure <$> serviceUpdateAdmins admins
   ControllerUnRegister RefreshToken{..} -> do
     pure <$> serviceUnRegister _sessionId
 

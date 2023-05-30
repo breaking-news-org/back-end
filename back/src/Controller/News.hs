@@ -9,7 +9,10 @@ import Service.Effects.News
 import Service.Prelude (interpret, send)
 import Service.Types.News
 
-create :: (NewsController :> es) => AccessToken -> CreateNews -> ExceptT ServerError (Eff es) (Either InsertNewsError NewsItem)
+updateCategories :: NewsController :> es => [CategoryName] -> ExceptT ServerError (Eff es) (Either UpdateCategoriesError ())
+updateCategories = ExceptT . send . ControllerUpdateCategories
+
+create :: (NewsController :> es) => AccessToken -> CreateNews -> ExceptT ServerError (Eff es) (Either InsertNewsError ())
 create accessToken = ExceptT . send . ControllerCreateNews accessToken
 
 getNews :: (NewsController :> es) => AccessToken -> NewsFilters -> ExceptT ServerError (Eff es) [NewsItem]
@@ -23,11 +26,13 @@ getCategories = ExceptT . send . ControllerGetCategories
 
 runNewsController :: (ServiceNews :> es) => Eff (NewsController : es) a -> Eff es a
 runNewsController = interpret $ \_ -> \case
-  ControllerCreateNews AccessToken{..} createNews -> do
+  ControllerCreateNews AccessToken{..} createNews ->
     pure <$> serviceCreateNews _userId createNews
   ControllerSelectNews AccessToken{..} newsFilters ->
     pure <$> serviceSelectNews _userId _role newsFilters
-  ControllerSetIsPublishedNews AccessToken{..} setIsPublishedNews -> do
+  ControllerSetIsPublishedNews AccessToken{..} setIsPublishedNews ->
     pure <$> serviceSetIsPublished _userId _role setIsPublishedNews
   ControllerGetCategories categoriesFilters ->
     pure <$> serviceGetCategories categoriesFilters
+  ControllerUpdateCategories categories ->
+    pure <$> serviceUpdateCategories categories

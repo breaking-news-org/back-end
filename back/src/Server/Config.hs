@@ -4,6 +4,7 @@ module Server.Config where
 
 import Common.Prelude (typeMismatch)
 import Common.TH
+import Common.Types.News (CategoryName)
 import Common.Types.User
 import Control.Exception (SomeException, catch)
 import Data.Aeson
@@ -55,16 +56,22 @@ instance ToJSON AppEnvironment where
     EnvDev -> "dev"
     EnvProd -> "prod"
 
+data InitDB = InitDB
+  { _admins :: [Admin]
+  , _categories :: [CategoryName]
+  }
+  deriving (Show, Generic)
+
 data App = App
   { _env :: AppEnvironment
   , _dataBase :: DB
   , _web :: Web
   , _jwtParameters :: JWTParameters
-  , _admins :: [Admin]
+  , _initDB :: InitDB
   }
   deriving (Show, Generic)
 
-processRecords [''DB, ''Web, ''JWTParameters, ''App]
+processRecords [''DB, ''Web, ''JWTParameters, ''InitDB, ''App]
 
 data Loader conf :: Effect where
   GetConfig :: (FromJSON conf) => (conf -> a) -> Loader conf m a

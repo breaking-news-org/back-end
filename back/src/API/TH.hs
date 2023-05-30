@@ -30,14 +30,14 @@ makeRecordToParamSchema' t = do
 makeRecordTypes :: (Type -> Q [Dec]) -> [Name] -> Q [Dec]
 makeRecordTypes f names = concat <$> traverse (f . ConT) names
 
-makeRecordToSchema :: Name -> Q [Dec]
-makeRecordToSchema name = makeRecordToSchema' $ ConT name
-
 makeRecordToSchemaTypes :: [Name] -> Q [Dec]
 makeRecordToSchemaTypes = makeRecordTypes makeRecordToSchema'
 
 makeRecordToParamSchemaTypes :: [Name] -> Q [Dec]
 makeRecordToParamSchemaTypes = makeRecordTypes makeRecordToParamSchema'
+
+makeRecordToSchema :: Name -> Q [Dec]
+makeRecordToSchema name = makeRecordToSchema' $ ConT name
 
 processRecordApiType :: Name -> Q [Dec]
 processRecordApiType name = do
@@ -54,16 +54,23 @@ makeSumToSchema' t = do
   [d|
     instance ToSchema $(pure t) where
       declareNamedSchema = genericDeclareNamedSchema $ fromAesonOptions aesonOptionsSum
+    |]
 
+makeSumToParamSchema' :: Type -> Q [Dec]
+makeSumToParamSchema' t = do
+  [d|
     instance ToParamSchema $(pure t) where
       toParamSchema = genericToParamSchema schemaOptionsSum
     |]
 
+makeSumToSchemaTypes :: [Name] -> Q [Dec]
+makeSumToSchemaTypes ns = concat <$> traverse (makeSumToSchema' . ConT) ns
+
+makeSumToParamSchemaTypes :: [Name] -> Q [Dec]
+makeSumToParamSchemaTypes ns = concat <$> traverse (makeSumToParamSchema' . ConT) ns
+
 makeSumToSchema :: Name -> Q [Dec]
 makeSumToSchema name = makeSumToSchema' $ ConT name
-
-makeSumToSchemaTypes :: [Name] -> Q [Dec]
-makeSumToSchemaTypes ns = concat <$> traverse makeSumToSchema ns
 
 processSumApiType :: Name -> Q [Dec]
 processSumApiType name = do

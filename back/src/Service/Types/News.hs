@@ -10,7 +10,7 @@ import Common.Types.News
 data CreateNews = CreateNews
   { _title :: NewsTitle
   , _text :: NewsText
-  , _category :: CategoryId
+  , _categories :: [CategoryName]
   , _images :: Images
   , _isPublished :: Bool
   }

@@ -2,7 +2,7 @@ module Service.User where
 
 import Common.Types.User
 import Control.Lens.Extras (is)
-import Control.Monad (forM)
+import Control.Monad (forM, forM_)
 import Control.Monad.Logger.Aeson
 import Data.Aeson.Text (encodeToLazyText)
 import Effectful
@@ -45,7 +45,7 @@ runUserService = interpret $ \_ -> \case
           else do
             repoSessionUpdateTokenId _sessionId newTokenExpiresAt
             pure $ Right (_id + 1, user)
-  ServiceSetAdmins admins -> do
+  ServiceUpdateAdmins admins -> do
     admins' <- forM admins $ \Admin{..} -> (_userName,) <$> hashPassword _password
     repoUpdateAdmins admins'
   ServiceUnRegister sessionId -> do

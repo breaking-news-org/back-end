@@ -47,7 +47,6 @@ import Test.Tasty
 import Test.Tasty.HUnit
 import qualified Servant.Client.Internal.HttpClient as HC
 
--- https://hackage.haskell.org/package/tasty-1.4.3/docs/Test-Tasty.html#v:defaultMain
 unit_main :: IO ()
 unit_main =
   defaultMain
@@ -100,9 +99,6 @@ api = Proxy
 
 _CONFIG_FILE :: String
 _CONFIG_FILE = "TEST_CONFIG_FILE"
-
--- TODO create admin in a database on server start
--- server ensures only the admins from the config are in a db
 
 testUserRegisterForm :: UserRegisterForm
 testUserRegisterForm =
@@ -182,7 +178,7 @@ authorizeCreateNewsNewsItem = testCase "Authorize, create news, get that news" d
           { _title = "test_title"
           , _text = "test_text"
           , _images = [Image "test_value"]
-          , _category = 1
+          , _categories = ["test_category"]
           , _isPublished = True
           }
   ns <-

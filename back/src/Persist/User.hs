@@ -6,7 +6,7 @@ where
 import Common.Prelude ((<&>))
 import Common.Types.User
 import Control.Lens (Bifunctor (bimap))
-import Database.Esqueleto.Experimental (Entity (Entity, entityKey), PersistUniqueWrite (putMany), delete, fromSqlKey, innerJoin, notIn, on, selectOne, set, update, valList, (+.), (=.), (==.), type (:&) ((:&)))
+import Database.Esqueleto.Experimental (Entity (Entity, entityKey), PersistUniqueWrite (putMany), delete, innerJoin, notIn, on, selectOne, set, update, valList, (+.), (=.), (==.), type (:&) ((:&)))
 import External.Passwords (checkPassword)
 import Persist.Effects.User (UserRepo (..))
 import Persist.Model

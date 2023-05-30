@@ -1,9 +1,9 @@
 module Service.Effects.User where
 
+import Common.Types.User
 import Effectful
 import Effectful.TH
 import Service.Types.User
-import Common.Types.User
 
 data UserService :: Effect where
   ServiceRegister :: UserRegisterForm -> UserService m (Either RegisterError DBUser)
@@ -12,6 +12,6 @@ data UserService :: Effect where
   -- create a session with a refresh token that expires at a given time
   ServiceCreateSession :: ExpiresAt -> UserId -> UserService m SessionId
   ServiceRotateRefreshToken :: RefreshToken -> ExpiresAt -> UserService m (Either RotateError (TokenId, DBUser))
-  ServiceSetAdmins :: [Admin] -> UserService m ()
+  ServiceUpdateAdmins :: [Admin] -> UserService m ()
 
 makeEffect ''UserService

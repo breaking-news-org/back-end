@@ -21,21 +21,19 @@ data InsertNewsItem = InsertNewsItem
   { _title :: NewsTitle
   , _createdAt :: CreatedAt
   , _authorId :: UserId
-  , _category :: CategoryId
+  , _categories :: [CategoryName]
   , _text :: NewsText
   , _images :: Images
   , _isPublished :: Bool
   }
   deriving (Generic)
 
-type CategoryIds = [CategoryId]
-
 data NewsItem = NewsItem
   { _id :: Int
   , _title :: NewsTitle
   , _createdAt :: CreatedAt
   , _authorName :: AuthorName
-  , _category :: CategoryId
+  , _categories :: [CategoryName]
   , _text :: NewsText
   , _images :: Images
   , _isPublished :: Bool
@@ -53,8 +51,8 @@ data NewsFilters = NewsFilters
   { _createdUntil :: Maybe CreatedUntil
   , _createdSince :: Maybe CreatedSince
   , _authorName :: Maybe AuthorName
-  , _categoriesInclude :: CategoryIds
-  , _categoriesExclude :: CategoryIds
+  , _categoriesInclude :: [CategoryId]
+  , _categoriesExclude :: [CategoryId]
   , _titleLike :: Maybe NewsTitle
   , _textLike :: Maybe NewsText
   , _showUnpublished :: Maybe Bool
@@ -78,8 +76,8 @@ instance Default NewsFilters where
       }
 
 data CategoryFilters = CategoryFilters
-  { _include :: CategoryIds
-  , _exclude :: CategoryIds
+  { _include :: [CategoryId]
+  , _exclude :: [CategoryId]
   }
   deriving (Generic)
 
@@ -123,10 +121,13 @@ type UnavailableNews = [NewsId]
 
 type SelectedCategories = [SelectedCategoryItem]
 
-newtype InsertNewsError
+data InsertNewsError
   = -- | An author unregistered, but then decided to create a news by a not-yet-expired access token
     AuthorDoesNotExist UserId
+  | InvalidCategories [CategoryName]
   deriving (Generic, Show)
+
+data UpdateCategoriesError = InvalidCategories' [CategoryName]
 
 data SetIsPublished = SetIsPublished
   { _newsIds :: [NewsId]
