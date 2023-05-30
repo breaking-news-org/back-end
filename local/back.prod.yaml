@@ -4,11 +4,11 @@ dataBase:
   user: admin
   password: admin_password
   host: localhost
-  port: 30005
+  port: 30102
   dbName: postgresdb
   numConns: 10
 web:
-  port: 30016
+  port: 30303
   pageSize: 10
   staticContent: static
 jwtParameters:

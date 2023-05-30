@@ -8,7 +8,7 @@ dataBase:
   dbName: postgresdb
   numConns: 10
 web:
-  port: 30023
+  port: 30203
   pageSize: 10
   staticContent: ../static
 jwtParameters:

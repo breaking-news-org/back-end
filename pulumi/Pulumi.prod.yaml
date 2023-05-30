@@ -20,7 +20,7 @@ config:
     service:
       type: NodePort
       port: 8080
-      nodePort: 30005
+      nodePort: 30102
   prod:back:
     name: back
     deployment:
@@ -51,4 +51,4 @@ config:
     service:
       port: 8080
       type: NodePort
-      nodePort: 30006
+      nodePort: 30103
