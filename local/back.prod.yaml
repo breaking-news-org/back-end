@@ -13,6 +13,12 @@ web:
   staticContent: static
 jwtParameters:
   expirationTime: 600
-admins:
-- userName: admin
-  password: admin
+initDB:
+  admins:
+  - userName: admin
+    password: admin
+  categories:
+  - misc
+  - it
+  - programming
+  - haskell
