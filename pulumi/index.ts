@@ -625,6 +625,70 @@ function mkTest(
     ))()
 }
 
+interface MonitoringConfig {
+  namespace: string
+  appLabel: string
+  releaseName: string
+  grafanaRepo: string
+  chart: string
+  grafanaService: {
+    port: number
+    targetPort: number
+    nodePort: number
+  }
+  values: {
+    loki: {
+      enabled: boolean
+      isDefault: boolean
+      url: string
+    }
+    promtail: {
+      enabled: true
+      config: {
+        serverPort: number
+        clients: [
+          {
+            url: string
+          }
+        ]
+      }
+    }
+    grafana: {
+      enabled: true
+      sidecar: {
+        datasources: {
+          enabled: true
+        }
+      }
+      image: {
+        tag: string
+      }
+    }
+  }
+}
+
+function mkMonitoring(config: MonitoringConfig, environment: string) {
+  const labels = {
+    app: config.appLabel,
+    environment: environment
+  }
+  const monitoringNs = new k8s.core.v1.Namespace(config.namespace, {
+    metadata: {
+      labels: labels,
+      name: config.namespace,
+    },
+  })
+  const monitoring = new k8s.helm.v3.Release(config.releaseName, {
+    chart: config.chart,
+    namespace: monitoringNs.metadata.name,
+    repositoryOpts: {
+      repo: config.grafanaRepo,
+    },
+    skipCrds: true,
+    values: config.values,
+  })
+}
+
 interface Digests {
   back: string
   test: string
@@ -662,8 +726,12 @@ function mkSetup(
       provider
     )
   }
+
+  const monitoring = mkMonitoring(config.requireObject("monitoring"), environment)
 }
 
+// didn't work with microk8s
+// worked with minikube
 // const provider = new k8s.Provider("k8s-yaml-rendered", {
 //   renderYamlToDirectory: "yaml",
 // })
