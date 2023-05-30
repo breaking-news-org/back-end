@@ -86,41 +86,15 @@ Haskell modules from [back/src](./back/src/) are logically grouped into the foll
 
 1. (Optionally) Open a `.hs` file and hover over a function. Shortly, Haskell Language Server should start giving the type info.
 
+1. See the following sections. They assume `dev` environment.
+
+   - There are configurations for the `prod` environment.
+
 ### Run the application
 
 #### Cluster
 
 Run a database, a server, and tests in a Kubernetes cluster.
-
-1. Create `secrets.env` file from `secrets.example.env`.
-
-1. `source` environment files.
-
-    1. Manually
-
-        ```console
-        source secrets.env
-        source .env
-        ```
-
-    1. Via `direnv`
-
-        ```console
-        direnv allow
-        ```
-
-1. Push images to Docker Hub.
-
-    ```console
-    nix run .#backPushToDockerHub
-    nix run .#testPushToDockerHub
-    ```
-
-1. Write image digests.
-
-   ```console
-   nix run .#writeDigests
-   ```
 
 1. Create a cluster.
 
@@ -132,7 +106,7 @@ Run a database, a server, and tests in a Kubernetes cluster.
     microk8s start
     ```
 
-1. The pods configuration is in the [pulumi](./pulumi) directory.
+1. The pods configuration is in [Pulumi.dev.yaml](./pulumi/Pulumi.dev.yaml).
 
 1. Prepare `pulumi`.
 
@@ -174,7 +148,7 @@ Run a database, a server, and tests in a Kubernetes cluster.
    kubectl get po
    ```
 
-1. The configuration is in the [local](./local) directory.
+1. The app configuration is in the [local](./local) directory. See [back.dev.yaml](./local/back.dev.yaml).
 
 1. Run the server using `cabal-install`. The server will connect to the database in the cluster.
 
@@ -182,15 +156,50 @@ Run a database, a server, and tests in a Kubernetes cluster.
     cabal run back:exe:back
     ```
 
+#### Images
+
+Build Docker images, push to Docker Hub and pin image digests for app and test.
+
+1. Create `secrets.env` file from `secrets.example.env`.
+
+1. `source` environment files.
+
+    1. Manually
+
+        ```console
+        source secrets.env
+        source .env
+        ```
+
+    1. Via `direnv`
+
+        ```console
+        direnv allow
+        ```
+
+1. Push images to Docker Hub.
+
+    ```console
+    nix run .#backPushToDockerHub
+    nix run .#testPushToDockerHub
+    ```
+
+1. Write image digests.
+
+   ```console
+   nix run .#writeDigests
+   ```
+
 ### Expose the server
 
 1. The server IP address (let's call it `<IP>`) is `localhost`.
 
 1. Get the port (let's call it `<port>`) of the server.
-   1. For the server in the cluster, see `dev:back.service.nodePort` in `pulumi/Pulumi.dev.yaml`.
-   1. For the server run via `cabal-install`, see `web.port` in `local/back.dev.yaml`.
 
-1. Expose the service to the world via `localtunnel`.
+   - For the server in the cluster, see `dev:back.service.nodePort` in [Pulumi.dev.yaml](./pulumi/Pulumi.dev.yaml).
+   - For the server run via `cabal-install`, see `web.port` in [back.dev.yaml](./local/back.dev.yaml).
+
+1. Expose the server to the world via `localtunnel`.
 
     ```console
     lt -l <IP> -p <port> -s <subdomain>
@@ -261,9 +270,20 @@ View the API, make requests to it.
     select * from users;
     ```
 
+### Monitoring
+
+1. The cluster provides pod monitoring via [loki-stack](https://github.com/grafana/helm-charts/tree/eb55960453f49814d3234fd4417ffb2d5b127b80/charts/loki-stack).
+
+1. Monitoring is configured in [Pulumi.dev.yaml](./pulumi/Pulumi.dev.yaml) at `dev:monitoring`.
+
+1. `Grafana` should be available at `http://localhost:30005`.
+
+   - Username: `admin`
+   - Password: `admin_password`
+
 ### Pulumi
 
-Manage resources
+Manage resources in a running cluster via `pulumi` (see [Cluster](#cluster)).
 
 1. Go to `pulumi`.
 
@@ -291,17 +311,18 @@ Manage resources
     
     # after deleting resources, run
     pulumi refresh
-
+    
+    # update resources
     pulumi up
     ```
 
-1. Destroy the resources.
+1. Destroy all resources.
 
     ```console
     pulumi destroy
     ```
 
-### Configs
+## Configs
 
 - [package.yaml](./package.yaml) - used by `hpack` to generate a `.cabal`
 - [.markdownlint.jsonc](./.markdownlint.jsonc) - for `markdownlint` from the extension `davidanson.vscode-markdownlint`
@@ -313,6 +334,12 @@ Manage resources
 
 ## References
 
+- [charts/loki-stack](https://github.com/grafana/helm-charts/tree/eb55960453f49814d3234fd4417ffb2d5b127b80/charts/loki-stack)
+  - It's possible to overwrite chart values
+    - Find `grafana` in [requirements.yaml](https://github.com/grafana/helm-charts/blob/eb55960453f49814d3234fd4417ffb2d5b127b80/charts/loki-stack/requirements.yaml#L14)
+    - Find its `grafana` chart [values](https://github.com/grafana/helm-charts/blob/eb55960453f49814d3234fd4417ffb2d5b127b80/charts/grafana/values.yaml)
+    - Edit `loki-stack` [values](https://github.com/grafana/helm-charts/blob/eb55960453f49814d3234fd4417ffb2d5b127b80/charts/loki-stack/values.yaml#L36) for `grafana`
+- Grafana, Loki, Promtail - [YT](https://www.youtube.com/watch?v=MBJ9puJyYH8)
 - `DeriveAnyClass` sometimes leads to infinite loops - see [ToHttpApiData](https://hackage.haskell.org/package/servant-0.19.1/docs/Servant-API.html#t:ToHttpApiData)
 - Running server in a `VM`
   - Host shouldn't be Windows
@@ -334,3 +361,4 @@ Manage resources
 - [Using production data in staging](https://help.cloud66.com/docs/databases/using-master-data-staging)
 - [API versioning](https://usecsv.com/community/api-versioning)
   - via url part (easy to version the whole API)
+- [PostgreSQL Initialization scripts](https://github.com/docker-library/docs/blob/master/postgres/README.md#initialization-scripts)
