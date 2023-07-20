@@ -1,50 +1,29 @@
 jobs:
-  _1_push_to_cachix:
-    name: Push to cachix
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout this repo
-        uses: actions/checkout@v3
-      - name: Install Nix
-        uses: cachix/install-nix-action@v20
-        with:
-          extra_nix_config: "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}\nsubstituters = https://cache.nixos.org/ https://cache.iog.io https://nix-community.cachix.org https://deemp.cachix.org \ntrusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= haskell-language-server.cachix.org-1:juFfHrwkOxqIOZShtC4YC1uT1bBcq2RSvC7OMKx0Nz8= deemp.cachix.org-1:9shDxyR2ANqEPQEEYDL/xIOnoPwxHot21L5fiZnFL18=\nstore = ${{ matrix.store }}\n"
-          install_url: https://releases.nixos.org/nix/nix-2.14.1/install
-      - name: Log in to Cachix
-        run: nix run nixpkgs#cachix -- authtoken ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - env:
-          CACHIX_CACHE: ${{ secrets.CACHIX_CACHE }}
-        name: Push flakes to Cachix
-        run: nix run .#pushToCachix
-    strategy:
-      matrix:
-        include:
-          - os: macos-11
-          - os: macos-12
-          - os: ubuntu-20.04
-            store: /home/runner/nix
-          - os: ubuntu-22.04
-            store: /home/runner/nix
-  _2_push_to_docker_hub:
+  _1_push_to_docker_hub_and_commit:
     name: Push ${{ matrix.scriptName }} to Docker Hub
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v3
       - name: Install Nix
-        uses: cachix/install-nix-action@v20
+        uses: nixbuild/nix-quick-install-action@v25
         with:
-          extra_nix_config: "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}\nsubstituters = https://cache.nixos.org/ https://cache.iog.io https://nix-community.cachix.org https://deemp.cachix.org \ntrusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= haskell-language-server.cachix.org-1:juFfHrwkOxqIOZShtC4YC1uT1bBcq2RSvC7OMKx0Nz8= deemp.cachix.org-1:9shDxyR2ANqEPQEEYDL/xIOnoPwxHot21L5fiZnFL18=\nstore = /home/runner/nix\n"
-          install_url: https://releases.nixos.org/nix/nix-2.14.1/install
+          nix_conf: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            substituters = https://cache.nixos.org/ https://nix-community.cachix.org https://cache.iog.io https://deemp.cachix.org
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= deemp.cachix.org-1:9shDxyR2ANqEPQEEYDL/xIOnoPwxHot21L5fiZnFL18=
+            keep-outputs = true
       - name: Restore and cache Nix store
-        uses: actions/cache@v3.3.0
+        uses: nix-community/cache-nix-action@v1
         with:
-          key: ${{ runner.os }}-nix-${{ hashfiles('./flake.nix', './flake.lock') }}-${{ matrix.scriptName }}
-          path: /home/runner/nix
+          key: nix-${{ runner.os }}-${{ matrix.scriptName }}-${{ hashfiles('**/flake.nix', '**/flake.lock') }}
+          linux-gc-enabled: true
+          linux-max-store-size: 5000000000
+          macos-gc-enabled: true
+          macos-max-store-size: 5000000000
           restore-keys: |
-            ${{ runner.os }}-nix-${{ hashfiles('./flake.nix', './flake.lock') }}-${{ matrix.scriptName }}
-            ${{ runner.os }}-nix-
-      - name: Log in to Docker
+            nix-${{ runner.os }}-${{ matrix.scriptName }}-
+      - name: Log in to DockerHub
         uses: docker/login-action@v2.1.0
         with:
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
@@ -53,61 +32,50 @@ jobs:
           DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
         name: Push to Docker Hub
-        run: |
+        run: |-
+          nix profile install .#${{ matrix.scriptName }}PushToDockerHub
           nix run .#${{ matrix.scriptName }}PushToDockerHub
+      - name: Config git for github-actions
+        run: |
+          git config --global user.name github-actions
+          git config --global user.email github-actions@github.com
+      - name: Update flake locks
+        run: |-
+          nix profile install .#updateLocks
+          nix run .#updateLocks
+      - name: Generate OpenAPI3 specification for the server
+        run: |-
+          nix profile install .#genOpenAPI3
+          nix run .#genOpenAPI3
+      - env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        name: Write Docker image digests
+        run: |-
+          nix profile install .#writeDigests
+          nix run .#writeDigests
+      - name: Extra commit
+        run: |-
+          git pull --rebase --autostash
+
+          git add .
+          git commit \
+            -m "action: Update flake locks" \
+            -m "action: Generate OpenAPI3 specification for the server" \
+            -m "action: Write Docker image digests" \
+            || echo "commit failed!"
+          git push
     strategy:
       matrix:
         scriptName:
           - back
           - test
-  _3_extra_commit:
-    name: Extra commit
-    needs:
-      - _2_push_to_docker_hub
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout this repo
-        uses: actions/checkout@v3
-      - name: Install Nix
-        uses: cachix/install-nix-action@v20
-        with:
-          extra_nix_config: "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}\nsubstituters = https://cache.nixos.org/ https://cache.iog.io https://nix-community.cachix.org https://deemp.cachix.org \ntrusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= haskell-language-server.cachix.org-1:juFfHrwkOxqIOZShtC4YC1uT1bBcq2RSvC7OMKx0Nz8= deemp.cachix.org-1:9shDxyR2ANqEPQEEYDL/xIOnoPwxHot21L5fiZnFL18=\nstore = /home/runner/nix\n"
-          install_url: https://releases.nixos.org/nix/nix-2.14.1/install
-      - name: Restore and cache Nix store
-        uses: actions/cache@v3.3.0
-        with:
-          key: ${{ runner.os }}-nix-${{ hashfiles('./flake.nix', './flake.lock') }}-extra
-          path: /home/runner/nix
-          restore-keys: |
-            ${{ runner.os }}-nix-${{ hashfiles('./flake.nix', './flake.lock') }}-extra
-            ${{ runner.os }}-nix-
-      - name: Config git for github-actions
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-      - name: Update flake locks
-        run: nix run .#updateLocks
-      - name: Generate OpenAPI3 specification for the server
-        run: nix run .#genOpenAPI3
-      - env:
-          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-        name: Write Docker image digests
-        run: nix run .#writeDigests
-      - name: Extra commit
-        run: |
-          git commit -a \
-           -m "action: extra" \
-           -m "- Update flake locks" \
-           -m "- Generate OpenAPI3 specification for the server" \
-           -m "- Write Docker image digests" \
-           && git push || echo ""
-  _4_build_deploy_gh_pages:
+  _2_build_deploy_gh_pages:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     name: Build and deploy GH Pages
-    needs: _3_extra_commit
-    runs-on: ubuntu-20.04
+    needs: _1_push_to_docker_hub_and_commit
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v3
@@ -116,10 +84,25 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: static
+          path: .
       - id: deployment
         name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v2
+  _3_purge_cache:
+    name: Purge cache
+    needs:
+      - _1_push_to_docker_hub_and_commit
+    permissions:
+      actions: write
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Purge cache
+        uses: deemp/purge-cache@v1
+        with:
+          accessed: true
+          created: true
+          debug: true
+          max-age: 172800
 name: CI
 "on":
   pull_request: {}
@@ -128,6 +111,7 @@ name: CI
     - cron: 0 0 * * *
   workflow_dispatch: {}
 permissions:
+  actions: write
   contents: write
   id-token: write
   pages: write

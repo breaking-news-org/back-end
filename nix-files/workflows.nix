@@ -1,11 +1,9 @@
 { workflows, backDir, name, system, back, test, scripts }:
 let
-  inherit (workflows.functions.${system}) writeWorkflow expr mkAccessors genAttrsId run cacheNixDirs installNix;
-  inherit (workflows.configs.${system}) steps os oss strategies;
-  job1 = "_1_push_to_cachix";
-  job2 = "_2_push_to_docker_hub";
-  job3 = "_3_extra_commit";
-  job4 = "_4_build_deploy_gh_pages";
+  inherit (workflows.lib.${system}) writeWorkflow expr mkAccessors genAttrsId run steps os oss strategies nixCI;
+  job1 = "_1_push_to_docker_hub_and_commit";
+  job2 = "_2_build_deploy_gh_pages";
+  job3 = "_3_purge_cache";
   names = mkAccessors {
     matrix.os = "";
     matrix.store = "";
@@ -17,17 +15,6 @@ let
       "DOCKER_HUB_USERNAME"
       "DOCKER_HUB_PASSWORD"
     ];
-  };
-  steps_ = {
-    dockerHubLogin = {
-      # not sure it's necessary
-      name = "Log in to Docker";
-      uses = "docker/login-action@v2.1.0";
-      "with" = {
-        username = expr names.secrets.DOCKER_HUB_USERNAME;
-        password = expr names.secrets.DOCKER_HUB_PASSWORD;
-      };
-    };
   };
 
   on = {
@@ -48,23 +35,13 @@ let
     permissions = {
       contents = "write";
       pages = "write";
+      actions = "write";
       id-token = "write";
     };
     jobs = {
       "${job1}" = {
-        name = "Push to cachix";
-        strategy = strategies.nixCache;
-        runs-on = expr names.matrix.os;
-        steps = [
-          steps.checkout
-          (installNix { store = expr names.matrix.store; })
-          steps.logInToCachix
-          steps.pushFlakesToCachix
-        ];
-      };
-      "${job2}" = {
         name = "Push ${expr names.matrix.scriptName} to Docker Hub";
-        runs-on = os.ubuntu-20;
+        runs-on = os.ubuntu-22;
         strategy = {
           matrix = {
             scriptName = [ back test ];
@@ -72,66 +49,69 @@ let
         };
         steps = [
           steps.checkout
-          (installNix { })
-          (cacheNixDirs { keySuffix = expr names.matrix.scriptName; restoreOnly = false; })
-          steps_.dockerHubLogin
+          (steps.installNix { })
+          (steps.cacheNix {
+            keyJob = expr names.matrix.scriptName;
+            linuxGCEnabled = true;
+            linuxMaxStoreSize = 5000000000;
+            macosGCEnabled = true;
+            macosMaxStoreSize = 5000000000;
+          })
+          {
+            # not sure it's necessary
+            name = "Log in to DockerHub";
+            uses = "docker/login-action@v2.1.0";
+            "with" = {
+              username = expr names.secrets.DOCKER_HUB_USERNAME;
+              password = expr names.secrets.DOCKER_HUB_PASSWORD;
+            };
+          }
           {
             name = "Push to Docker Hub";
             env = {
               DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
               DOCKER_HUB_PASSWORD = expr names.secrets.DOCKER_HUB_PASSWORD;
             };
-            run = ''
-              nix run .#${expr names.matrix.scriptName}PushToDockerHub
-            '';
+            run = run.nixScript { name = "${expr names.matrix.scriptName}PushToDockerHub"; };
           }
-        ];
-      };
-      "${job3}" = {
-        name = "Extra commit";
-        needs = [ job2 ];
-        runs-on = os.ubuntu-20;
-        steps = [
-          steps.checkout
-          (installNix { })
-          (cacheNixDirs { keySuffix = "extra"; restoreOnly = false; })
           steps.configGitAsGHActions
-          {
-            name = "Update flake locks";
-            run = ''nix run .#${scripts.updateLocks.pname}'';
-          }
+          (steps.updateLocks { doGitPull = false; doCommit = false; })
           {
             name = "Generate OpenAPI3 specification for the server";
-            run = ''nix run .#${scripts.genOpenAPI3.pname}'';
+            run = run.nixScript { name = scripts.genOpenAPI3.pname; };
           }
           {
             name = "Write Docker image digests";
             env = {
               DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
             };
-            run = ''nix run .#${scripts.writeDigests.pname}'';
+            run = run.nixScript { name = scripts.writeDigests.pname; };
           }
           {
             name = "Extra commit";
-            run = ''
-              git commit -a \
-               -m "action: extra" \
-               -m "- Update flake locks" \
-               -m "- Generate OpenAPI3 specification for the server" \
-               -m "- Write Docker image digests" \
-               && git push || echo ""
-            '';
+            run = run.nix {
+              doGitPull = true;
+              doCommit = true;
+              commitArgs = {
+                doIgnoreCommitFailed = true;
+                commitMessages = [
+                  (steps.updateLocks { }).name
+                  "Generate OpenAPI3 specification for the server"
+                  "Write Docker image digests"
+                ];
+              };
+            };
           }
         ];
       };
-      "${job4}" = {
+      "${job2}" = {
         name = "Build and deploy GH Pages";
-        needs = job3;
+        needs = job1;
         environment = {
           name = "github-pages";
           url = expr "steps.deployment.outputs.page_url";
         };
-        runs-on = os.ubuntu-20;
+        runs-on = os.ubuntu-22;
         steps = [
           steps.checkout
           {
@@ -153,6 +133,9 @@ let
           }
         ];
       };
+      "${job3}" = (nixCI {
+        purgeCacheNeeds = [ job1 ];
+      }).jobs.purgeCache;
     };
   };
 in

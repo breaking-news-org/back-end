@@ -340,6 +340,7 @@ Manage resources in a running cluster via `pulumi` (see [Cluster](#cluster)).
     - Find its `grafana` chart [values](https://github.com/grafana/helm-charts/blob/eb55960453f49814d3234fd4417ffb2d5b127b80/charts/grafana/values.yaml)
     - Edit `loki-stack` [values](https://github.com/grafana/helm-charts/blob/eb55960453f49814d3234fd4417ffb2d5b127b80/charts/loki-stack/values.yaml#L36) for `grafana`
 - Grafana, Loki, Promtail - [YT](https://www.youtube.com/watch?v=MBJ9puJyYH8)
+  - [similar](https://brain2life.hashnode.dev/grafana-loki-setup-in-minikube)
 - `DeriveAnyClass` sometimes leads to infinite loops - see [ToHttpApiData](https://hackage.haskell.org/package/servant-0.19.1/docs/Servant-API.html#t:ToHttpApiData)
 - Running server in a `VM`
   - Host shouldn't be Windows
