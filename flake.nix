@@ -1,7 +1,6 @@
 {
   inputs = {
     flakes.url = "github:deemp/flakes";
-    dream2nix.url = "github:nix-community/dream2nix";
     jose = {
       url = "github:frasertweedale/hs-jose";
       flake = false;
