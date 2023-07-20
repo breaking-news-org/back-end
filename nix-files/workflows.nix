@@ -53,9 +53,9 @@ let
           (steps.cacheNix {
             keyJob = expr names.matrix.scriptName;
             linuxGCEnabled = true;
-            linuxMaxStoreSize = 5000000000;
+            linuxMaxStoreSize = 7000000000;
             macosGCEnabled = true;
-            macosMaxStoreSize = 5000000000;
+            macosMaxStoreSize = 7000000000;
           })
           {
             # not sure it's necessary
