@@ -1,6 +1,6 @@
 { workflows, backDir, name, system, back, test, scripts }:
 let
-  inherit (workflows.lib.${system}) writeWorkflow expr mkAccessors genAttrsId run steps os oss strategies nixCI;
+  inherit (workflows.lib.${system}) writeWorkflow expr mkAccessors genAttrsId run steps os oss strategies nixCI job;
   job1 = "_1_push_to_docker_hub_and_commit";
   job2 = "_2_build_deploy_gh_pages";
   job3 = "_3_purge_cache";
@@ -39,71 +39,55 @@ let
       id-token = "write";
     };
     jobs = {
-      "${job1}" = {
-        name = "Push ${expr names.matrix.scriptName} to Docker Hub";
-        runs-on = os.ubuntu-22;
-        strategy = {
-          matrix = {
-            scriptName = [ back test ];
+      "${job1}" = job
+        {
+          name = "Push ${expr names.matrix.scriptName} to Docker Hub";
+          runsOn = os.ubuntu-22;
+          strategy = {
+            matrix = {
+              scriptName = [ back test ];
+            };
           };
-        };
-        steps = [
-          steps.checkout
-          (steps.installNix { })
-          (steps.cacheNix {
+          cacheNixArgs = {
             keyJob = expr names.matrix.scriptName;
             linuxGCEnabled = true;
             linuxMaxStoreSize = 7000000000;
             macosGCEnabled = true;
             macosMaxStoreSize = 7000000000;
-          })
-          {
-            # not sure it's necessary
-            name = "Log in to DockerHub";
-            uses = "docker/login-action@v2.1.0";
-            "with" = {
-              username = expr names.secrets.DOCKER_HUB_USERNAME;
-              password = expr names.secrets.DOCKER_HUB_PASSWORD;
-            };
-          }
-          {
-            name = "Push to Docker Hub";
-            env = {
-              DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
-              DOCKER_HUB_PASSWORD = expr names.secrets.DOCKER_HUB_PASSWORD;
-            };
-            run = run.nixScript { name = "${expr names.matrix.scriptName}PushToDockerHub"; };
-          }
-          steps.configGitAsGHActions
-          (steps.updateLocks { doGitPull = false; doCommit = false; })
-          {
-            name = "Generate OpenAPI3 specification for the server";
-            run = run.nixScript { name = scripts.genOpenAPI3.pname; };
-          }
-          {
-            name = "Write Docker image digests";
-            env = {
-              DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
-            };
-            run = run.nixScript { name = scripts.writeDigests.pname; };
-          }
-          {
-            name = "Extra commit";
-            run = run.nix {
-              doGitPull = true;
-              doCommit = true;
-              commitArgs = {
-                doIgnoreCommitFailed = true;
-                commitMessages = [
-                  (steps.updateLocks { }).name
-                  "Generate OpenAPI3 specification for the server"
-                  "Write Docker image digests"
-                ];
+          };
+          doUpdateLocks = true;
+          doFormat = true;
+          doPurgeCache = false;
+          steps = { stepsAttrs, ... }: [
+            {
+              name = "Push to Docker Hub";
+              env = {
+                DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
+                DOCKER_HUB_PASSWORD = expr names.secrets.DOCKER_HUB_PASSWORD;
               };
-            };
-          }
-        ];
-      };
+              run = run.nixScript { name = "${expr names.matrix.scriptName}PushToDockerHub"; };
+            }
+            {
+              name = "Generate server specification";
+              run = run.nixScript { name = scripts.genOpenAPI3.pname; };
+            }
+            {
+              name = "Write Docker image digests";
+              env = {
+                DOCKER_HUB_USERNAME = expr names.secrets.DOCKER_HUB_USERNAME;
+              };
+              run = run.nixScript { name = scripts.writeDigests.pname; };
+            }
+            (steps.commit {
+              messages = [
+                (steps.updateLocks { }).name
+                (steps.format { }).name
+                stepsAttrs."Generate server specification".name
+                stepsAttrs."Write Docker image digests".name
+              ];
+            })
+          ];
+        };
       "${job2}" = {
         name = "Build and deploy GH Pages";
         needs = job1;
@@ -133,9 +117,6 @@ let
           }
         ];
       };
-      "${job3}" = (nixCI {
-        purgeCacheNeeds = [ job1 ];
-      }).jobs.purgeCache;
     };
   };
 in

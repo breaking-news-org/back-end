@@ -1,6 +1,9 @@
 jobs:
   _1_push_to_docker_hub_and_commit:
     name: Push ${{ matrix.scriptName }} to Docker Hub
+    permissions:
+      actions: write
+      contents: write
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout this repo
@@ -16,26 +19,16 @@ jobs:
       - name: Restore and cache Nix store
         uses: nix-community/cache-nix-action@v1
         with:
-          key: nix-${{ runner.os }}-${{ matrix.scriptName }}-${{ hashfiles('**/flake.nix', '**/flake.lock') }}
+          key: nix-ubuntu-22.04-${{ matrix.scriptName }}-${{ hashfiles('**/flake.nix', '**/flake.lock') }}
           linux-gc-enabled: true
           linux-max-store-size: 7000000000
           macos-gc-enabled: true
           macos-max-store-size: 7000000000
           restore-keys: |
-            nix-${{ runner.os }}-${{ matrix.scriptName }}-
-      - name: Log in to DockerHub
-        uses: docker/login-action@v2.1.0
-        with:
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-      - env:
-          DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-        name: Push to Docker Hub
-        run: |-
-          nix profile install .#${{ matrix.scriptName }}PushToDockerHub
-          nix run .#${{ matrix.scriptName }}PushToDockerHub
-      - name: Config git for github-actions
+            nix-ubuntu-22.04-${{ matrix.scriptName }}-
+      - name: Remove old cache profiles
+        run: rm -rf /nix/var/nix/profiles/cache
+      - name: Configure git for github-actions
         run: |
           git config --global user.name github-actions
           git config --global user.email github-actions@github.com
@@ -43,7 +36,18 @@ jobs:
         run: |-
           nix profile install .#updateLocks
           nix run .#updateLocks
-      - name: Generate OpenAPI3 specification for the server
+      - name: Format Nix files
+        run: |-
+          nix profile install .#format
+          nix run .#format
+      - env:
+          DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        name: Push to Docker Hub
+        run: |-
+          nix profile install .#${{ matrix.scriptName }}PushToDockerHub
+          nix run .#${{ matrix.scriptName }}PushToDockerHub
+      - name: Generate server specification
         run: |-
           nix profile install .#genOpenAPI3
           nix run .#genOpenAPI3
@@ -53,16 +57,20 @@ jobs:
         run: |-
           nix profile install .#writeDigests
           nix run .#writeDigests
-      - name: Extra commit
+      - name: Commit & Push
         run: |-
           git pull --rebase --autostash
 
           git add .
+
           git commit \
-            -m "action: Update flake locks" \
-            -m "action: Generate OpenAPI3 specification for the server" \
-            -m "action: Write Docker image digests" \
+            -m "action" \
+            -m "Update flake locks" \
+            -m "Format Nix files" \
+            -m "Generate server specification" \
+            -m "Write Docker image digests" \
             || echo "commit failed!"
+
           git push
     strategy:
       matrix:
@@ -88,21 +96,6 @@ jobs:
       - id: deployment
         name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v2
-  _3_purge_cache:
-    name: Purge cache
-    needs:
-      - _1_push_to_docker_hub_and_commit
-    permissions:
-      actions: write
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Purge cache
-        uses: deemp/purge-cache@v1
-        with:
-          accessed: true
-          created: true
-          debug: true
-          max-age: 172800
 name: CI
 "on":
   pull_request: {}
