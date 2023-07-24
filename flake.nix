@@ -29,7 +29,7 @@
           inherit (inputs.workflows.lib.${system}) writeWorkflow run nixCI;
 
           # Next, set the desired GHC version
-          ghcVersion_ = "928";
+          ghcVersion = "928";
 
           # And the names of packages
           back = "back";
@@ -46,8 +46,6 @@
           # So, override as few packages as possible and consider making a PR when haskellPackages.somePackage doesn't build
 
           inherit (pkgs.haskell.lib)
-            # doJailbreak - remove package bounds from build-depends of a package
-            doJailbreak
             # dontCheck - skip test
             dontCheck
             dontHaddock
@@ -100,7 +98,7 @@
           # This will prevent nix from building B as a dev dependency of A
 
           inherit (toolsGHC {
-            version = ghcVersion_;
+            version = ghcVersion;
             override = override pkgs;
             packages = (ps: [
               ps.${back}
@@ -222,9 +220,10 @@
           genOpenAPI3 = "gen-openapi3";
 
           scripts =
-            let scripts1 =
-              (mkScripts { name = back; imageName = backDockerHubImageName; package = backExe; executableName = "back"; })
-              // (mkScripts { name = test; imageName = testDockerHubImageName; package = testExe; executableName = "test"; });
+            let
+              scripts1 =
+                (mkScripts { name = back; imageName = backDockerHubImageName; package = backExe; executableName = "back"; })
+                // (mkScripts { name = test; imageName = testDockerHubImageName; package = testExe; executableName = "test"; });
             in
             scripts1 // (mkShellApps {
               genOpenAPI3 = {
@@ -238,14 +237,30 @@
                 '';
               };
             }) // {
-              inherit (mkFlakesTools { dirs = [ "." ]; root = ./.; }) updateLocks pushToCachix logInToCachix;
+              inherit (mkFlakesTools { dirs = [ "." ]; root = ./.; }) updateLocks pushToCachix format;
             };
+
+          packages = {
+            writeSettings = writeSettingsJSON (settingsCommonNix // { inherit (settingsNix) haskell; });
+            # And compose VSCodium with dev tools and HLS
+            codium = mkCodium { extensions = extensionsCommon // { inherit (extensions) haskell kubernetes typescript; }; };
+
+            writeWorkflows = import ./nix-files/workflows.nix {
+              inherit (inputs) workflows;
+              backDir = "back";
+              name = "CI";
+              inherit system;
+              inherit scripts;
+              inherit back test;
+            };
+          } // scripts;
+
 
           tools = [
             ghcid
             hpack
             cabal
-            # ghc
+            ghc
             hls
 
             # db stuff
@@ -269,30 +284,9 @@
             pkgs.nodePackages.localtunnel
           ];
 
-          extraTools = [
-            pkgs.bashInteractive
-          ];
-
-          packages = {
-            writeSettings = writeSettingsJSON (settingsCommonNix // { inherit (settingsNix) haskell; });
-            # And compose VSCodium with dev tools and HLS
-            codium = mkCodium {
-              extensions = extensionsCommon // { inherit (extensions) haskell kubernetes typescript; };
-            };
-
-            writeWorkflows = import ./nix-files/workflows.nix {
-              inherit (inputs) workflows;
-              backDir = "back";
-              name = "CI";
-              inherit system;
-              inherit scripts;
-              inherit back test;
-            };
-          } // scripts;
-
           devShells = {
             default = mkShell {
-              packages = tools ++ extraTools;
+              packages = tools;
               commands =
                 (mkCommands "tools" tools)
                 # ++ [
@@ -317,6 +311,7 @@
         in
         {
           inherit packages devShells;
+          formatter = inputs.formatter.${system};
         };
     };
 
