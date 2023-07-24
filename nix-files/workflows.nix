@@ -106,8 +106,7 @@ let
             name = "Upload artifact";
             uses = "actions/upload-pages-artifact@v1";
             "with" = {
-              # Upload entire repository
-              path = ".";
+              path = "static";
             };
           }
           {
