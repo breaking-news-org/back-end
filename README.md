@@ -130,7 +130,7 @@ Run a database, a server, and tests in a Kubernetes cluster.
     # select `yes`
 
     # check that all pods are ready
-    kubectl get po
+    kubectl get po -n breaking-news-dev
     ```
 
 #### Cabal
@@ -145,7 +145,7 @@ Run a database, a server, and tests in a Kubernetes cluster.
 
    # select `yes`
 
-   kubectl get po
+   kubectl get po -n breaking-news-dev
    ```
 
 1. The app configuration is in the [local](./local) directory. See [back.dev.yaml](./local/back.dev.yaml).
@@ -280,6 +280,8 @@ View the API, make requests to it.
 
    - Username: `admin`
    - Password: `admin_password`
+
+1. In `Explore` -> `Log browser`, type `{app="back-deployment"}`
 
 ### Pulumi
 
