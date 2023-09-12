@@ -1,7 +1,6 @@
 import { Output } from "@pulumi/pulumi"
 import { Config } from "./pulumi"
 import * as k8s from "@pulumi/kubernetes"
-import { mkFullName } from "../common"
 import { AppConfigFile } from "./config"
 import * as pulumi from "@pulumi/pulumi"
 import path = require("node:path")
@@ -15,10 +14,10 @@ export function main(
   postgresHost: Output<string>,
   postgresPort: number,
   dockerHubImage: string,
-  provider: k8s.Provider
+  provider: k8s.Provider,
+  namespace: string
 ) {
   const appName = config.name
-  const fullName = mkFullName(environment, appName)
   const deploymentConfig = config.deployment
 
   const containerConfig = {
@@ -58,13 +57,14 @@ export function main(
   data[appConfig.filePath] = pulumi.jsonStringify(appConfigFile)
   data[jwkConfig.filePath] = pulumi.jsonStringify(jwkConfig.fileContent)
 
-  const configMap = ((name = `${fullName}-configmap`) =>
+  const configMap = ((name = `${appName}-configmap`) =>
     new k8s.core.v1.ConfigMap(
       name,
       {
         metadata: {
-          name: name,
-          labels: labels,
+          name,
+          namespace,
+          labels,
         },
         data: data,
       },
@@ -72,15 +72,16 @@ export function main(
     ))()
 
   const containerPort = appConfigFile.web.port
-  const containerPortName = `${fullName}-port`
+  const containerPortName = `${appName}-port`
 
-  const deployment = ((name = `${fullName}-deployment`) =>
+  const deployment = ((name = `${appName}-deployment`) =>
     new k8s.apps.v1.Deployment(
       name,
       {
         metadata: {
-          name: name,
-          labels: labels,
+          name,
+          labels,
+          namespace
         },
         spec: {
           replicas: 1,
@@ -89,7 +90,8 @@ export function main(
           },
           template: {
             metadata: {
-              labels: labels,
+              labels,
+              namespace
             },
             spec: ((
               appVolume = `${name}-app-config-volume`,
@@ -164,13 +166,14 @@ export function main(
       opts
     ))()
 
-  const backService = ((name = `${fullName}-service`) =>
+  const backService = ((name = `${appName}-service`) =>
     new k8s.core.v1.Service(
       name,
       {
         metadata: {
-          name: name,
-          labels: labels,
+          name,
+          namespace,
+          labels,
         },
         spec: {
           type: serviceConfig.type,
@@ -188,7 +191,8 @@ export function main(
       opts
     ))()
 
-  const host = backService.metadata.name
-  const port = serviceConfig.port
-  return { host: host, port: port }
+  return {
+    host: backService.metadata.name,
+    port: serviceConfig.port
+  }
 } 

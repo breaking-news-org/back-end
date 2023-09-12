@@ -1,14 +1,13 @@
 import * as k8s from "@pulumi/kubernetes"
 import { PostgresConfig } from "./pulumi"
-import { mkFullName } from "../common"
 
 export function main(
   config: PostgresConfig,
   environment: string,
-  provider: k8s.Provider
+  provider: k8s.Provider,
+  namespace: string
 ) {
   const appName = config.name
-  const fullName = mkFullName(environment, appName)
   const dbConfig = config.dataBase
   const containerConfig = config.container
   const persistentVolumeConfig = config.persistentVolume
@@ -21,26 +20,28 @@ export function main(
     deleteBeforeReplace: true,
   }
 
-  const configMap = ((name = `${fullName}-configmap`) =>
+  const configMap = ((name = `${appName}-configmap`) =>
     new k8s.core.v1.ConfigMap(
       name,
       {
         metadata: {
-          name: name,
-          labels: labels,
+          name,
+          labels,
+          namespace
         },
         data: config.configMap.data,
       },
       opts
     ))()
 
-  const persistentVolume = ((name = `${fullName}-persistent-volume`) =>
+  const persistentVolume = ((name = `${appName}-persistent-volume`) =>
     new k8s.core.v1.PersistentVolume(
       name,
       {
         metadata: {
-          name: name,
-          labels: labels,
+          name,
+          labels,
+          namespace
         },
         spec: {
           storageClassName: "manual",
@@ -57,21 +58,25 @@ export function main(
     ))()
 
   const persistentVolumeClaim = ((
-    name = `${fullName}-persistent-volume-claim`
+    name = `${appName}-persistent-volume-claim`
   ) =>
     new k8s.core.v1.PersistentVolumeClaim(
       name,
       {
         metadata: {
-          name: name,
-          labels: labels,
+          name,
+          labels,
+          namespace,
+          finalizers: [
+            
+          ]
         },
         spec: {
           storageClassName: "manual",
           accessModes: ["ReadWriteMany"],
           resources: {
             requests: {
-              storage: "5Gi",
+              storage: "512M",
             },
           },
         },
@@ -81,13 +86,14 @@ export function main(
 
   const dbPort = "db-port"
 
-  const deployment = ((name = `${fullName}-deployment`) =>
+  const deployment = ((name = `${appName}-deployment`) =>
     new k8s.apps.v1.Deployment(
       name,
       {
         metadata: {
-          name: name,
-          labels: labels,
+          name,
+          labels,
+          namespace
         },
         spec: {
           replicas: 1,
@@ -96,7 +102,8 @@ export function main(
           },
           template: {
             metadata: {
-              labels: labels,
+              labels,
+              namespace
             },
             spec: ((volumeName = `${name}-container-volume`) => {
               return {
@@ -152,13 +159,14 @@ export function main(
       opts
     ))()
 
-  const service = ((name = `${fullName}-service`) =>
+  const service = ((name = `${appName}-service`) =>
     new k8s.core.v1.Service(
       name,
       {
         metadata: {
-          name: name,
-          labels: labels,
+          name,
+          labels,
+          namespace
         },
         spec: {
           type: serviceConfig.type,

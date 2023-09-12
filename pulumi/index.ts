@@ -23,10 +23,18 @@ function mkSetup(
 ) {
   const config = new pulumi.Config(environment)
 
+  const namespace = `breaking-news-${environment}`
+  new k8s.core.v1.Namespace(namespace, {
+    metadata: {
+      name: namespace
+    }
+  })
+
   const postgres = Postgres.main(
     config.requireObject("postgres"),
     environment,
-    provider
+    provider,
+    namespace
   )
 
   const back = Back.main(
@@ -35,7 +43,8 @@ function mkSetup(
     postgres.host,
     postgres.port,
     digests.back,
-    provider
+    provider,
+    namespace
   )
 
   if (environment == "dev") {
@@ -45,13 +54,14 @@ function mkSetup(
       back.host,
       back.port,
       digests.test,
-      provider
+      provider,
+      namespace
     )
   }
 
   const monitoring = Monitoring.main(
     config.requireObject("monitoring"),
-    environment
+    namespace
   )
 }
 

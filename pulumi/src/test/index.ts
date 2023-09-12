@@ -1,8 +1,8 @@
 import { Output } from "@pulumi/pulumi"
 import { TestConfig } from "./pulumi"
 import * as k8s from "@pulumi/kubernetes"
-import { mkFullName } from "../common"
 import * as pulumi from "@pulumi/pulumi"
+import { AppConfigFileContent } from "./config"
 
 export function main(
   config: TestConfig,
@@ -10,10 +10,10 @@ export function main(
   backHost: Output<string>,
   backPort: number,
   dockerHubImage: string,
-  provider: k8s.Provider
+  provider: k8s.Provider,
+  namespace: string
 ) {
   const appName = config.name
-  const fullName = mkFullName(environment, appName)
   const containerConfig = {
     ...config.deployment.container,
     ...{ dockerHubImage: dockerHubImage },
@@ -28,17 +28,6 @@ export function main(
 
   var testConfig = containerConfig.app
 
-  interface AppConfigFileContent {
-    app: {
-      host: Output<string>
-      port: number
-    }
-    users: {
-      email: string
-      password: string
-    }[]
-  }
-
   const appConfigFileContent: AppConfigFileContent = {
     ...testConfig.fileContent,
     app: { host: backHost, port: backPort },
@@ -47,13 +36,14 @@ export function main(
   var data: { [k: string]: Output<string> } = {}
   data[testConfig.filePath] = pulumi.jsonStringify(appConfigFileContent)
 
-  const configMap = ((name = `${fullName}-configmap`) =>
+  const configMap = ((name = `${appName}-configmap`) =>
     new k8s.core.v1.ConfigMap(
       name,
       {
         metadata: {
-          name: name,
-          labels: labels,
+          name,
+          labels,
+          namespace
         },
         data: data,
       },
@@ -61,20 +51,22 @@ export function main(
     ))()
   const appConfig = containerConfig.app
   const containerPort = containerConfig.port
-  const containerPortName = `${fullName}-port`
+  const containerPortName = `${appName}-port`
 
-  const job = ((name = `${fullName}-job`) =>
+  const job = ((name = `${appName}-job`) =>
     new k8s.batch.v1.Job(
       name,
       {
         metadata: {
-          name: name,
-          labels: labels,
+          name,
+          labels,
+          namespace
         },
         spec: {
           template: {
             metadata: {
-              labels: labels,
+              labels,
+              namespace
             },
             spec: ((
               appVolume = `${name}-app-config-volume`,

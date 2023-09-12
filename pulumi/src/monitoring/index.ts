@@ -1,22 +1,20 @@
 import { Config } from "./pulumi"
 import * as k8s from "@pulumi/kubernetes"
 
-export function main(config: Config, environment: string) {
-  const labels = {
-    app: config.appLabel,
-    environment: environment
-  }
-
-  const monitoringNs = new k8s.core.v1.Namespace(config.namespace, {
+export function main(
+  config: Config,
+  namespaceName: string
+) {
+  const namespace = `${namespaceName}-monitoring`
+  new k8s.core.v1.Namespace(namespace, {
     metadata: {
-      labels: labels,
-      name: config.namespace,
-    },
+      name: namespace
+    }
   })
 
-  const monitoring = new k8s.helm.v3.Release(config.releaseName, {
+  new k8s.helm.v3.Release(config.releaseName, {
     chart: config.chart,
-    namespace: monitoringNs.metadata.name,
+    namespace: namespace,
     repositoryOpts: {
       repo: config.grafanaRepo,
     },
