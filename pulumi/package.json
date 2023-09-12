@@ -5,9 +5,9 @@
         "@types/node": "^16"
     },
     "dependencies": {
-        "@pulumi/kubernetes": "^3.25.0",
-        "@pulumi/pulumi": "^3.0.0",
-        "yaml": "^2.2.2"
+        "@pulumi/kubernetes": "^4.1.1",
+        "@pulumi/pulumi": "^3.82.0",
+        "yaml": "^2.3.2"
     },
     "compilerOptions": {
         "esModuleInterop": true
