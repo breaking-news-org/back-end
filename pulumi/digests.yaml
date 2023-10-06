@@ -1,2 +1,6 @@
 back: deemp/breaking-news-back-app@sha256:5e67f2fbb899ca3145526a78607a96c763a3428f6022303980cf3c9131d39b38
+<<<<<<< Updated upstream
 test: deemp/breaking-news-back-test@sha256:2f3e3574256300bf659141fc6a3489734530a0f1c204aeb8bcdaf8d69b47f512
+=======
+test: deemp/breaking-news-back-test@sha256:3eabde9caf3e56fcc8a0aeda1669b71a82892b654cd43383fd230bae4622824f
+>>>>>>> Stashed changes
